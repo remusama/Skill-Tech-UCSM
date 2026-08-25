@@ -1,0 +1,384 @@
+{
+	"Version": 3,
+	"Parameters": [
+		{
+			"Id": "ParamAngleX",
+			"GroupId": "ParamGroup",
+			"Name": "Angle X"
+		},
+		{
+			"Id": "ParamAngleY",
+			"GroupId": "ParamGroup",
+			"Name": "Angle Y"
+		},
+		{
+			"Id": "ParamAngleZ",
+			"GroupId": "ParamGroup",
+			"Name": "Angle Z"
+		},
+		{
+			"Id": "ParamBrowRY",
+			"GroupId": "ParamGroup3",
+			"Name": "BrowR Y"
+		},
+		{
+			"Id": "ParamBrowLY",
+			"GroupId": "ParamGroup3",
+			"Name": "BrowL Y"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "ParamGroup3",
+			"Name": "BrowR Angle"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "ParamGroup3",
+			"Name": "BrowL Angle"
+		},
+		{
+			"Id": "ParamBrowRForm",
+			"GroupId": "ParamGroup3",
+			"Name": "BrowR Form"
+		},
+		{
+			"Id": "ParamBrowLForm",
+			"GroupId": "ParamGroup3",
+			"Name": "BrowL Form"
+		},
+		{
+			"Id": "ParamEyeSmile",
+			"GroupId": "ParamGroup2",
+			"Name": "Eye Smile"
+		},
+		{
+			"Id": "ParamEyeROpen",
+			"GroupId": "ParamGroup2",
+			"Name": "EyeR Open"
+		},
+		{
+			"Id": "ParamEyeLOpen",
+			"GroupId": "ParamGroup2",
+			"Name": "EyeL Open"
+		},
+		{
+			"Id": "ParamEyeBallX",
+			"GroupId": "ParamGroup2",
+			"Name": "Eyeball X"
+		},
+		{
+			"Id": "ParamEyeBallY",
+			"GroupId": "ParamGroup2",
+			"Name": "Eyeball Y"
+		},
+		{
+			"Id": "ParamMouthForm",
+			"GroupId": "ParamGroup4",
+			"Name": "Mouth Form"
+		},
+		{
+			"Id": "ParamMouthOpenY",
+			"GroupId": "ParamGroup4",
+			"Name": "Mouth Open"
+		},
+		{
+			"Id": "ParamBreath",
+			"GroupId": "ParamGroup5",
+			"Name": "Breathing"
+		},
+		{
+			"Id": "ParamBodyAngleX",
+			"GroupId": "ParamGroup5",
+			"Name": "Body X"
+		},
+		{
+			"Id": "ParamBodyAngleY",
+			"GroupId": "ParamGroup5",
+			"Name": "Body Y"
+		},
+		{
+			"Id": "ParamBodyAngleZ",
+			"GroupId": "ParamGroup5",
+			"Name": "Body Z"
+		},
+		{
+			"Id": "ParamPawOff",
+			"GroupId": "ParamGroup6",
+			"Name": "Paw Off"
+		},
+		{
+			"Id": "ParamNekomimiL",
+			"GroupId": "ParamGroup7",
+			"Name": "Nekomimi L"
+		},
+		{
+			"Id": "ParamNekomimiL2",
+			"GroupId": "ParamGroup7",
+			"Name": "Nekomimi L2"
+		},
+		{
+			"Id": "ParamNekoLB",
+			"GroupId": "ParamGroup7",
+			"Name": "Neko L B"
+		},
+		{
+			"Id": "ParamNekomimiR",
+			"GroupId": "ParamGroup7",
+			"Name": "Nekomimi R"
+		},
+		{
+			"Id": "ParamNekomimiR2",
+			"GroupId": "ParamGroup7",
+			"Name": "Nekomimi R2"
+		},
+		{
+			"Id": "ParamNekoRB",
+			"GroupId": "ParamGroup7",
+			"Name": "Neko R B"
+		},
+		{
+			"Id": "ParamAccX",
+			"GroupId": "ParamGroup7",
+			"Name": "Acc X"
+		},
+		{
+			"Id": "ParamAccY",
+			"GroupId": "ParamGroup7",
+			"Name": "Acc Y"
+		},
+		{
+			"Id": "ParamPawMove1",
+			"GroupId": "ParamGroup7",
+			"Name": "Paw Move 1"
+		},
+		{
+			"Id": "ParamPawMove2",
+			"GroupId": "ParamGroup7",
+			"Name": "Paw Move 2"
+		},
+		{
+			"Id": "ParamNekoPaw",
+			"GroupId": "ParamGroup7",
+			"Name": "NekoPaw"
+		},
+		{
+			"Id": "ParamBoobsX",
+			"GroupId": "ParamGroup7",
+			"Name": "Boobs X"
+		},
+		{
+			"Id": "ParamBoobsY",
+			"GroupId": "ParamGroup7",
+			"Name": "Boobs Y"
+		},
+		{
+			"Id": "ParamHairX",
+			"GroupId": "ParamGroup7",
+			"Name": "Hair X"
+		},
+		{
+			"Id": "ParamHairY",
+			"GroupId": "ParamGroup7",
+			"Name": "Hair Y"
+		},
+		{
+			"Id": "ParamHairX2",
+			"GroupId": "ParamGroup7",
+			"Name": "Hair X2"
+		},
+		{
+			"Id": "ParamHairY2",
+			"GroupId": "ParamGroup7",
+			"Name": "Hair Y2"
+		},
+		{
+			"Id": "ParamExtraMove",
+			"GroupId": "ParamGroup7",
+			"Name": "Extra Move"
+		},
+		{
+			"Id": "ParamExtraMove2",
+			"GroupId": "ParamGroup7",
+			"Name": "Extra Move2"
+		},
+		{
+			"Id": "Param_Angle_Rotation9",
+			"GroupId": "ParamGroup8",
+			"Name": "[0]Front Hair"
+		},
+		{
+			"Id": "Param_Angle_Rotation10",
+			"GroupId": "ParamGroup8",
+			"Name": "[1]Front Hair"
+		},
+		{
+			"Id": "Param_Angle_Rotation11",
+			"GroupId": "ParamGroup8",
+			"Name": "[2]Front Hair"
+		},
+		{
+			"Id": "ParamFrontY",
+			"GroupId": "ParamGroup8",
+			"Name": "Front Y"
+		},
+		{
+			"Id": "Param_Angle_Rotation15",
+			"GroupId": "ParamGroup10",
+			"Name": "[0]Side Hair Move"
+		},
+		{
+			"Id": "Param_Angle_Rotation16",
+			"GroupId": "ParamGroup10",
+			"Name": "[1]Side Hair Move"
+		},
+		{
+			"Id": "Param_Angle_Rotation17",
+			"GroupId": "ParamGroup10",
+			"Name": "[2]Side Hair Move"
+		},
+		{
+			"Id": "ParamSideY",
+			"GroupId": "ParamGroup10",
+			"Name": "Side Y"
+		}
+	],
+	"ParameterGroups": [
+		{
+			"Id": "ParamGroup",
+			"GroupId": "",
+			"Name": "Head"
+		},
+		{
+			"Id": "ParamGroup3",
+			"GroupId": "",
+			"Name": "Brows"
+		},
+		{
+			"Id": "ParamGroup2",
+			"GroupId": "",
+			"Name": "Eyes"
+		},
+		{
+			"Id": "ParamGroup4",
+			"GroupId": "",
+			"Name": "Mouth"
+		},
+		{
+			"Id": "ParamGroup5",
+			"GroupId": "",
+			"Name": "Body"
+		},
+		{
+			"Id": "ParamGroup6",
+			"GroupId": "",
+			"Name": "Toggle"
+		},
+		{
+			"Id": "ParamGroup7",
+			"GroupId": "",
+			"Name": "Physics"
+		},
+		{
+			"Id": "ParamGroup8",
+			"GroupId": "",
+			"Name": "Front Hair"
+		},
+		{
+			"Id": "ParamGroup10",
+			"GroupId": "",
+			"Name": "Side Hair Move"
+		}
+	],
+	"Parts": [
+		{
+			"Id": "Chara",
+			"Name": "Chara"
+		},
+		{
+			"Id": "paw_left",
+			"Name": "paw_left"
+		},
+		{
+			"Id": "paw_left3",
+			"Name": "paw_left"
+		},
+		{
+			"Id": "face",
+			"Name": "face"
+		},
+		{
+			"Id": "hair",
+			"Name": "hair"
+		},
+		{
+			"Id": "Mouth",
+			"Name": "Mouth"
+		},
+		{
+			"Id": "Part2",
+			"Name": "Neko R Copy"
+		},
+		{
+			"Id": "arms",
+			"Name": "arms"
+		},
+		{
+			"Id": "Part3",
+			"Name": "Extra Hair"
+		},
+		{
+			"Id": "Part4",
+			"Name": "Eye L Copy"
+		},
+		{
+			"Id": "eyeL",
+			"Name": "eyeL"
+		},
+		{
+			"Id": "eyeR",
+			"Name": "eyeR"
+		},
+		{
+			"Id": "ArtMesh28_Skinning",
+			"Name": "side_hair copy(Skinning)"
+		},
+		{
+			"Id": "side_hair_Skinning",
+			"Name": "side_hair(Skinning)"
+		},
+		{
+			"Id": "ArtMesh9_Skinning",
+			"Name": "R bang(Skinning)"
+		},
+		{
+			"Id": "ArtMesh10_Skinning",
+			"Name": "L bang(Skinning)"
+		}
+	],
+	"CombinedParameters": [
+		[
+			"ParamEyeBallX",
+			"ParamEyeBallY"
+		],
+		[
+			"ParamNekomimiL",
+			"ParamNekomimiL2"
+		],
+		[
+			"ParamNekomimiR",
+			"ParamNekomimiR2"
+		],
+		[
+			"ParamAccX",
+			"ParamAccY"
+		],
+		[
+			"ParamBoobsX",
+			"ParamBoobsY"
+		],
+		[
+			"ParamHairX",
+			"ParamHairY"
+		]
+	]
+}

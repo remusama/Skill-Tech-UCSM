@@ -1,0 +1,48 @@
+{
+    "name": "Skill Tech",
+    "short_name": "Skill Tech",
+    "description": "Plataforma de Diagnóstico y Aprendizaje de Vanguardia",
+    "id": "/",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "display_override": [
+        "standalone",
+        "fullscreen"
+    ],
+    "orientation": "portrait",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "prefer_related_applications": false,
+    "categories": [
+        "education",
+        "productivity",
+        "utilities"
+    ],
+    "icons": [
+        {
+            "src": "/new-logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/new-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/new-logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/new-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

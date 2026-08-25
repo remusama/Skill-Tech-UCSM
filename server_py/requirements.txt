@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+openai
+edge-tts
+python-dotenv
+websockets
+python-multipart
+tiktoken
+google-genai
+sqlalchemy
+psycopg2-binary
+PyJWT
+bcrypt
+elevenlabs

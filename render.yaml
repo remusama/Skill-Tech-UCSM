@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: eleonor-backend
+    env: python
+    buildCommand: pip install -r server_py/requirements.txt
+    startCommand: uvicorn server_py.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      # ─── SUPABASE (Base de datos persistente) ──────────────────────
+      # Pegar en Render Dashboard: Settings → Environment
+      # Formato: postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres
+      - key: DATABASE_URL
+        sync: false
+      # ─── APIs externas ─────────────────────────────────────────────
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      # ─── Auth JWT ──────────────────────────────────────────────────
+      - key: JWT_SECRET_KEY
+        sync: false
+      # ─── CORS: URL del frontend en Netlify ─────────────────────────
+      - key: FRONTEND_URL
+        sync: false

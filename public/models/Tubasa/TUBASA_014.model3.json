@@ -1,0 +1,58 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "TUBASA_014.moc3",
+		"Textures": [
+			"TUBASA_014.4096/texture_00.webp",
+			"TUBASA_014.4096/texture_01.webp",
+			"TUBASA_014.4096/texture_02.webp"
+		],
+		"Physics": "TUBASA_014.physics3.json",
+		"DisplayInfo": "TUBASA_014.cdi3.json",
+		"Expressions": [
+			{
+				"Name": "Enojo",
+				"File": "Enojo.exp3.json"
+			},
+			{
+				"Name": "Feliz",
+				"File": "Feliz.exp3.json"
+			},
+			{
+				"Name": "Mentira",
+				"File": "Mentira.exp3.json"
+			},
+			{
+				"Name": "Prueba",
+				"File": "Prueba.exp3.json"
+			},
+			{
+				"Name": "Tristeza",
+				"File": "Tristeza.exp3.json"
+			},
+			{
+				"Name": "Tristeza2",
+				"File": "Tristeza2.exp3.json"
+			},
+			{
+				"Name": "coqueta",
+				"File": "coqueta.exp3.json"
+			}
+		]
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": []
+		},
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		}
+	]
+}
