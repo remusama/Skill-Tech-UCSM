@@ -1,10 +1,11 @@
-﻿"use client"
+"use client"
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Users, Search, Folder, ChevronRight, BarChart3,
-    Plus, X, ArrowLeft, CheckCircle
+    Plus, X, ArrowLeft, CheckCircle, Archive, Copy, FileText,
+    BookOpen, Loader2, Trash2, Edit, ExternalLink
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
 import { QuantumResultsView } from "../admin/QuantumResultsView"
@@ -25,7 +26,7 @@ interface Group {
 }
 
 interface MentorDashboardProps {
-    view?: "dashboard" | "students" | "groups"
+    view?: "dashboard" | "students" | "groups" | "archives"
 }
 
 const FolderCard = ({ title, subtitle, isSelected, onClick, count, isGroup }: {
@@ -106,9 +107,15 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
     const [description, setDescription] = useState("")
     const [selectedIds, setSelectedIds] = useState<number[]>([])
     const [creating, setCreating] = useState(false)
+    const [searchTerm, setSearchTerm] = useState("")
 
     const toggle = (id: number) =>
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+
+    const filteredStudents = students.filter(s =>
+        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
     const handleCreate = async () => {
         if (!name.trim()) return
@@ -155,12 +162,18 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
                         placeholder="Descripción (opcional)"
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 ring-purple-500/30" />
                 </div>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <input type="text" placeholder="Buscar estudiante..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 ring-purple-500/30 text-sm"
+                        value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                </div>
                 <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-3">
                         Agregar estudiantes ({selectedIds.length} seleccionados)
                     </p>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                        {students.map(s => {
+                        {filteredStudents.map(s => {
                             const sel = selectedIds.includes(s.id)
                             return (
                                 <div key={s.id} onClick={() => toggle(s.id)}
@@ -192,6 +205,107 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
     )
 }
 
+// ── ARCHIVES VIEW ──────────────────────────────────────────────────────────────
+const ArchivesView = () => {
+    const [exams, setExams] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
+    const [duplicating, setDuplicating] = useState<number | null>(null)
+
+    const load = async () => {
+        const token = localStorage.getItem("eleonor_token")
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/mentor/archives/exams`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            if (res.ok) setExams(await res.json())
+        } catch (e) { console.error(e) }
+        finally { setLoading(false) }
+    }
+
+    useEffect(() => { load() }, [])
+
+    const handleDuplicate = async (examId: number) => {
+        setDuplicating(examId)
+        const token = localStorage.getItem("eleonor_token")
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/mentor/exams/${examId}/duplicate`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            if (res.ok) { await load() }
+        } catch (e) { console.error(e) }
+        finally { setDuplicating(null) }
+    }
+
+    const statusBadge = (s: string) => {
+        if (s === "published") return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+        if (s === "draft") return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+        return "bg-gray-500/10 text-gray-400 border-gray-500/20"
+    }
+
+    return (
+        <div className="space-y-6">
+            {loading ? (
+                <div className="flex items-center justify-center py-32">
+                    <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
+                </div>
+            ) : exams.length === 0 ? (
+                <div className="text-center py-32 text-gray-500">
+                    <Archive className="w-14 h-14 mx-auto mb-4 opacity-20" />
+                    <p className="text-base font-medium">No hay exámenes guardados.</p>
+                    <p className="text-sm mt-1">Crea un examen desde el panel de exámenes.</p>
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    {exams.map((exam, i) => (
+                        <motion.div key={exam.id}
+                            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                            className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-white/5 border border-white/10 rounded-2xl hover:border-white/20 transition-all"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                                    <FileText className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <h3 className="font-bold text-base">{exam.title}</h3>
+                                        <span className={`text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full border ${statusBadge(exam.status)}`}>
+                                            {exam.status}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-400 mt-0.5">Agente: <span className="text-purple-300">{exam.agent_name}</span></p>
+                                    <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                                        <span>{exam.question_count} preguntas</span>
+                                        <span>{exam.assignment_count} asignaciones</span>
+                                        {exam.created_at && <span>{new Date(exam.created_at).toLocaleDateString('es-PE')}</span>}
+                                    </div>
+                                    {exam.competencies?.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            {exam.competencies.slice(0, 3).map((c: string) => (
+                                                <span key={c} className="text-[10px] px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/20">{c}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                    onClick={() => handleDuplicate(exam.id)}
+                                    disabled={duplicating === exam.id}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-xl text-purple-300 text-sm font-medium transition-all disabled:opacity-50"
+                                >
+                                    {duplicating === exam.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                                    Duplicar
+                                </button>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) => {
     const [students, setStudents] = useState<Student[]>([])
     const [groups, setGroups] = useState<Group[]>([])
@@ -201,7 +315,9 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     const [viewingStudentName, setViewingStudentName] = useState("")
     const [quantumData, setQuantumData] = useState<any>(null)
     const [quantumLoading, setQuantumLoading] = useState(false)
-    const [selectedGroup, setSelectedGroup] = useState<string>("none")
+    const [selectedGroup, setSelectedGroup] = useState<number | null>(null)
+    const [groupStudents, setGroupStudents] = useState<Student[]>([])
+    const [groupStudentsLoading, setGroupStudentsLoading] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
 
     useEffect(() => {
@@ -232,6 +348,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                 headers: { Authorization: `Bearer ${token}` }
             })
             if (res.ok) setQuantumData(await res.json())
+            else console.error("Quantum API error:", res.status, await res.text())
         } catch (err) {
             console.error("Error fetching quantum data:", err)
         } finally {
@@ -245,7 +362,34 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         fetchQuantumData(student.id)
     }
 
+    // Load group students when a group is selected
+    const handleGroupSelect = async (groupId: number) => {
+        if (selectedGroup === groupId) {
+            setSelectedGroup(null)
+            setGroupStudents([])
+            return
+        }
+        setSelectedGroup(groupId)
+        setGroupStudentsLoading(true)
+        const token = localStorage.getItem("eleonor_token")
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/mentor/groups/${groupId}/students`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            if (res.ok) setGroupStudents(await res.json())
+        } catch (err) {
+            console.error("Error fetching group students:", err)
+        } finally {
+            setGroupStudentsLoading(false)
+        }
+    }
+
     const filteredStudents = students.filter(s =>
+        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const filteredGroupStudents = groupStudents.filter(s =>
         s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.username.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -285,6 +429,20 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         data={quantumData}
                     />
                 )}
+            </div>
+        )
+    }
+
+    // ── ARCHIVES ───────────────────────────────────────────────────────────────
+    if (view === "archives") {
+        return (
+            <div className="space-y-10 max-w-7xl mx-auto pb-20">
+                <div>
+                    <span className="text-[10px] text-purple-500 font-black uppercase tracking-[0.4em]">Panel del Mentor</span>
+                    <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Archivos</h1>
+                    <p className="text-gray-500 mt-2 font-medium">Exámenes guardados. Duplica cualquier examen para reutilizarlo como plantilla.</p>
+                </div>
+                <ArchivesView />
             </div>
         )
     }
@@ -419,22 +577,30 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                             <FolderCard key={g.id} title={g.name}
                                 subtitle={g.description || "Grupo de Mentoría"}
                                 count={g.student_count} isGroup
-                                isSelected={selectedGroup === g.id.toString()}
-                                onClick={() => setSelectedGroup(selectedGroup === g.id.toString() ? "none" : g.id.toString())} />
+                                isSelected={selectedGroup === g.id}
+                                onClick={() => handleGroupSelect(g.id)} />
                         ))}
                     </div>
 
-                    {selectedGroup !== "none" && (
+                    {selectedGroup !== null && (
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold">Estudiantes en el grupo</h2>
                                 <SearchBar />
                             </div>
-                            <div className="grid gap-3">
-                                {filteredStudents.map((s, i) => (
-                                    <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s)} />
-                                ))}
-                            </div>
+                            {groupStudentsLoading ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                                </div>
+                            ) : filteredGroupStudents.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500 text-sm">Este grupo no tiene estudiantes aún.</div>
+                            ) : (
+                                <div className="grid gap-3">
+                                    {filteredGroupStudents.map((s, i) => (
+                                        <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s)} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </>

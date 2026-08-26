@@ -26,6 +26,9 @@ interface QuizInterfaceProps {
   onExit: () => void
   onExploreMap?: () => void
   duration?: number // en segundos
+  initialAnswers?: Record<number, string>
+  initialIndex?: number
+  examId?: number
 }
 
 export function QuizInterface({
@@ -35,18 +38,25 @@ export function QuizInterface({
   onComplete,
   onExit,
   onExploreMap,
-  duration: _duration // Ignoramos el prop para forzar el estándar
+  duration: _duration,
+  initialAnswers,
+  initialIndex,
+  examId
 }: QuizInterfaceProps) {
-  const duration = 600; // 10 minutos exactos sin excepciones
-
+  const duration = examId ? (_duration || 600) : 600;
 
   // Navigation State
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(initialIndex || 0)
   const [direction, setDirection] = useState(1) // 1 for forward, -1 for backward
 
   // Data State
-  const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [inputText, setInputText] = useState("")
+  const [answers, setAnswers] = useState<Record<number, string>>(initialAnswers || {})
+  const [inputText, setInputText] = useState(() => {
+    if (initialAnswers && questions && questions[initialIndex || 0]) {
+      return initialAnswers[questions[initialIndex || 0].id] || ""
+    }
+    return ""
+  })
 
   // Status State
   const [timeRemaining, setTimeRemaining] = useState(duration)
@@ -63,6 +73,16 @@ export function QuizInterface({
   const [showExplanationText, setShowExplanationText] = useState(false)
   const [inputMode, setInputMode] = useState<'voice' | 'keyboard'>('voice')
   const { enterPresence, setPage } = useEleonor()
+
+  const saveProgress = (currentAnswers = answers, index = currentQuestionIndex, time = timeRemaining) => {
+    if (examId) {
+      localStorage.setItem(`mentor_exam_progress_${examId}`, JSON.stringify({
+        answers: currentAnswers,
+        currentQuestionIndex: index,
+        timeRemaining: time
+      }))
+    }
+  }
 
   // --- CSAT & RAGE CLICKS (Phase 3) ---
   const [showCSATModal, setShowCSATModal] = useState(false)
@@ -147,6 +167,29 @@ export function QuizInterface({
   // Current Question
   const question = questions && questions.length > 0 ? questions[currentQuestionIndex] : null
   const isLastQuestion = questions ? currentQuestionIndex === questions.length - 1 : true
+
+  // Auto-commit inputText to answers with debounce (must be after question declaration)
+  useEffect(() => {
+    if (question && (question.type === "input-text" || question.type === "open-ended")) {
+      const timer = setTimeout(() => {
+        setAnswers(prev => {
+          if (prev[question.id] !== inputText) {
+            return { ...prev, [question.id]: inputText }
+          }
+          return prev
+        })
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [inputText, question])
+
+  // Auto-save progress to localStorage
+  useEffect(() => {
+    if (examId && !isFinished) {
+      saveProgress()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers, currentQuestionIndex, timeRemaining, examId, isFinished])
 
   // Question Telemetry Tracker
   useEffect(() => {
@@ -638,6 +681,22 @@ export function QuizInterface({
             </div>
           </div>
           <div className="flex items-center gap-4 self-end md:self-auto">
+            {examId && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const finalAnswers = { ...answers }
+                  if (question && (question.type === "input-text" || question.type === "open-ended")) {
+                    finalAnswers[question.id] = inputText
+                  }
+                  saveProgress(finalAnswers)
+                  onExit()
+                }}
+                className="border-purple-500/30 text-purple-300 hover:bg-[#bf00ff]/10 hover:text-white rounded-xl px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                Guardar y Salir
+              </Button>
+            )}
             <div className="flex flex-col items-end">
               <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Tiempo Restante</span>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">

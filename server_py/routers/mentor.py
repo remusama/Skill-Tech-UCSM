@@ -122,3 +122,34 @@ async def get_global_stats(db: Session = Depends(get_db), current_user_id: int =
         "total_students": db.query(User).filter(User.role == "student").count(),
         "system_health": "stable"
     }
+
+@router.get("/groups/{group_id}/students")
+async def get_group_students(group_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    """Returns students belonging to a specific group with their skill data."""
+    check_is_mentor(current_user_id, db)
+    group = db.query(MentorGroup).filter(MentorGroup.id == group_id, MentorGroup.mentor_id == current_user_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+    
+    student_ids = [gs.student_id for gs in group.students]
+    students = db.query(User).filter(User.id.in_(student_ids)).all()
+    
+    all_skills = db.query(UserSkill).filter(UserSkill.user_id.in_(student_ids)).all()
+    skills_by_student = {}
+    for sk in all_skills:
+        skills_by_student.setdefault(sk.user_id, []).append(sk)
+    
+    result = []
+    for s in students:
+        s_skills = skills_by_student.get(s.id, [])
+        top_skill = max(s_skills, key=lambda x: x.level).area if s_skills else "N/A"
+        avg_level = sum(sk.level for sk in s_skills) / max(1, len(s_skills)) if s_skills else 0
+        result.append({
+            "id": s.id,
+            "username": s.username,
+            "full_name": s.full_name or s.username,
+            "top_skill": top_skill,
+            "average_level": avg_level
+        })
+    return result
+

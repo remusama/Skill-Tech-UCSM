@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bot, FileText, Users, Check, Plus, Trash2, ChevronRight, Send, X } from "lucide-react"
+import { Bot, FileText, Users, Check, Plus, Trash2, ChevronRight, Send, X, ChevronDown } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
 
 interface Agent {
@@ -29,6 +29,7 @@ interface Question {
   question: string
   question_type: "text" | "multiple_choice"
   options: string[]  // Only for multiple_choice
+  correct_answer?: string
   order: number
 }
 
@@ -49,15 +50,18 @@ export const ExamCreator = () => {
   const [publishing, setPublishing] = useState(false)
   const [published, setPublished] = useState(false)
 
+  // Accordion state
+  const [showTemplates, setShowTemplates] = useState(true)
+  const [showCustom, setShowCustom] = useState(true)
+
   // Selections
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
-  const [questions, setQuestions] = useState<Question[]>([{ question: "", question_type: "text", options: [], order: 0 }])
+  const [questions, setQuestions] = useState<Question[]>([{ question: "", question_type: "text", options: [], correct_answer: "", order: 0 }])
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([])
   const [selectedGroupIds, setSelectedGroupIds] = useState<number[]>([])
   const [createdExamId, setCreatedExamId] = useState<number | null>(null)
-
   useEffect(() => {
     const token = localStorage.getItem("eleonor_token")
     const fetchAll = async () => {
@@ -90,7 +94,7 @@ export const ExamCreator = () => {
   }
 
   const addQuestion = () => {
-    setQuestions(prev => [...prev, { question: "", question_type: "text", options: [], order: prev.length }])
+    setQuestions(prev => [...prev, { question: "", question_type: "text", options: [], correct_answer: "", order: prev.length }])
   }
 
   const removeQuestion = (idx: number) => {
@@ -100,13 +104,19 @@ export const ExamCreator = () => {
   const updateQuestion = (idx: number, field: keyof Question, value: any) => {
     setQuestions(prev => prev.map((q, i) => {
       if (i !== idx) return q
-      if (field === "question_type" && value === "text") return { ...q, [field]: value, options: [] }
+      if (field === "question_type" && value === "text") return { ...q, [field]: value, options: [], correct_answer: "" }
       return { ...q, [field]: value }
     }))
   }
 
   const addOption = (qIdx: number) => {
-    setQuestions(prev => prev.map((q, i) => i === qIdx ? { ...q, options: [...q.options, ""] } : q))
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q
+      const newOpts = [...q.options, ""]
+      // Default correct_answer to first option if not set
+      const correct = q.correct_answer || "A"
+      return { ...q, options: newOpts, correct_answer: correct }
+    }))
   }
 
   const updateOption = (qIdx: number, oIdx: number, value: string) => {
@@ -119,9 +129,20 @@ export const ExamCreator = () => {
   }
 
   const removeOption = (qIdx: number, oIdx: number) => {
-    setQuestions(prev => prev.map((q, i) =>
-      i === qIdx ? { ...q, options: q.options.filter((_, j) => j !== oIdx) } : q
-    ))
+    setQuestions(prev => prev.map((q, i) => {
+      if (i !== qIdx) return q
+      const newOpts = q.options.filter((_, j) => j !== oIdx)
+      let correct = q.correct_answer || "A"
+      // If we removed the option that was correct, reset correct option indicator
+      const removedChar = String.fromCharCode(65 + oIdx)
+      if (correct === removedChar) {
+        correct = "A"
+      } else if (correct > removedChar) {
+        // shift index down
+        correct = String.fromCharCode(correct.charCodeAt(0) - 1)
+      }
+      return { ...q, options: newOpts, correct_answer: correct }
+    }))
   }
 
   const handleCreateAndAssign = async () => {
@@ -144,6 +165,7 @@ export const ExamCreator = () => {
               question: q.question,
               question_type: q.question_type,
               options: q.question_type === "multiple_choice" ? q.options.filter(o => o.trim()) : [],
+              correct_answer: q.question_type === "multiple_choice" ? (q.correct_answer || "A") : null,
               order: q.order
             }))
         })
@@ -170,7 +192,7 @@ export const ExamCreator = () => {
 
   const resetForm = () => {
     setStep(1); setSelectedAgent(null); setTitle(""); setDescription("")
-    setQuestions([{ question: "", question_type: "text", options: [], order: 0 }])
+    setQuestions([{ question: "", question_type: "text", options: [], correct_answer: "", order: 0 }])
     setSelectedStudentIds([]); setSelectedGroupIds([])
     setPublished(false); setCreatedExamId(null)
   }
@@ -247,34 +269,121 @@ export const ExamCreator = () => {
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
           <h2 className="text-xl font-bold">Selecciona un Agente</h2>
           <p className="text-gray-400 text-sm">El agente define las competencias que serán evaluadas en este examen.</p>
-          <div className="grid gap-3">
-            {allAgents.map(a => (
-              <motion.div
-                key={a.id} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                onClick={() => setSelectedAgent(a)}
-                className={`p-5 rounded-2xl border cursor-pointer transition-all ${selectedAgent?.id === a.id ? "bg-purple-500/15 border-purple-500/50" : "bg-white/5 border-white/10 hover:border-white/20"}`}
+          
+          <div className="space-y-4">
+            {/* Base Agents Accordion */}
+            <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.02]">
+              <button
+                type="button"
+                onClick={() => setShowTemplates(!showTemplates)}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors text-left"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${a.is_template ? "bg-blue-500/20 text-blue-400" : "bg-purple-500/20 text-purple-400"}`}>
-                    <Bot className="w-6 h-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold">{a.name}</h3>
-                      {a.is_template && <span className="text-[10px] px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full font-bold uppercase">Plantilla</span>}
-                    </div>
-                    <p className="text-sm text-gray-400 mt-0.5">{a.description}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(a.competencies || []).slice(0, 3).map(c => (
-                      <span key={c} className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs">{c}</span>
-                    ))}
-                  </div>
-                  {selectedAgent?.id === a.id && <Check className="w-5 h-5 text-purple-400 flex-shrink-0" />}
+                <div className="flex items-center gap-2">
+                  <Bot className="w-5 h-5 text-blue-400" />
+                  <span className="font-bold text-sm text-gray-200">Agentes Base ({agents.templates.length})</span>
                 </div>
-              </motion.div>
-            ))}
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${showTemplates ? "transform rotate-180" : ""}`} />
+              </button>
+              
+              <AnimatePresence initial={false}>
+                {showTemplates && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="p-4 pt-2 space-y-3 overflow-hidden"
+                  >
+                    {agents.templates.length === 0 ? (
+                      <p className="text-xs text-gray-500 italic p-2">No hay agentes base disponibles.</p>
+                    ) : (
+                      agents.templates.map(a => (
+                        <div
+                          key={a.id}
+                          onClick={() => setSelectedAgent(a)}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-4 ${selectedAgent?.id === a.id ? "bg-purple-500/15 border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)]" : "bg-white/5 border-white/5 hover:border-white/15"}`}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center flex-shrink-0">
+                              <Bot className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-sm truncate">{a.name}</h4>
+                              <p className="text-xs text-gray-400 truncate mt-0.5">{a.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <div className="flex flex-wrap gap-1">
+                              {(a.competencies || []).slice(0, 2).map(c => (
+                                <span key={c} className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-[10px]">{c}</span>
+                              ))}
+                            </div>
+                            {selectedAgent?.id === a.id && <Check className="w-4 h-4 text-purple-400" />}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Custom Agents Accordion */}
+            <div className="border border-white/10 rounded-2xl overflow-hidden bg-white/[0.02]">
+              <button
+                type="button"
+                onClick={() => setShowCustom(!showCustom)}
+                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors text-left"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-purple-400" />
+                  <span className="font-bold text-sm text-gray-200">Agentes Personalizados ({agents.custom.length})</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${showCustom ? "transform rotate-180" : ""}`} />
+              </button>
+              
+              <AnimatePresence initial={false}>
+                {showCustom && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="p-4 pt-2 space-y-3 overflow-hidden"
+                  >
+                    {agents.custom.length === 0 ? (
+                      <p className="text-xs text-gray-500 italic p-2">No tienes agentes personalizados creados.</p>
+                    ) : (
+                      agents.custom.map(a => (
+                        <div
+                          key={a.id}
+                          onClick={() => setSelectedAgent(a)}
+                          className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between gap-4 ${selectedAgent?.id === a.id ? "bg-purple-500/15 border-purple-500/40 shadow-[0_0_15px_rgba(168,85,247,0.15)]" : "bg-white/5 border-white/5 hover:border-white/15"}`}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center flex-shrink-0">
+                              <Bot className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-sm truncate">{a.name}</h4>
+                              <p className="text-xs text-gray-400 truncate mt-0.5">{a.description}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <div className="flex flex-wrap gap-1">
+                              {(a.competencies || []).slice(0, 2).map(c => (
+                                <span key={c} className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-[10px]">{c}</span>
+                              ))}
+                            </div>
+                            {selectedAgent?.id === a.id && <Check className="w-4 h-4 text-purple-400" />}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
+
           <div className="flex justify-end">
             <button
               disabled={!selectedAgent}
@@ -355,21 +464,37 @@ export const ExamCreator = () => {
                 {/* Multiple choice options */}
                 {q.question_type === "multiple_choice" && (
                   <div className="ml-10 space-y-2">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Opciones de respuesta</p>
-                    {q.options.map((opt, oIdx) => (
-                      <div key={oIdx} className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full border border-white/20 flex items-center justify-center text-[10px] text-gray-500 flex-shrink-0">{String.fromCharCode(65 + oIdx)}</span>
-                        <input
-                          value={opt}
-                          onChange={e => updateOption(idx, oIdx, e.target.value)}
-                          placeholder={`Opción ${String.fromCharCode(65 + oIdx)}...`}
-                          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 ring-purple-500/30"
-                        />
-                        <button onClick={() => removeOption(idx, oIdx)} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-600 hover:text-red-400 transition-colors">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">Opciones de respuesta (Selecciona una respuesta correcta)</p>
+                    {q.options.map((opt, oIdx) => {
+                      const optChar = String.fromCharCode(65 + oIdx)
+                      const isCorrect = q.correct_answer === optChar
+                      return (
+                        <div key={oIdx} className="flex items-center gap-2">
+                          <span className="w-5 h-5 rounded-full border border-white/20 flex items-center justify-center text-[10px] text-gray-500 flex-shrink-0">{optChar}</span>
+                          <input
+                            value={opt}
+                            onChange={e => updateOption(idx, oIdx, e.target.value)}
+                            placeholder={`Opción ${optChar}...`}
+                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 ring-purple-500/30"
+                          />
+                          {/* Correct Answer Switch */}
+                          <button
+                            type="button"
+                            onClick={() => updateQuestion(idx, "correct_answer", optChar)}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1 flex-shrink-0 ${isCorrect
+                              ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                              : "bg-white/5 text-gray-500 border border-white/5 hover:border-white/15"
+                            }`}
+                          >
+                            <Check className={`w-3 h-3 ${isCorrect ? "opacity-100" : "opacity-30"}`} />
+                            {isCorrect ? "Correcta" : "Marcar Correcta"}
+                          </button>
+                          <button onClick={() => removeOption(idx, oIdx)} className="p-1.5 hover:bg-red-500/20 rounded-lg text-gray-600 hover:text-red-400 transition-colors flex-shrink-0">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )
+                    })}
                     {q.options.length < 5 && (
                       <button onClick={() => addOption(idx)}
                         className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors mt-1">

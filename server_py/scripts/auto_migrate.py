@@ -68,6 +68,7 @@ MIGRATIONS = [
     ("exam_results", "csat_score", "INTEGER", "INTEGER"),
     ("exam_results", "rage_clicks", "INTEGER", "INTEGER"),
     ("exam_results", "score_tri", "FLOAT", "REAL"),
+    ("mentor_exam_questions", "correct_answer", "VARCHAR", "VARCHAR"),
 ]
 
 

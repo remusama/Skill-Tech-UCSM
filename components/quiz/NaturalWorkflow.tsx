@@ -38,6 +38,7 @@ import { DiagnosisEleonorOverlay } from "./DiagnosisEleonorOverlay"
 
 interface NaturalWorkflowProps {
     skills: any[];
+    mentorSkills?: any[];
     onFeedbackRequest?: (node: any) => void;
 }
 
@@ -106,6 +107,7 @@ const HolographicNode = ({ data, selected }: any) => {
     const Icon = data.icon || ICON_MAP[data.label] || User
     const isRoot = data.type === 'root'
     const isArea = data.type === 'area'
+    const isMentor = data.type === 'mentor'
 
     // Color determination
     let colorClass = 'text-[#d946ef]';
@@ -226,7 +228,7 @@ const edgeTypes = {
 
 // --- Main Component ---
 
-function NaturalWorkflowContent({ skills, onFeedbackRequest }: NaturalWorkflowProps & { onFeedbackRequest?: (node: string) => void }) {
+function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }: NaturalWorkflowProps & { onFeedbackRequest?: (node: string) => void }) {
     const [selectedNodeData, setSelectedNodeData] = useState<any | null>(null)
     const [activeStage, setActiveStage] = useState(0)
     const [userName, setUserName] = useState<string>('Usuario')
@@ -376,8 +378,48 @@ function NaturalWorkflowContent({ skills, onFeedbackRequest }: NaturalWorkflowPr
             })
         })
 
+        // --- Mentor exam nodes (outer ring) ---
+        if (mentorSkills && mentorSkills.length > 0) {
+            const mentorRadius = isMobileWidth ? 380 : 560
+            const mentorAngleStep = 360 / mentorSkills.length
+            mentorSkills.forEach((ms, idx) => {
+                const angleDeg = idx * mentorAngleStep - 30 // slight offset
+                const angleRad = (angleDeg * Math.PI) / 180
+                const mx = cx + Math.cos(angleRad) * mentorRadius
+                const my = cy + Math.sin(angleRad) * mentorRadius
+                const nodeId = `mentor_${ms.id || idx}`
+                nodes.push({
+                    id: nodeId,
+                    type: 'holographic',
+                    position: { x: mx - 48, y: my - 48 },
+                    data: {
+                        label: ms.area,
+                        type: 'mentor',
+                        level: ms.level || 70,
+                        color: 'from-purple-400 to-fuchsia-500',
+                        diagnosis: {
+                            nivel: ms.level || 70,
+                            razonamiento: `Examen de Mentoría: ${ms.examTitle || ms.area}`,
+                            observaciones: ms.competencies?.length
+                                ? `Competencias evaluadas: ${ms.competencies.join(', ')}.`
+                                : 'Examen de mentoría completado.',
+                        },
+                        isMentorExam: true
+                    }
+                })
+                edges.push({
+                    id: `e-root-${nodeId}`,
+                    source: 'root',
+                    target: nodeId,
+                    type: 'stream',
+                    data: { color: 'from-purple-400 to-fuchsia-500', type: 'mentor' },
+                    animated: true
+                })
+            })
+        }
+
         return { initialNodes: nodes, initialEdges: edges }
-    }, [skills, userName])
+    }, [skills, userName, mentorSkills])
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)

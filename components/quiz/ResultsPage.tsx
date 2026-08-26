@@ -15,6 +15,7 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [skills, setSkills] = useState<any[]>([])
+    const [mentorSkills, setMentorSkills] = useState<any[]>([])
     const [activeFeedbackNode, setActiveFeedbackNode] = useState<string | null>(null)
 
     const loadData = async () => {
@@ -25,6 +26,32 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
                 : await fetchUserSkills()
             console.log("Skills loaded for ResultsPage:", data)
             setSkills(data)
+
+            // Load completed mentor exams to generate extra nodes
+            if (!studentId) {
+                const token = localStorage.getItem('eleonor_token')
+                const base = process.env.NEXT_PUBLIC_API_URL || ''
+                const mResp = await fetch(`${base}/api/student/mentor-exams`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                if (mResp.ok) {
+                    const exams = await mResp.json()
+                    // Build synthetic skill nodes for completed exams
+                    const mentorNodes = (Array.isArray(exams) ? exams : [])
+                        .filter((e: any) => e.status === 'completed' || e.status === 'pending')
+                        .map((e: any) => ({
+                            id: `mentor_${e.id}`,
+                            area: e.agent_name || e.title,
+                            level: e.status === 'completed' ? (e.score ?? 90) : 40,
+                            skill_xp: 0,
+                            isMentorExam: true,
+                            examTitle: e.title,
+                            competencies: e.competencies || [],
+                            last_updated: e.assigned_at || new Date().toISOString()
+                        }))
+                    setMentorSkills(mentorNodes)
+                }
+            }
         } catch (error) {
             console.error("Failed to load skills:", error)
             setError("No se pudieron cargar los resultados.")
@@ -112,6 +139,7 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
             <div className="flex-1 min-h-[600px] relative">
                 <NaturalWorkflow
                     skills={skills}
+                    mentorSkills={mentorSkills}
                     onFeedbackRequest={(node) => setActiveFeedbackNode(node)}
                 />
             </div>

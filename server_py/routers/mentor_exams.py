@@ -21,6 +21,7 @@ class QuestionRequest(BaseModel):
     question_type: str = "text"  # "text" | "multiple_choice"
     options: List[str] = []  # Only used when question_type == "multiple_choice"
     order: int = 0
+    correct_answer: Optional[str] = None
 
 class CreateExamRequest(BaseModel):
     agent_id: int
@@ -62,7 +63,8 @@ async def create_exam(req: CreateExamRequest, db: Session = Depends(get_db), cur
             question=q.question,
             question_type=q.question_type,
             options=q.options if q.question_type == "multiple_choice" else None,
-            order=q.order
+            order=q.order,
+            correct_answer=q.correct_answer if q.question_type == "multiple_choice" else None
         )
         db.add(question)
     
@@ -168,7 +170,7 @@ async def get_student_mentor_exams(db: Session = Depends(get_db), current_user_i
                     "competencies": agent.competencies if agent else [],
                     "status": assignment.status,
                     "assigned_at": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
-                    "questions": [{"id": q.id, "question": q.question, "question_type": q.question_type, "options": q.options or [], "order": q.order} for q in questions]
+                    "questions": [{"id": q.id, "question": q.question, "question_type": q.question_type, "options": q.options or [], "correct_answer": q.correct_answer, "order": q.order} for q in questions]
                 })
     
     return result
@@ -192,7 +194,7 @@ async def get_exam_detail(exam_id: int, db: Session = Depends(get_db), current_u
         "description": exam.description,
         "status": exam.status,
         "agent": {"id": agent.id, "name": agent.name, "competencies": agent.competencies} if agent else None,
-        "questions": [{"id": q.id, "question": q.question, "question_type": q.question_type, "options": q.options or [], "order": q.order} for q in questions],
+        "questions": [{"id": q.id, "question": q.question, "question_type": q.question_type, "options": q.options or [], "correct_answer": q.correct_answer, "order": q.order} for q in questions],
         "assignment_count": len(assignments)
     }
 
@@ -209,5 +211,64 @@ async def get_student_quantum_mentor(
     student = db.query(User).filter(User.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    data = informante_logic.get_student_quantum_data(student_id, db)
+    data = informante_logic.get_student_quantum_data(db, student_id)
     return data
+
+
+@router.get("/api/mentor/archives/exams")
+async def get_all_mentor_exams(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    """Returns all exams created by the mentor with full details for the archives view."""
+    check_is_mentor(current_user_id, db)
+    exams = db.query(MentorExam).filter(MentorExam.mentor_id == current_user_id).all()
+    result = []
+    for e in exams:
+        agent = db.query(Agent).filter(Agent.id == e.agent_id).first()
+        questions = db.query(MentorExamQuestion).filter(MentorExamQuestion.exam_id == e.id).all()
+        assignments = db.query(MentorExamAssignment).filter(MentorExamAssignment.exam_id == e.id).all()
+        result.append({
+            "id": e.id,
+            "title": e.title,
+            "description": e.description,
+            "status": e.status,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+            "agent_id": e.agent_id,
+            "agent_name": agent.name if agent else "Desconocido",
+            "competencies": agent.competencies if agent else [],
+            "question_count": len(questions),
+            "assignment_count": len(assignments),
+        })
+    return result
+
+
+@router.post("/api/mentor/exams/{exam_id}/duplicate")
+async def duplicate_exam(exam_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    """Duplicates an existing exam as a new draft for editing/reuse."""
+    check_is_mentor(current_user_id, db)
+    original = db.query(MentorExam).filter(MentorExam.id == exam_id, MentorExam.mentor_id == current_user_id).first()
+    if not original:
+        raise HTTPException(status_code=404, detail="Examen no encontrado")
+
+    new_exam = MentorExam(
+        mentor_id=current_user_id,
+        agent_id=original.agent_id,
+        title=f"[COPIA] {original.title}",
+        description=original.description,
+        status="draft"
+    )
+    db.add(new_exam)
+    db.commit()
+    db.refresh(new_exam)
+
+    original_questions = db.query(MentorExamQuestion).filter(MentorExamQuestion.exam_id == exam_id).all()
+    for q in original_questions:
+        db.add(MentorExamQuestion(
+            exam_id=new_exam.id,
+            question=q.question,
+            question_type=q.question_type,
+            options=q.options,
+            correct_answer=q.correct_answer,
+            order=q.order
+        ))
+    db.commit()
+
+    return {"id": new_exam.id, "title": new_exam.title, "status": new_exam.status}

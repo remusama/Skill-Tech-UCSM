@@ -18,7 +18,8 @@ import {
   FileText,
   Compass,
   Users,
-  Folder
+  Folder,
+  Archive
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -42,6 +43,7 @@ const teacherNavItems = [
   { icon: Folder, label: "Grupos", page: "mentor-groups" },
   { icon: FileText, label: "Exámenes", page: "mentor-exams" },
   { icon: Settings, label: "Agentes IA", page: "mentor-agents" },
+  { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
 
 import { useEleonor } from "@/contexts/eleonor-context"

@@ -95,7 +95,7 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
 };
 
 export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }) {
-  const [activeCategory, setActiveCategory] = useState<'academica' | 'personal' | 'mentoria'>('academica')
+  const [activeCategory, setActiveCategory] = useState<'academica' | 'personal' | 'mentoria'>('mentoria')
   const [mentorExams, setMentorExams] = useState<any[]>([])
   const [loadingMentorExams, setLoadingMentorExams] = useState(false)
   const [selectedTab, setSelectedTab] = useState("examenes")
@@ -167,6 +167,18 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     }
   }, [])
 
+  // Auto-load mentor exams on mount
+  useEffect(() => {
+    const token = localStorage.getItem('eleonor_token')
+    if (!token) return
+    setLoadingMentorExams(true)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/student/mentor-exams`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).then(data => {
+      setMentorExams(Array.isArray(data) ? data : [])
+    }).catch(() => {}).finally(() => setLoadingMentorExams(false))
+  }, [])
+
   useEffect(() => {
     if (!currentAreas.find(a => a.id === selectedArea)) {
       setSelectedArea(currentAreas[0].id)
@@ -210,13 +222,34 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
       options: q.question_type === 'multiple_choice'
         ? (q.options || []).map((opt: string, j: number) => ({ id: String.fromCharCode(65 + j), text: opt }))
         : [],
-      correctAnswer: '',
+      correctAnswer: q.correct_answer || '',
       skill: exam.agent_name || 'Habilidades'
     }))
+
+    // Try to load saved progress from localStorage
+    let initialAnswers = {}
+    let initialIndex = 0
+    let initialTime = 600 // 10 mins standard
+
+    const saved = localStorage.getItem(`mentor_exam_progress_${exam.id}`)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        initialAnswers = parsed.answers || {}
+        initialIndex = parsed.currentQuestionIndex || 0
+        initialTime = parsed.timeRemaining || 600
+      } catch (e) {
+        console.error("Error loading saved exam progress:", e)
+      }
+    }
+
     setActiveExam({
       ...exam,
       questions,
-      areaName: exam.agent_name || 'Mentoría'
+      areaName: exam.agent_name || 'Mentoría',
+      initialAnswers,
+      initialIndex,
+      initialTime
     })
   }
 
@@ -232,8 +265,15 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           title={activeExam.title}
           area={activeExam.areaName || activeExam.area}
           questions={activeExam.questions || []}
-          duration={Number.parseInt(activeExam.duration)}
-          onComplete={handleCompleteExam}
+          duration={activeExam.initialTime || 600}
+          initialAnswers={activeExam.initialAnswers}
+          initialIndex={activeExam.initialIndex}
+          examId={activeExam.id}
+          onComplete={(score, answers) => {
+            // Remove saved progress on completion
+            localStorage.removeItem(`mentor_exam_progress_${activeExam.id}`)
+            handleCompleteExam({ score, answers })
+          }}
           onExit={handleCancelExam}
           onExploreMap={() => onNavigate?.("diagnosis")}
         />
@@ -247,69 +287,26 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
       <div ref={topAnchorRef} className="absolute top-0 left-0 w-0 h-0" aria-hidden />
       <div className="fixed inset-0 bg-[#0B0121] opacity-60 z-[-5]" />
 
-      {/* TOP HEADER - Replaces redundant Practice title and integrates Area name */}
+      {/* TOP HEADER */}
       <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">
         <div className="flex items-center gap-3">
-          <div className={cn("w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]", theme.color)} />
+          <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-purple-400 to-blue-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
           <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-xl uppercase leading-none">
-            {currentArea.name}
+            Mentoría
           </h1>
         </div>
-        <p className={cn("text-[9px] md:text-xs font-black tracking-[0.3em] mt-2 uppercase ml-4 md:ml-5 opacity-40", theme.textColor)}>
-          MÓDULO DE ENTRENAMIENTO Y DIAGNÓSTICO
+        <p className="text-[9px] md:text-xs font-black tracking-[0.3em] mt-2 uppercase ml-4 md:ml-5 opacity-40 text-purple-400">
+          MÓDULO DE EVALUACIONES Y DIAGNÓSTICO
         </p>
       </div>
 
       <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
 
-        {/* Category & Area Selector Container */}
-        <div className="flex flex-col md:flex-row items-center gap-6 bg-white/[0.03] p-4 rounded-3xl border border-white/5 backdrop-blur-md">
-          {/* Main Toggle (Académicas vs Personales) */}
-          <div className="flex bg-black/40 p-1 rounded-2xl border border-white/5">
-            <button
-              onClick={() => setActiveCategory('academica')}
-              className={cn(
-                "px-6 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all",
-                activeCategory === 'academica' ? "bg-white text-black shadow-lg" : "text-white/40 hover:text-white"
-              )}
-            >
-              Académicas
-            </button>
-            <button
-              onClick={() => setActiveCategory('personal')}
-              className={cn(
-                "px-6 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all",
-                activeCategory === 'personal' ? "bg-white text-black shadow-lg" : "text-white/40 hover:text-white"
-              )}
-            >
-              Personales
-            </button>
-            <button
-              onClick={() => {
-                setActiveCategory('mentoria')
-                if (mentorExams.length === 0 && !loadingMentorExams) {
-                  setLoadingMentorExams(true)
-                  const token = localStorage.getItem('eleonor_token')
-                  fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/student/mentor-exams`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                  }).then(r => r.json()).then(data => {
-                    setMentorExams(Array.isArray(data) ? data : [])
-                  }).catch(() => {}).finally(() => setLoadingMentorExams(false))
-                }
-              }}
-              className={cn(
-                "px-6 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all",
-                activeCategory === 'mentoria' ? "bg-purple-600 text-white shadow-lg" : "text-white/40 hover:text-white"
-              )}
-            >
-              Mentoría
-            </button>
-          </div>
+        {/* Category locked to Mentoría — tabs removed per user request */}
 
-          <div className="w-px h-8 bg-white/10 hidden md:block" />
-
-          {/* Area Selector Horizontal Scroll */}
-          <div className="flex gap-4 overflow-x-auto px-4 w-full custom-scrollbar pb-2 flex-nowrap scroll-smooth">
+        {/* Area Selector — solo visible en modo académico/personal */}
+        {activeCategory !== 'mentoria' && (
+          <div className="flex gap-4 overflow-x-auto px-4 w-full custom-scrollbar pb-2 flex-nowrap scroll-smooth bg-white/[0.03] rounded-2xl border border-white/5 p-3">
             {currentAreas.map(area => {
               const isActive = selectedArea === area.id
               const areaTheme = THEMES[area.id] || THEMES.ciencias
@@ -318,7 +315,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                   key={area.id}
                   onClick={() => setSelectedArea(area.id)}
                   className={cn(
-                    "group flex flex-col items-center gap-2 min-w-[100px] p-2 rounded-xl transition-all duration-300 relative shrink-0",
+                    "group flex flex-col items-center gap-2 min-w-[90px] p-2 rounded-xl transition-all duration-300 relative shrink-0",
                     isActive ? "bg-white/5 shadow-[0_0_20px_-5px_rgba(255,255,255,0.1)] scale-105" : "hover:bg-white/5 opacity-60 hover:opacity-100"
                   )}
                 >
@@ -336,7 +333,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                   )}>
                     {area.name}
                   </span>
-
                   {isActive && (
                     <motion.div
                       layoutId="activeTabBottom"
@@ -347,7 +343,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
               )
             })}
           </div>
-        </div>
+        )}
 
         {/* Action Tabs Selector - only shown when not in mentoria mode */}
         {activeCategory !== 'mentoria' && (

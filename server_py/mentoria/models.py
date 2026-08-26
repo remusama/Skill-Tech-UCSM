@@ -64,6 +64,7 @@ class MentorExamQuestion(Base):
     question_type = Column(String) # e.g. "text", "multiple_choice"
     options = Column(JSON, nullable=True)  # List[str] for multiple_choice options
     order = Column(Integer, default=0)
+    correct_answer = Column(String, nullable=True)
     
     exam = relationship("MentorExam", back_populates="questions")
 

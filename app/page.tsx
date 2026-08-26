@@ -168,6 +168,7 @@ export default function Home() {
             {currentPage === "mentor-groups" && <MentorDashboard view="groups" />}
             {currentPage === "mentor-agents" && <AgentCreator />}
             {currentPage === "mentor-exams" && <ExamCreator />}
+            {currentPage === "mentor-archives" && <MentorDashboard view="archives" />}
           </>
         ) : (
           <>

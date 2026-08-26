@@ -27,9 +27,9 @@ const CAMERA_PRESETS: Record<CameraMode, { scale: number, xOffset: number, yOffs
         opacity: 1,
     },
     ASSISTANT: {
-        scale: 0.65,   // AJUSTADO POR USUARIO - NO TOCAR
+        scale: 2.55,   // AJUSTADO POR USUARIO - NO TOCAR (subido de 0.65)
         xOffset: 0, // AJUSTADO POR USUARIO - NO TOCAR
-        yOffset: 400,  // AJUSTADO POR USUARIO - NO TOCAR
+        yOffset: 150,  // AJUSTADO POR USUARIO - NO TOCAR
         opacity: 1,
     },
     DIAGNOSIS: {
@@ -210,7 +210,7 @@ const AvatarDisplay = () => {
             // Centro X de la tarjeta: ancho de pantalla - 32px - 224px = app.screen.width - 256px
             const preset = CAMERA_PRESETS.GUIDE;
             const targetScale = FIXED_AVATAR_MODEL_SCALE * viewportScale * preset.scale * mobileScaleMultiplier;
-            const targetX = app.screen.width - 256; 
+            const targetX = app.screen.width - 256;
             const targetY = (app.screen.height / 2) + (preset.yOffset * viewportScale);
 
             const lerpFactor = 0.15;
@@ -632,21 +632,45 @@ const AvatarDisplay = () => {
                 const phoneticForm = (freqBands.current.high * 1.5) - (freqBands.current.mid * 1.2);
                 const mouthForm = Math.max(-1, Math.min(1, phoneticForm));
 
+                // Idle breathing oscillation
+                const idleSwayX = Math.sin(now / (isIdle ? 4000 : 2500)) * (isIdle ? 2 : 4);
+                const idleSwayY = Math.cos(now / (isIdle ? 3000 : 1800)) * (isIdle ? 1 : 2);
+
+                // Ear idle flicker
+                const earFlap = Math.sin(now / 1800) * 0.3;
+
                 const finalParams: any = {
-                    'ParamBreath': breathValue,
-                    'ParamAngleX': (Math.sin(now / (isIdle ? 4000 : 2500)) * (isIdle ? 2 : 4)) + (lookFactorX * 25) + breezeX,
-                    'ParamAngleY': (Math.cos(now / (isIdle ? 3000 : 1800)) * (isIdle ? 1 : 2)) - (lookFactorY * 15) + (cognitiveState.tension > 0.7 ? 10 : 0) + breezeY,
+                    // Tororo model uses PARAM_ prefix (not Param)
+                    'PARAM_BREATH':        breathValue,
+                    'PARAM_ANGLE_X':       idleSwayX + (lookFactorX * 25) + breezeX,
+                    'PARAM_ANGLE_Y':       idleSwayY - (lookFactorY * 15) + (cognitiveState.tension > 0.7 ? 10 : 0) + breezeY,
+                    'PARAM_ANGLE_Z':       breezeX * 0.8,
 
-                    'ParamBodyAngleX': (lookFactorX * 10) + (breezeX * 0.5),
-                    'ParamBodyAngleY': (cognitiveState.tension > 0.7 ? 5 : 0) + (breezeY * 0.3),
+                    'PARAM_BODY_ANGLE_Y':  (lookFactorX * 10) + (breezeX * 0.5),
+                    'PARAM_BODY_ANGLE_Z':  (cognitiveState.tension > 0.7 ? 5 : 0) + (breezeY * 0.3),
+                    'PARAM_BODY':          breathValue * 0.5,
 
-                    // Ojos (EyeBall X/Y) 
-                    'ParamEyeBallX': finalLookX,
-                    'ParamEyeBallY': -finalLookY,
-                    'ParamEyeLOpen': blinkProgress.current,
-                    'ParamEyeROpen': blinkProgress.current,
-                    'ParamMouthOpenY': mouthOpen,
-                    'ParamMouthForm': mouthForm
+                    // Eyes — mouse tracking
+                    'PARAM_EYE_BALL_X':    finalLookX,
+                    'PARAM_EYE_BALL_Y':   -finalLookY,
+                    'PARAM_EYE_L_OPEN':    blinkProgress.current,
+                    'PARAM_EYE_R_OPEN':    blinkProgress.current,
+                    'PARAM_EYE_FORM':      cognitiveState.tension > 0.7 ? -0.5 : 0.2,
+
+                    // Mouth — lipsync
+                    'PARAM_MOUTH_OPEN_Y':  mouthOpen,
+                    'PARAM_MOUTH_FORM':    mouthForm,
+
+                    // Ears — idle idle animation
+                    'PARAM_EAR_R':         earFlap,
+                    'PARAM_EAR_L':        -earFlap,
+
+                    // Tail — idle wag
+                    'PARAM_TAIL':          Math.sin(now / 900) * 0.6,
+
+                    // Brows — tension
+                    'PARAM_BLOW_R':        cognitiveState.tension > 0.6 ? -0.5 : earFlap * 0.3,
+                    'PARAM_BLOW_L':        cognitiveState.tension > 0.6 ? -0.5 : -earFlap * 0.3,
                 };
 
                 Object.keys(currentExpParams.current).forEach(id => {
@@ -684,14 +708,14 @@ const AvatarDisplay = () => {
                 // 250 en Intro/Guía (entre blur 220 y texto 300)
                 // 150 en Asistente (detrás del Layout 200)
                 // 350 en DIAGNOSIS (Encima de los overlays de datos z-140)
-                zIndex: isHistoryOpen 
-                    ? 40 
-                    : presence === 'GUIDE_ACTIVE' 
-                        ? (isMobile ? 311 : 250) 
-                        : presence === 'INTRO_ACTIVE' 
-                            ? 250 
-                            : presence === 'DIAGNOSIS' 
-                                ? 350 
+                zIndex: isHistoryOpen
+                    ? 40
+                    : presence === 'GUIDE_ACTIVE'
+                        ? (isMobile ? 311 : 250)
+                        : presence === 'INTRO_ACTIVE'
+                            ? 250
+                            : presence === 'DIAGNOSIS'
+                                ? 350
                                 : 150,
                 display: isModelLoaded ? 'block' : 'none',
                 pointerEvents: 'none' // Importante para no bloquear el scroll del body
