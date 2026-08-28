@@ -20,10 +20,8 @@ AREA_MAPPING = {
     "adaptabilidad": "Adaptabilidad",
     "autonomia": "Autonomía",
     "autonomía": "Autonomía",
+    "cognitivo-academico": "Cognitivo-Académico",
     "liderazgo": "Liderazgo",
-    "comunicacion": "Comunicación",
-    "comunicación": "Comunicación",
-    "cognitivo-academico": "Cognitivo-Académico"
 }
 
 

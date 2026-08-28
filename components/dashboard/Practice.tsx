@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { QuizInterface } from "../quiz/QuizInterface"
+import { LewinLeadershipTest } from "../quiz/LewinLeadershipTest"
 import { getRandomQuestions } from "../quiz/QuizData"
 import { cn } from "@/lib/utils"
 import { JourneyVisualizer } from "./JourneyVisualizer"
@@ -91,6 +92,13 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
     badge: "text-rose-400 bg-rose-400/10 border-rose-400/20",
     tab: "bg-rose-500",
     via: "via-rose-400"
+  },
+  liderazgo: {
+    color: "from-amber-400 to-yellow-600",
+    textColor: "text-amber-400",
+    badge: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    tab: "bg-amber-500",
+    via: "via-amber-400"
   }
 };
 
@@ -192,6 +200,10 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   const theme = THEMES[currentArea.id] || THEMES.ciencias
 
   const handleStartExam = (exam: any) => {
+    if (currentArea.id === "liderazgo" && exam.id === "lewin-33") {
+      setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
+      return
+    }
     const questions = getRandomQuestions(currentArea.id, exam.title, exam.questions)
     setActiveExam({ ...exam, questions, areaName: currentArea.name })
   }
@@ -254,6 +266,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   }
 
   if (activeExam) {
+    if ((activeExam as any).isLewin) {
+      return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+          <LewinLeadershipTest onExit={handleCancelExam} onComplete={() => {}} />
+        </motion.div>
+      )
+    }
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
@@ -269,7 +288,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           initialAnswers={activeExam.initialAnswers}
           initialIndex={activeExam.initialIndex}
           examId={activeExam.id}
-          mentorAgentId={activeExam.agent_id}
           onComplete={(score, answers) => {
             // Remove saved progress on completion
             localStorage.removeItem(`mentor_exam_progress_${activeExam.id}`)
@@ -303,7 +321,20 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
       <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
 
-        {/* Category locked to Mentoría — tabs removed per user request */}
+        <div className="flex gap-2 p-1 bg-white/[0.04] border border-white/10 rounded-2xl w-fit">
+          {(["mentoria", "personal", "academica"] as const).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                activeCategory === cat ? "bg-white text-black shadow" : "text-white/50 hover:text-white"
+              )}
+            >
+              {cat === "mentoria" ? "Mentoría" : cat === "personal" ? "Personal" : "Académica"}
+            </button>
+          ))}
+        </div>
 
         {/* Area Selector — solo visible en modo académico/personal */}
         {activeCategory !== 'mentoria' && (

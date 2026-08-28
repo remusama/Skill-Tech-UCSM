@@ -1,6 +1,6 @@
 import {
     Microscope, Calculator, BookMarked, Code, Stethoscope, BrainCircuit,
-    Zap, Lightbulb, Scale, RefreshCw, User, Brain
+    Zap, Lightbulb, Scale, RefreshCw, User, Brain, Crown
 } from "lucide-react"
 
 export const academicAreas = [
@@ -125,6 +125,16 @@ export const personalAreas = [
             { id: "aut-ges", title: "Autogestión del Aprendizaje", professor: "IA SkillTech", duration: "10 min", questions: 10, date: "Siempre", status: "Disponible", difficulty: 70 },
             { id: "aut-ini", title: "Iniciativa Operativa", professor: "IA SkillTech", duration: "10 min", questions: 10, date: "Siempre", status: "Disponible", difficulty: 80 },
             { id: "aut-dir", title: "Autodirección Personal", professor: "IA SkillTech", duration: "10 min", questions: 10, date: "Siempre", status: "Disponible", difficulty: 90 },
+        ],
+    },
+    {
+        id: "liderazgo",
+        name: "Liderazgo",
+        icon: Crown,
+        color: "from-amber-400 to-yellow-600",
+        textColor: "text-amber-400",
+        exams: [
+            { id: "lewin-33", title: "Test de Liderazgo — Kurt Lewin", professor: "Kurt Lewin (33 ítems A/D)", duration: "15 min", questions: 33, date: "Siempre", status: "Disponible", difficulty: 50 },
         ],
     },
 ]

@@ -14,7 +14,7 @@ from server_py.config import settings
 from server_py.chat import router as chat_router
 from server_py.chat import ws_router as ws_chat_router
 from server_py.diagnostico import router as diagnosis_router
-from server_py.diagnostico import journey_router
+from server_py.diagnostico import journey_router, leadership_router
 from server_py.eleonor import api_client as gemini_router
 from server_py.auth import router as auth_router
 from server_py.user import router as user_router
@@ -54,6 +54,7 @@ app.include_router(chat_router.router)
 app.include_router(ws_chat_router.router)
 app.include_router(diagnosis_router.router)
 app.include_router(journey_router.router)
+app.include_router(leadership_router.router)
 app.include_router(gemini_router.router)
 app.include_router(auth_router.router)
 app.include_router(user_router.router)

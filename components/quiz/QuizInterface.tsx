@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { BackgroundAnimation } from "../shared/BackgroundAnimation"
 import { submitExam, fetchUserSkills, explainQuestion } from "@/lib/api/skills"
 import { useEleonor } from "@/contexts/eleonor-context"
-import { API_BASE_URL, VOICE_PLAYBACK_ENABLED } from "@/lib/config"
+import { API_BASE_URL } from "@/lib/config"
 // Importamos el nuevo componente de diagnóstico y el grafo natural
 import { NaturalWorkflow } from "./NaturalWorkflow"
 import { DiagnosisEleonorOverlay } from "./DiagnosisEleonorOverlay"
@@ -29,7 +29,6 @@ interface QuizInterfaceProps {
   initialAnswers?: Record<number, string>
   initialIndex?: number
   examId?: number
-  mentorAgentId?: number
 }
 
 export function QuizInterface({
@@ -42,8 +41,7 @@ export function QuizInterface({
   duration: _duration,
   initialAnswers,
   initialIndex,
-  examId,
-  mentorAgentId
+  examId
 }: QuizInterfaceProps) {
   const duration = examId ? (_duration || 600) : 600;
 
@@ -316,11 +314,6 @@ export function QuizInterface({
       if (data?.explanation) {
         setExplanationText(data.explanation)
         setShowExplanationText(true)
-        if (!VOICE_PLAYBACK_ENABLED) {
-          setIsExplaining(false)
-          enterPresence('IDLE_HIDDEN')
-          return
-        }
         // Reproducir audio via endpoint de TTS ya existente
         const ttsResp = await fetch(`${API_BASE_URL}/api/tts`, {
           method: 'POST',
@@ -365,10 +358,6 @@ export function QuizInterface({
 
           source.start()
           updateAnalysis()
-        } else {
-          // The explanation is still visible in text-only mode.
-          setIsExplaining(false)
-          enterPresence('IDLE_HIDDEN')
         }
       }
     } catch (error) {
@@ -487,8 +476,7 @@ export function QuizInterface({
       examTitle: title,
       area: area,
       items: items,
-      totalTime: duration - timeRemaining,
-      ...(mentorAgentId ? { agent_id: mentorAgentId } : {})
+      totalTime: duration - timeRemaining
     }
 
     setCsatPayload(payload)

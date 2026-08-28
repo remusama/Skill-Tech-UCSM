@@ -6,7 +6,7 @@ import { useEleonor } from '@/contexts/eleonor-context'
 import { createPortal } from 'react-dom'
 import { Brain, Sparkles, TrendingUp, Target, Zap, X, Network, ArrowRight, User } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { API_BASE_URL, VOICE_PLAYBACK_ENABLED } from '@/lib/config'
+import { API_BASE_URL } from '@/lib/config'
 import { fetchUserProfile } from '@/lib/api/user'
 
 interface DiagnosisEleonorOverlayProps {
@@ -87,7 +87,6 @@ export const DiagnosisEleonorOverlay: React.FC<DiagnosisEleonorOverlayProps> = (
     }, [analysis, enterPresence, preload])
 
     const playTTS = async (text: string) => {
-        if (!VOICE_PLAYBACK_ENABLED) return
         if (!text || text === lastTextRef.current) return
         lastTextRef.current = text
 
@@ -156,10 +155,8 @@ export const DiagnosisEleonorOverlay: React.FC<DiagnosisEleonorOverlayProps> = (
                     ? `He completado tu evaluación científica, ${userName}. ${analysis.analisis_profundo} ${analysis.observaciones}`
                     : `Saludos ${userName}. Basado en tu desempeño, presento el siguiente diagnóstico: ${analysis.observaciones || ''}. Tu perfil se identifica como ${analysis.razonamiento || 'en proceso'}. Para mejorar, recomiendo enfocarte en: ${(analysis.recomendaciones || analysis.errores || []).slice(0, 3).join(', ') || 'revisión técnica'}.`)
 
-            if (VOICE_PLAYBACK_ENABLED) {
-                console.log("🗣️ Triggering TTS:", summary)
-                playTTS(summary)
-            }
+            console.log("🗣️ Triggering TTS:", summary)
+            playTTS(summary)
 
             // Auto-hide avatar after some time if requested or just ensure IDLE_HIDDEN on close
         }

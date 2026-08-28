@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEleonor } from '@/contexts/eleonor-context'
-import { API_BASE_URL, VOICE_PLAYBACK_ENABLED } from '@/lib/config'
+import { API_BASE_URL } from '@/lib/config'
 import { Input } from '@/components/ui/input'
 import { createPortal } from 'react-dom'
 
@@ -211,10 +211,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
 
     // ... (TTS Logic remains unchanged) ...
     const playTTS = async (text: string, onFinish?: () => void) => {
-        if (!VOICE_PLAYBACK_ENABLED) {
-            onFinish?.()
-            return
-        }
         if (!text || text === lastTextRef.current) return
         lastTextRef.current = text
 
@@ -317,9 +313,6 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
 
                 source.start(0)
                 updateAnalysis()
-            } else if (onFinish) {
-                // Continue the onboarding even when audio has been disabled.
-                onFinish()
             }
         } catch (e) {
             console.error("TTS Error:", e)

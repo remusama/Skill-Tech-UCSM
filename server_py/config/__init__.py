@@ -26,8 +26,5 @@ class Settings(BaseModel):
     # LLM cost control: max tokens per user per day (default 50k)
     DAILY_TOKEN_LIMIT: int = int(os.getenv("DAILY_TOKEN_LIMIT", 50000))
 
-    # Voice synthesis is opt-in while the product runs in text-only mode.
-    TTS_ENABLED: bool = os.getenv("TTS_ENABLED", "false").lower() == "true"
-
 
 settings = Settings()
