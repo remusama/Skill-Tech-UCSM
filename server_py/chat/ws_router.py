@@ -99,9 +99,10 @@ async def websocket_chat(websocket: WebSocket):
                 node_name = message_data.get("node")
                 print(f"🧠 [ANALYSIS] Request for node: {node_name}", flush=True)
                 
-                # Fetch skill data
+                # Fetch skill data - esta raro, me parece que hay que hacer una validacion con userskill para el id
                 from server_py.memoria.database import UserSkill
                 skill = db.query(UserSkill).filter(
+                    UserSkill.user_id == user_id, # <- esta seria la validacion extra
                     UserSkill.area.ilike(f"%{node_name}%")
                 ).first()
                 
