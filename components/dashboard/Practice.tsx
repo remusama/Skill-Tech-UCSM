@@ -269,6 +269,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           initialAnswers={activeExam.initialAnswers}
           initialIndex={activeExam.initialIndex}
           examId={activeExam.id}
+          mentorAgentId={activeExam.agent_id}
           onComplete={(score, answers) => {
             // Remove saved progress on completion
             localStorage.removeItem(`mentor_exam_progress_${activeExam.id}`)
