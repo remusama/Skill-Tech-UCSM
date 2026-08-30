@@ -22,6 +22,8 @@ AREA_MAPPING = {
     "autonomía": "Autonomía",
     "cognitivo-academico": "Cognitivo-Académico",
     "liderazgo": "Liderazgo",
+    "personalidad_neo": "Personalidad",
+    "personalidad": "Personalidad",
 }
 
 

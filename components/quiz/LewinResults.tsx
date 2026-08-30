@@ -2,8 +2,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BackgroundAnimation } from "../shared/BackgroundAnimation";
-import { LEWIN_TRAITS, LEWIN_STYLE_LABEL, LEWIN_STYLE_DESCRIPTION } from "@/components/exams/personales/liderazgo/kurtLewinInterpretation";
-import { LeadershipStyle } from "@/components/exams/personales/liderazgo/kurtLewinItems";
+import { LEWIN_TRAITS, LEWIN_STYLE_LABEL, LEWIN_STYLE_DESCRIPTION } from "@/components/exams/personales/psicometria/kurtLewinInterpretation";
+import { LeadershipStyle } from "@/components/exams/personales/psicometria/kurtLewinItems";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 type Props = { result: { counts: Record<string, number>; dominant: string; isTied?: boolean; offline?: boolean }; onExit?: () => void };

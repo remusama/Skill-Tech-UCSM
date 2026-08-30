@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BackgroundAnimation } from "../shared/BackgroundAnimation";
-import { kurtLewinItems } from "@/components/exams/personales/liderazgo/kurtLewinItems";
-import { scoreLewinTest, LewinAnswer } from "@/components/exams/personales/liderazgo/kurtLewinScoring";
+import { kurtLewinItems } from "@/components/exams/personales/psicometria/kurtLewinItems";
+import { scoreLewinTest, LewinAnswer } from "@/components/exams/personales/psicometria/kurtLewinScoring";
 import { LewinResults } from "./LewinResults";
 import { API_URL } from "@/lib/config";
 

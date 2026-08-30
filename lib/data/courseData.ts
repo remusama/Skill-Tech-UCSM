@@ -1,6 +1,6 @@
 import {
     Microscope, Calculator, BookMarked, Code, Stethoscope, BrainCircuit,
-    Zap, Lightbulb, Scale, RefreshCw, User, Brain, Crown
+    Zap, Lightbulb, Scale, RefreshCw, User, Brain, Crown, Heart
 } from "lucide-react"
 
 export const academicAreas = [
@@ -128,13 +128,14 @@ export const personalAreas = [
         ],
     },
     {
-        id: "liderazgo",
-        name: "Liderazgo",
-        icon: Crown,
-        color: "from-amber-400 to-yellow-600",
-        textColor: "text-amber-400",
+        id: "psicometria",
+        name: "Psicometría",
+        icon: Brain,
+        color: "from-violet-400 to-purple-600",
+        textColor: "text-violet-400",
         exams: [
             { id: "lewin-33", title: "Test de Liderazgo — Kurt Lewin", professor: "Kurt Lewin (33 ítems A/D)", duration: "15 min", questions: 33, date: "Siempre", status: "Disponible", difficulty: 50 },
+            { id: "neo-240", title: "NEO PI-R — Personalidad (240 ítems)", professor: "Costa & McCrae — requiere licencia TEA/PAR o IPIP-NEO", duration: "40 min", questions: 240, date: "Siempre", status: "Disponible", difficulty: 50 },
         ],
     },
 ]

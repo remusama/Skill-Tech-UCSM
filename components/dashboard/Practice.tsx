@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { QuizInterface } from "../quiz/QuizInterface"
 import { LewinLeadershipTest } from "../quiz/LewinLeadershipTest"
+import { NeoPiRTest } from "../quiz/NeoPiRTest"
 import { getRandomQuestions } from "../quiz/QuizData"
 import { cn } from "@/lib/utils"
 import { JourneyVisualizer } from "./JourneyVisualizer"
@@ -93,12 +94,12 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
     tab: "bg-rose-500",
     via: "via-rose-400"
   },
-  liderazgo: {
-    color: "from-amber-400 to-yellow-600",
-    textColor: "text-amber-400",
-    badge: "text-amber-400 bg-amber-400/10 border-amber-400/20",
-    tab: "bg-amber-500",
-    via: "via-amber-400"
+  psicometria: {
+    color: "from-violet-400 to-purple-600",
+    textColor: "text-violet-400",
+    badge: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+    tab: "bg-violet-500",
+    via: "via-violet-400"
   }
 };
 
@@ -200,8 +201,12 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   const theme = THEMES[currentArea.id] || THEMES.ciencias
 
   const handleStartExam = (exam: any) => {
-    if (currentArea.id === "liderazgo" && exam.id === "lewin-33") {
+    if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
       setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
+      return
+    }
+    if (currentArea.id === "psicometria" && exam.id === "neo-240") {
+      setActiveExam({ ...exam, areaName: currentArea.name, isNeo: true })
       return
     }
     const questions = getRandomQuestions(currentArea.id, exam.title, exam.questions)
@@ -270,6 +275,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
           <LewinLeadershipTest onExit={handleCancelExam} onComplete={() => {}} />
+        </motion.div>
+      )
+    }
+    if ((activeExam as any).isNeo) {
+      return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+          <NeoPiRTest onExit={handleCancelExam} />
         </motion.div>
       )
     }
