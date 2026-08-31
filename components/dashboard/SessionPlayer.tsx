@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils"
 import { BackgroundAnimation } from "../shared/BackgroundAnimation"
 import { useEleonor } from "@/contexts/eleonor-context"
 import { explainQuestion } from "@/lib/api/skills"
-import { API_BASE_URL, API_URL } from "@/lib/config"
+import { API_BASE_URL, API_URL, VOICE_PLAYBACK_ENABLED } from "@/lib/config"
 
 interface Exercise {
     id: string
@@ -189,6 +189,11 @@ export function SessionPlayer({ session, onClose, onComplete, theme }: SessionPl
                 setCachedExplanations(prev => ({ ...prev, [exerciseKey]: data.explanation }))
                 setShowTextExplanation(true)
 
+                if (!VOICE_PLAYBACK_ENABLED) {
+                    setIsExplaining(false)
+                    return
+                }
+
                 const baseUrl = API_BASE_URL
                 const ttsResp = await fetch(`${baseUrl}/api/tts`, {
                     method: 'POST',
@@ -211,6 +216,9 @@ export function SessionPlayer({ session, onClose, onComplete, theme }: SessionPl
                     audioBufferRef.current = audioBuffer
 
                     playAudio(0)
+                } else {
+                    // Keep the written explanation usable while TTS is disabled.
+                    setIsExplaining(false)
                 }
             }
         } catch (error) {

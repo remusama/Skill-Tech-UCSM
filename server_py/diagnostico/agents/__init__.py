@@ -1,16 +1,16 @@
 import asyncio
-from .judge_agent import JudgeAgent
-from .behavioral_agent import BehavioralAgent
 import json
-from .math_agent import MathAgent
-from .science_agent import ScienceAgent
-from .humanities_agent import HumanitiesAgent
-from .engineering_agent import EngineeringAgent
-from .medical_agent import MedicalAgent
+from .behavioral_agent import BehavioralAgent
 from .cognitive_agent import CognitiveAgent
-from .unified_synthesizer import UnifiedSynthesizer
-from .specialist_agent import SpecialistAgent
 from .eleonor_synthesizer import EleonorSynthesizer
+from .engineering_agent import EngineeringAgent
+from .humanities_agent import HumanitiesAgent
+from .judge_agent import JudgeAgent
+from .math_agent import MathAgent
+from .medical_agent import MedicalAgent
+from .science_agent import ScienceAgent
+from .specialist_agent import SpecialistAgent
+from .unified_synthesizer import UnifiedSynthesizer
 
 # Registry of Agents
 AGENTS = {
@@ -25,7 +25,10 @@ AGENTS = {
     "criterio": SpecialistAgent("Criterio", "ERES EL TRADUCTOR ANALÍTICO DE CRITERIO. Interpreta Z-scores y clusters en términos de análisis crítico y ética del tema evaluado."),
     "adaptabilidad": SpecialistAgent("Adaptabilidad", "ERES EL TRADUCTOR ANALÍTICO DE ADAPTABILIDAD. Interpreta Z-scores y clusters en términos de flexibilidad cognitiva del tema evaluado."),
     "autonomia": SpecialistAgent("Autonomía", "ERES EL TRADUCTOR ANALÍTICO DE AUTONOMÍA. Interpreta Z-scores y clusters en términos de autogestión e iniciativa del tema evaluado."),
-    "autonomía": SpecialistAgent("Autonomía", "ERES EL TRADUCTOR ANALÍTICO DE AUTONOMÍA. Interpreta Z-scores y clusters en términos de autogestión e iniciativa del tema evaluado.")
+    "autonomía": SpecialistAgent("Autonomía", "ERES EL TRADUCTOR ANALÍTICO DE AUTONOMÍA. Interpreta Z-scores y clusters en términos de autogestión e iniciativa del tema evaluado."),
+    "liderazgo": SpecialistAgent("Liderazgo", "ERES EL TRADUCTOR ANALÍTICO DE LIDERAZGO. Interpreta las respuestas y métricas en términos de influencia positiva, coordinación, toma de decisiones y trabajo en equipo."),
+    "comunicacion": SpecialistAgent("Comunicación", "ERES EL TRADUCTOR ANALÍTICO DE COMUNICACIÓN. Interpreta las respuestas y métricas en términos de claridad, escucha activa, coherencia y adaptación al interlocutor."),
+    "comunicación": SpecialistAgent("Comunicación", "ERES EL TRADUCTOR ANALÍTICO DE COMUNICACIÓN. Interpreta las respuestas y métricas en términos de claridad, escucha activa, coherencia y adaptación al interlocutor.")
 }
 
 
@@ -37,13 +40,27 @@ BEHAVIORAL_AGENT = BehavioralAgent()
 JUDGE_AGENT = JudgeAgent()
 
 
-async def analyze_exam(area: str, quiz_data: dict) -> dict:
+async def analyze_exam(area: str, quiz_data: dict, mentor_agent: dict = None) -> dict:
     """
     Routes the analysis request to the specialized subject agent and behavioral agent,
     then combines them using the judge agent.
     """
-    key = area.lower()
+    key = area.lower().strip()
     subject_agent = AGENTS.get(key)
+
+    # Mentor-created agents live in the database, not in the static registry.
+    # When one is attached to the submission, its own prompt takes precedence.
+    if mentor_agent:
+        agent_name = mentor_agent["name"]
+        competencies = ", ".join(mentor_agent.get("competencies") or [])
+        persona = mentor_agent.get("system_prompt") or (
+            f"Eres un evaluador experto en {agent_name}. Evalúa las competencias del estudiante "
+            "con base exclusiva en sus respuestas y telemetría."
+        )
+        if competencies:
+            persona += f"\nCOMPETENCIAS A EVALUAR: {competencies}."
+        subject_agent = SpecialistAgent(agent_name, persona)
+        print(f"🧠 [MoE] Agente de mentor conectado: {agent_name} (id={mentor_agent['id']})")
 
     if not subject_agent:
         # Fallback if area not found

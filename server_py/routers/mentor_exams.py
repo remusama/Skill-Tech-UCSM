@@ -1,35 +1,29 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from server_py.memoria.database import get_db, User
-from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorGroup, GroupStudent
+from typing import List, Optional
+from sqlalchemy.orm import Session
+from server_py.memoria.database import get_db, User, MentorGroup, GroupStudent
+from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment
+from server_py.routers.mentor import check_is_mentor
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic
 
 router = APIRouter(tags=["Mentor Exams"])
 
 
-def check_is_mentor(user_id: int, db: Session) -> User:
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(status_code=403, detail="Acceso denegado: Se requiere rol de mentor.")
-    return user
-
-
-class QuestionRequest(BaseModel):
+class QuestionItem(BaseModel):
     question: str
-    question_type: str = "text"  # "text" | "multiple_choice"
-    options: List[str] = []  # Only used when question_type == "multiple_choice"
-    order: int = 0
+    question_type: str  # "multiple_choice" | "open"
+    options: Optional[List[str]] = None
     correct_answer: Optional[str] = None
+    order: int = 0
 
 
 class CreateExamRequest(BaseModel):
     agent_id: int
     title: str
     description: Optional[str] = None
-    questions: List[QuestionRequest] = []
+    questions: List[QuestionItem]
 
 
 class AssignExamRequest(BaseModel):
@@ -175,6 +169,7 @@ async def get_student_mentor_exams(db: Session = Depends(get_db), current_user_i
                     "id": exam.id,
                     "title": exam.title,
                     "description": exam.description,
+                    "agent_id": exam.agent_id,
                     "agent_name": agent.name if agent else "Desconocido",
                     "competencies": agent.competencies if agent else [],
                     "status": assignment.status,
@@ -218,7 +213,6 @@ async def get_student_quantum_mentor(
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Returns quantum skills data for a student — accessible by mentors."""
-    from server_py.routers.mentor import check_is_mentor
     check_is_mentor(current_user_id, db)
     student = db.query(User).filter(User.id == student_id).first()
     if not student:

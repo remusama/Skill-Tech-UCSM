@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import json
 
-# Updated import to point to the new modular package
 # Updated imports to point to the new modular package
 from server_py.diagnostico.agents import analyze_exam, ELEONOR_SYNTH
 from server_py.memoria.database import get_db, UserSkill, ExamResult, EleonorHistory
+from server_py.mentoria.models import Agent
 from server_py.memoria.skills import update_user_skills, get_skill_snapshot, get_trends, AREA_MAPPING
 from server_py.diagnostico.agents.game_generator import GAME_GENERATOR
 from server_py.auth.router import get_current_user_id
@@ -39,6 +39,7 @@ class ExamSubmission(BaseModel):
     technicalSummary: Optional[str] = None
     csat_score: Optional[int] = None
     rage_clicks: Optional[int] = 0
+    agent_id: Optional[int] = None
 
 
 class GameTelemetry(BaseModel):
@@ -80,8 +81,6 @@ async def submit_exam(submission: ExamSubmission, db: Session = Depends(get_db),
     try:
         # --- ANALYTICS PIPELINE (Phase 2) ---
         from server_py.diagnostico.analytics import process_telemetry_pipeline
-        from server_py.memoria.database import UserSkill
-        from server_py.memoria.skills import AREA_MAPPING
 
         # Get baseline from UserSkill
         skill_name = AREA_MAPPING.get(submission.area.lower(), submission.area)
@@ -110,8 +109,22 @@ async def submit_exam(submission: ExamSubmission, db: Session = Depends(get_db),
         payload_for_ai = submission.dict()
         payload_for_ai["analytics_data"] = analytics_result
 
-        # 1. Analyze with AI (Synchronous for immediate feedback)
-        ai_result = await analyze_exam(submission.area, payload_for_ai)
+        # 1. Connect mentor-created agents to the diagnostic engine when present.
+        mentor_agent = None
+        if submission.agent_id is not None:
+            agent = db.query(Agent).filter(Agent.id == submission.agent_id).first()
+            if not agent:
+                raise HTTPException(status_code=422, detail="El agente de mentoría seleccionado no existe.")
+            mentor_agent = {
+                "id": agent.id,
+                "name": agent.name,
+                "system_prompt": agent.system_prompt,
+                "competencies": agent.competencies or [],
+            }
+            payload_for_ai["mentor_agent"] = mentor_agent
+
+        # 2. Analyze with AI (Synchronous for immediate feedback)
+        ai_result = await analyze_exam(submission.area, payload_for_ai, mentor_agent=mentor_agent)
 
         # --- ITEM RESPONSE THEORY (TRI) CALCULATION (Phase 3) ---
         try:
@@ -298,8 +311,8 @@ async def save_game_result(telemetry: GameTelemetry, db: Session = Depends(get_d
         db.add(new_hito)
 
         # 3. Actualizar la Skill de Adaptabilidad directamente si existe
-        adapt_skill = db.query(UserSkill).filter(UserSkill.user_id == user_id,
-                                                 UserSkill.area == "Adaptabilidad").first()
+        adapt_skill = db.query(UserSkill).filter(
+            UserSkill.user_id == user_id, UserSkill.area == "Adaptabilidad").first()
         if adapt_skill:
             # Lógica simple de actualización
             delta = (telemetry.accuracy * 5) - (telemetry.rule_adaptation_delay / 1000)
