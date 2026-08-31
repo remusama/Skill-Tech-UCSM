@@ -52,7 +52,6 @@ def get_supabase_url() -> str:
 def migrate():
     """Migra todas las tablas de SQLite a Supabase/PostgreSQL."""
     import psycopg2
-    from psycopg2.extras import execute_values
 
     print("=" * 70)
     print("  MIGRACIÓN SQLite → Supabase")
@@ -67,7 +66,7 @@ def migrate():
 
     # ── 2. Conectar a Supabase ────────────────────────────────────────────
     supabase_url = get_supabase_url()
-    print(f"✅ Conectando a Supabase...")
+    print("✅ Conectando a Supabase...")
 
     try:
         pg_conn = psycopg2.connect(supabase_url)

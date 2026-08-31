@@ -12,11 +12,13 @@ no diagnósticos definitivos. Ver IRT en irt.py para la capa matemática escalab
 
 from typing import TypedDict
 
+
 class NivelMadurez(TypedDict):
     etiqueta: str          # Ej: "Competente"
     rango_min: int         # Ej: 60
     rango_max: int         # Ej: 79
-    descripcion_breve: str # Para el frontend
+    descripcion_breve: str  # Para el frontend
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # ESCALA UNIVERSAL DE MADUREZ (aplica a todos los módulos personales)
@@ -166,6 +168,7 @@ RUBRICAS_PERSONALES = {
 # FUNCIONES DE UTILIDAD
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def get_nivel_madurez(nivel_numerico: int) -> dict:
     """
     Convierte un nivel numérico (0-100) en una etiqueta de madurez
@@ -204,9 +207,9 @@ def get_criterios_llm_para_area(area: str) -> str:
     rubrica = get_rubrica_para_area(area)
     if not rubrica:
         return ""
-    
+
     criterios = []
     for dim in rubrica.get("dimensiones", []):
         criterios.append(f"• [{dim['nombre']}]: {dim['criterios_llm']}")
-    
+
     return "\n".join(criterios)

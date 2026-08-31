@@ -1,4 +1,3 @@
-import os
 import time
 from fastapi import APIRouter, HTTPException, Body
 from openai import AsyncOpenAI
@@ -9,6 +8,7 @@ logger = get_logger("vision")
 
 router = APIRouter(prefix="/api/vision", tags=["vision"])
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
 
 @router.post("/analyze")
 async def analyze_frame(payload: dict = Body(...)):
@@ -22,20 +22,21 @@ async def analyze_frame(payload: dict = Body(...)):
             raise HTTPException(status_code=400, detail="Falta image_base64")
 
         logger.info(f"Procesando frame ({len(image_base64)} caracteres)...")
-        
+
         # Limpiar prefijo data:image/jpeg;base64, si existe
         if "," in image_base64:
             image_base64 = image_base64.split(",")[1]
 
         start_time = time.time()
-        
+
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "Analiza brevemente: expresión facial (emoción), atención y objetos clave. Máximo 20 palabras."},
+                        {"type": "text",
+                            "text": "Analiza brevemente: expresión facial (emoción), atención y objetos clave. Máximo 20 palabras."},
                         {
                             "type": "image_url",
                             "image_url": {
@@ -57,7 +58,8 @@ async def analyze_frame(payload: dict = Body(...)):
             u = response.usage
             logger.info(
                 f"Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens} | Latency: {latency:.2f}s",
-                extra={"extra_fields": {"prompt_tokens": u.prompt_tokens, "completion_tokens": u.completion_tokens, "total_tokens": u.total_tokens, "latency": latency}}
+                extra={"extra_fields": {"prompt_tokens": u.prompt_tokens,
+                                        "completion_tokens": u.completion_tokens, "total_tokens": u.total_tokens, "latency": latency}}
             )
 
         return {
@@ -68,4 +70,3 @@ async def analyze_frame(payload: dict = Body(...)):
     except Exception as e:
         logger.error(f"Error procesando visión: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
-

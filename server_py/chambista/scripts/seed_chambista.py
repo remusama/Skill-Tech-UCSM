@@ -1,3 +1,5 @@
+from server_py.chambista.models import Professional, Base
+from server_py.chambista.database import SessionLocal, engine
 import random
 import os
 import sys
@@ -5,26 +7,25 @@ import sys
 # Agrega la ruta de server_py al sys.path para poder importar los módulos
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from server_py.chambista.database import SessionLocal, engine
-from server_py.chambista.models import Professional, Skill, ProfessionalSkill, Base
 
 CATEGORIAS = [
-    "Plomería", "Electricidad", "Gasfitería", "Albañilería", "Pintura", 
-    "Carpintería", "Cerrajería", "Soldadura", "Jardinería", "Limpieza", 
-    "Aire acondicionado", "Refrigeración", "Instalación de cámaras", 
-    "Instalación de internet", "Computadoras", "Laptops", "Celulares", 
+    "Plomería", "Electricidad", "Gasfitería", "Albañilería", "Pintura",
+    "Carpintería", "Cerrajería", "Soldadura", "Jardinería", "Limpieza",
+    "Aire acondicionado", "Refrigeración", "Instalación de cámaras",
+    "Instalación de internet", "Computadoras", "Laptops", "Celulares",
     "Electrodomésticos", "Impresoras", "Muebles", "Drywall"
 ]
 
 NOMBRES = ["Carlos", "Luis", "Juan", "Maria", "Ana", "Jose", "Miguel", "Rosa", "Pedro", "Elena"]
 APELLIDOS = ["Medina", "Torres", "Perez", "Gomez", "Lopez", "Garcia", "Silva", "Vargas", "Rojas", "Flores"]
 
+
 def create_dummy_data():
     # Crear las tablas si no existen
     Base.metadata.create_all(bind=engine)
-    
+
     db = SessionLocal()
-    
+
     # Verificar si ya hay datos
     if db.query(Professional).count() > 0:
         print("Los datos ya han sido insertados anteriormente.")
@@ -41,10 +42,10 @@ def create_dummy_data():
         experiencia = random.randint(1, 20)
         precio = random.uniform(20.0, 150.0)
         rating = random.uniform(3.5, 5.0)
-        
+
         prof = Professional(
             nombre=nombre,
-            apellido=f"{apellido} {i}", # Para que no se repitan
+            apellido=f"{apellido} {i}",  # Para que no se repitan
             categoria=categoria,
             especialidad=especialidad,
             descripcion=descripcion,
@@ -63,10 +64,11 @@ def create_dummy_data():
             activo=True
         )
         db.add(prof)
-        
+
     db.commit()
     print("Datos insertados correctamente.")
     db.close()
+
 
 if __name__ == "__main__":
     create_dummy_data()

@@ -1,5 +1,6 @@
 from .base_agent import BaseAgent
 
+
 class SpecialistAgent(BaseAgent):
     def __init__(self, name: str, persona: str):
         super().__init__()

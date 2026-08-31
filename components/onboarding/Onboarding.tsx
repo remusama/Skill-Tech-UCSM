@@ -943,25 +943,25 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 className="w-full max-w-lg relative group pointer-events-auto flex flex-col items-center gap-6"
                             >
                                 <div className="relative w-full">
-                                    <Input
-                                        autoFocus
-                                        value={inputValue}
-                                        onChange={(e) => setInputValue(e.target.value)}
-                                        onKeyDown={handleKeyDown}
-                                        placeholder="Escribe aquí..."
-                                        className="bg-black/60 backdrop-blur-md border-white/10 rounded-2xl text-center text-xl h-20 focus-visible:ring-2 focus-visible:ring-cyan-500/50 transition-all placeholder:text-white/30 text-white font-medium pr-16"
-                                    />
-                                    <button
-                                        onClick={handleSend}
-                                        disabled={!inputValue.trim()}
-                                        className="absolute right-3 top-3 bottom-3 aspect-square bg-cyan-500 hover:bg-cyan-400 disabled:opacity-30 disabled:hover:bg-cyan-500 text-white rounded-xl flex items-center justify-center transition-all"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                    </button>
-                                </div>
-                                <div className="text-center animate-pulse hidden md:block">
-                                    <span className="text-[11px] uppercase tracking-[0.3em] font-bold text-cyan-400">Presiona Enter para enviar</span>
-                                </div>
+                                <Input
+                                    autoFocus
+                                    value={inputValue}
+                                    onChange={(e) => setInputValue(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Escribe aquí..."
+                                    className="bg-[#063924]/60 backdrop-blur-md border-[#d0b04d]/20 rounded-2xl text-center text-xl h-20 focus-visible:ring-2 focus-visible:ring-[#d0b04d]/50 focus-visible:border-[#d0b04d]/50 transition-all placeholder:text-[#f6f6ed]/40 text-[#f6f6ed] font-medium pr-16 outline-none"
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={!inputValue.trim()}
+                                    className="absolute right-3 top-3 bottom-3 aspect-square bg-[#d0b04d] hover:bg-[#e0c05d] disabled:opacity-30 disabled:hover:bg-[#d0b04d] text-[#063924] rounded-xl flex items-center justify-center transition-all shadow-md"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
+                            </div>
+                            <div className="text-center animate-pulse hidden md:block mt-2">
+                                <span className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#d0b04d]">Presiona Enter para enviar</span>
+                            </div>
                             </motion.div>
                         )}
                     </div>

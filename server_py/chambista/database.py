@@ -28,8 +28,10 @@ engine = create_engine(DATABASE_URL, **engine_kwargs)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 def init_chambista_db():
     Base.metadata.create_all(bind=engine)
+
 
 def get_chambista_db():
     db = SessionLocal()

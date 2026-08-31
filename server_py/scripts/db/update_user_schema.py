@@ -1,15 +1,13 @@
+from server_py.core.database import DATABASE_URL
+import sqlite3
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
-import sqlite3
-import os
-import sys
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-from server_py.core.database import BASE_DIR, DATABASE_URL
 
 def add_column_if_not_exists(cursor, table, column, definition):
     try:
@@ -20,6 +18,7 @@ def add_column_if_not_exists(cursor, table, column, definition):
             print(f"Column {column} already exists in {table}")
         else:
             print(f"Error adding {column}: {e}")
+
 
 def update_schema():
     if "sqlite" not in DATABASE_URL:
@@ -54,6 +53,7 @@ def update_schema():
     conn.commit()
     conn.close()
     print("Schema update complete.")
+
 
 if __name__ == "__main__":
     update_schema()

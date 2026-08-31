@@ -4,6 +4,7 @@ import sqlite3
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 db_file = os.path.join(BASE_DIR, "skill_tech_v2.db")
 
+
 def upgrade():
     if not os.path.exists(db_file):
         print(f"Base de datos no encontrada en {db_file}")
@@ -32,6 +33,7 @@ def upgrade():
     conn.commit()
     conn.close()
     print("Migración completada.")
+
 
 if __name__ == "__main__":
     upgrade()
