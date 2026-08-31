@@ -24,7 +24,7 @@ import { API_BASE_URL } from "@/lib/config"
 // Importar AvatarDisplay lazy para usarlo en el grid ya definido arriba
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false) 
   const [currentPage, setCurrentPage] = useState("skillmap")
   const [isLoaded, setIsLoaded] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
