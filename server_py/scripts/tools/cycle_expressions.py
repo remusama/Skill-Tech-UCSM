@@ -1,11 +1,10 @@
+import websockets
+import json
+import asyncio
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
-import asyncio
-import json
-import websockets
-import os
 
 # --- Configuración ---
 PLUGIN_NAME = "EleonorAI"
@@ -24,11 +23,14 @@ EXPRESSION_FILES = [
 ]
 
 # --- Funciones de Utilidad ---
+
+
 def cargar_token():
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, "r") as f:
             return json.load(f).get("authenticationToken")
     return None
+
 
 async def autenticar(ws, token):
     auth_request = {
@@ -52,6 +54,7 @@ async def autenticar(ws, token):
         print("❌ Fallo en la autenticación.")
         return False
 
+
 async def controlar_expresion(ws, expression_file, activar):
     status_text = "Activando" if activar else "Desactivando"
     request = {
@@ -69,6 +72,7 @@ async def controlar_expresion(ws, expression_file, activar):
     if 'Reseteando' not in status_text:
         print(f"⏯️  {status_text}: {expression_file}")
 
+
 async def resetear_expresiones(ws):
     print("\n🔄 Reseteando todas las expresiones a 'false'...")
     # Usamos un texto especial en status_text para evitar la impresión detallada
@@ -77,6 +81,8 @@ async def resetear_expresiones(ws):
     print("✅ Expresiones reseteadas.")
 
 # --- Lógica Principal ---
+
+
 async def ciclar_expresiones():
     token = cargar_token()
     if not token:

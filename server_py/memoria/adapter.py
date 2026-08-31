@@ -8,7 +8,6 @@ Controls via config.ENABLE_DB_SESSION:
 This allows a canary deploy: enable ENABLE_DB_SESSION=true in staging only, while
 production still uses the in-memory fallback until fully validated.
 """
-from typing import Optional
 from server_py.config import settings
 from server_py.core.structured_logger import get_logger
 

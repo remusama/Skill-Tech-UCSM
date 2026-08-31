@@ -144,7 +144,8 @@ async def chat_complete(
 
         except RateLimitError as e:
             wait = (2 ** attempt) + 0.5
-            logger.error(f"chat_complete: RateLimitError on attempt {attempt + 1}/{max_retries}. Retrying in {wait}s. Error: {e}")
+            logger.error(
+                f"chat_complete: RateLimitError on attempt {attempt + 1}/{max_retries}. Retrying in {wait}s. Error: {e}")
             last_error = e
             await asyncio.sleep(wait)
 

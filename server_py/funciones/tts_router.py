@@ -4,9 +4,11 @@ from .tts import generate_ssml_tts_base64
 
 router = APIRouter()
 
+
 class TTSRequest(BaseModel):
     text: str
     mode: str = "neutral_atenta"
+
 
 @router.post("/api/tts")
 async def tts_endpoint(request: TTSRequest):

@@ -1,12 +1,13 @@
 from .base_agent import BaseAgent
 
+
 class EngineeringAgent(BaseAgent):
     async def analyze(self, quiz_data: dict) -> dict:
         persona = """
         ERES EL AGENTE DE DIAGNÓSTICO DE INGENIERÍA.
         Tu función es evaluar el diseño de sistemas, optimización, y resolución estructurada de problemas técnicos,
         ajustándote al contexto del tema evaluado.
-        
+
         INSTRUCCIONES DE TRADUCCIÓN (FASE 2):
         - Usa el 'session_cluster' (ej. slow_precise, fast_unstable) provisto en ANALYTICS para interpretar el desempeño.
         - En Ingeniería, un Z-score alto en tiempo con alta precisión ('slow_precise') muestra diseño meticuloso y prevención de fallos.

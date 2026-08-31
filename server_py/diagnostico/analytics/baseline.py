@@ -11,11 +11,12 @@ def calculate_ewma_baseline(current_z_scores: dict, previous_baseline: dict = No
             "ewma_z_deletions": current_z_scores["z_deletions"],
             "session_count": 1
         }
-        
+
     # Calcular nuevo EWMA
     new_ewma_z_time = (alpha * current_z_scores["z_time"]) + ((1 - alpha) * previous_baseline.get("ewma_z_time", 0))
-    new_ewma_z_deletions = (alpha * current_z_scores["z_deletions"]) + ((1 - alpha) * previous_baseline.get("ewma_z_deletions", 0))
-    
+    new_ewma_z_deletions = (alpha * current_z_scores["z_deletions"]) + \
+        ((1 - alpha) * previous_baseline.get("ewma_z_deletions", 0))
+
     return {
         "ewma_z_time": round(new_ewma_z_time, 3),
         "ewma_z_deletions": round(new_ewma_z_deletions, 3),

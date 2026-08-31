@@ -1,7 +1,5 @@
-import json
-import asyncio
 from server_py.config.app_config import client
-from server_py.eleonor.brain import update_eleonor_state, get_behavioral_mode, map_expression
+
 
 class ChatService:
     async def stream_response(self, prompt: str, cognitive_context: str = "", history: list = []):
@@ -26,15 +24,16 @@ class ChatService:
                     delta = chunk.choices[0].delta.content or ""
                     full_content += delta
                     yield {"type": "text", "content": delta}
-                
+
                 if chunk.usage:
                     u = chunk.usage
                     print(f"📊 [ChatService] Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens}")
 
             yield {"type": "done", "content": full_content}
-            
+
         except Exception as e:
             print(f"❌ [ChatService] Error: {e}")
             yield {"type": "error", "content": str(e)}
+
 
 chat_service = ChatService()

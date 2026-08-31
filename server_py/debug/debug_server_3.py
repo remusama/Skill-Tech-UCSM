@@ -1,8 +1,8 @@
+import traceback
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-import traceback
 
 # Permitir ejecutar como script desde server_py/ o desde root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -13,9 +13,9 @@ try:
     print(">>> 1. Importing FastAPI")
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
-    
+
     print(">>> 2. Importing Routers...")
-    
+
     print("   > Importing chat")
     from routers import chat
     print("   > Importing stt")
@@ -57,7 +57,7 @@ try:
     app.include_router(eleven_tts.router)
     app.include_router(auth.router)
     app.include_router(ws_chat.router)
-    
+
     print(">>> SUCCESS: App created and configured.")
 
 except Exception as e:
