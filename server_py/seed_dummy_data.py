@@ -1,13 +1,11 @@
+import bcrypt
+import random
+from datetime import datetime, timedelta
+from server_py.memoria.database import SessionLocal, User, ExamResult, UserSkill
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
 
-from sqlalchemy.orm import Session
-from server_py.memoria.database import SessionLocal, User, ExamResult, UserSkill, Base, engine
-from datetime import datetime, timedelta
-import random
-
-import bcrypt
 
 def seed_users():
     db = SessionLocal()
@@ -27,7 +25,7 @@ def seed_users():
             db.add(teacher)
             db.commit()
             db.refresh(teacher)
-        
+
         # 2. Check if design student exists
         design_student = db.query(User).filter(User.username == "design_student").first()
         if design_student:
@@ -52,23 +50,24 @@ def seed_users():
 
         # 3. Create Diagnostic History
         areas = ["Matemáticas", "Comprensión Lectora", "Lógica", "Ciencia", "Creatividad"]
-        
+
         print("Seeding diagnostic history...")
         for i in range(5):
             days_ago = (5 - i) * 7
             timestamp = datetime.now() - timedelta(days=days_ago)
-            
+
             # Simulate progress
             base_score = 60 + (i * 5)
-            
+
             for area in areas:
                 score = min(100, base_score + random.randint(-10, 10))
-                
+
                 # Create detailed competency data for the graph
                 competencias = [
-                    {"area": area, "level": score, "razonamiento": f"Análisis de {area} nivel {i+1}.", "observaciones": "Progresión constante.", "confianza": "95%"}
+                    {"area": area, "level": score, "razonamiento": f"Análisis de {area} nivel {i + 1}.",
+                        "observaciones": "Progresión constante.", "confianza": "95%"}
                 ]
-                
+
                 for other_area in areas:
                     if other_area != area:
                         competencias.append({
@@ -137,13 +136,15 @@ def seed_users():
             db.add(skill)
 
         db.commit()
-        print(f"Success! Design student '{new_student.full_name}' (ID: {new_student.id}) created in classroom '{new_student.classroom}'.")
+        print(
+            f"Success! Design student '{new_student.full_name}' (ID: {new_student.id}) created in classroom '{new_student.classroom}'.")
 
     except Exception as e:
         db.rollback()
         print(f"Error seeding data: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_users()

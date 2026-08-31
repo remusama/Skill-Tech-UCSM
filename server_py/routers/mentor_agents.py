@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from server_py.memoria.database import get_db, User
 from server_py.mentoria.models import Agent
 from server_py.auth.router import get_current_user_id
-import datetime
 
 router = APIRouter(prefix="/api/mentor", tags=["Mentor Agents"])
 
@@ -61,15 +60,17 @@ BASE_AGENTS = [
     },
 ]
 
+
 def check_is_mentor(user_id: int, db: Session) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     if not user or user.role not in ["teacher", "admin", "mentor"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: Se requiere rol de mentor.")
     return user
 
+
 def seed_base_agents(db: Session):
     """Seeds base agent templates if they don't exist."""
-    existing = db.query(Agent).filter(Agent.is_template == True).count()
+    existing = db.query(Agent).filter(Agent.is_template.is_(True)).count()
     if existing == 0:
         for a in BASE_AGENTS:
             db.add(Agent(
@@ -82,11 +83,13 @@ def seed_base_agents(db: Session):
             ))
         db.commit()
 
+
 class CreateAgentRequest(BaseModel):
     name: str
     description: Optional[str] = None
     system_prompt: Optional[str] = None
     competencies: List[str] = []
+
 
 @router.get("/agents")
 async def list_agents(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
@@ -94,13 +97,13 @@ async def list_agents(db: Session = Depends(get_db), current_user_id: int = Depe
     Returns base template agents + agents created by any mentor (visible to all mentors).
     """
     check_is_mentor(current_user_id, db)
-    
+
     # Ensure base templates exist
     seed_base_agents(db)
-    
-    templates = db.query(Agent).filter(Agent.is_template == True).all()
-    custom = db.query(Agent).filter(Agent.is_template == False).all()
-    
+
+    templates = db.query(Agent).filter(Agent.is_template.is_(True)).all()
+    custom = db.query(Agent).filter(Agent.is_template.is_(False)).all()
+
     def agent_to_dict(a: Agent, is_mine: bool = False):
         return {
             "id": a.id,
@@ -113,11 +116,12 @@ async def list_agents(db: Session = Depends(get_db), current_user_id: int = Depe
             "is_mine": is_mine,
             "created_at": a.created_at.isoformat() if a.created_at else None
         }
-    
+
     return {
         "templates": [agent_to_dict(a) for a in templates],
         "custom": [agent_to_dict(a, is_mine=(a.creator_id == current_user_id)) for a in custom]
     }
+
 
 @router.post("/agents")
 async def create_agent(req: CreateAgentRequest, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
@@ -125,7 +129,7 @@ async def create_agent(req: CreateAgentRequest, db: Session = Depends(get_db), c
     Creates a custom agent owned by the mentor.
     """
     check_is_mentor(current_user_id, db)
-    
+
     agent = Agent(
         name=req.name,
         description=req.description,
@@ -137,7 +141,7 @@ async def create_agent(req: CreateAgentRequest, db: Session = Depends(get_db), c
     db.add(agent)
     db.commit()
     db.refresh(agent)
-    
+
     return {
         "id": agent.id,
         "name": agent.name,
@@ -145,6 +149,7 @@ async def create_agent(req: CreateAgentRequest, db: Session = Depends(get_db), c
         "competencies": agent.competencies,
         "is_template": agent.is_template
     }
+
 
 @router.get("/agents/{agent_id}")
 async def get_agent(agent_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):

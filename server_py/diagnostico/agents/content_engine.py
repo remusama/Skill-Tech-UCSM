@@ -1,11 +1,12 @@
-import os
 import json
 from .base_agent import BaseAgent
+
 
 class InterpreteAgent(BaseAgent):
     """
     Agente Interprete: Analiza el diagnóstico y diseña la estructura de la ruta.
     """
+
     def __init__(self):
         super().__init__()
         self.output_schema = """
@@ -31,7 +32,7 @@ class InterpreteAgent(BaseAgent):
         ERES EL AGENTE INTERPRETE DE SKILLTECH.
         Analizas el mapa de habilidades y el DIAGNÓSTICO DETALLADO del usuario para diseñar una ruta de 5 sesiones de ALTO IMPACTO.
         REGLAS CRÍTICAS DE ESTRUCTURA:
-        1. DIVERSIDAD OBLIGATORIA: Cada sesión DEBE tener un propósito distinto. Ejemplo: 
+        1. DIVERSIDAD OBLIGATORIA: Cada sesión DEBE tener un propósito distinto. Ejemplo:
            - Sesión 1: Nivelación y Conceptos Base.
            - Sesión 2: Aplicación Práctica Intermedia.
            - Sesión 3: Resolución de Errores Comunes (basado en diagnóstico).
@@ -42,41 +43,44 @@ class InterpreteAgent(BaseAgent):
         4. ADAPTACIÓN: Nivel <40 = "Principiante", Nivel >70 = "Avanzado".
         5. Idioma: Español. Salida: JSON estricto.
         """
-        
+
         prompt = f"""
         ÁREA OBJETIVO: {area}
         MAPA DE NIVELES: {json.dumps(skills_diagnostico)}
         DIAGNÓSTICO DETALLADO: {json.dumps(detailed_diagnosis) if detailed_diagnosis else "No disponible"}
-        
-        DISEÑA LA ESTRUCTURA DE 5 SESIONES DINÁMICAS. 
+
+        DISEÑA LA ESTRUCTURA DE 5 SESIONES DINÁMICAS.
         Asegúrate de que cada sesión tenga un 'objetivo_especifico' que resuelva un problema detectado en el diagnóstico.
         ESQUEMA: {self.output_schema}
         """
-        
+
         # Override BaseAgent's _generate to change logging style
         messages = [
             {"role": "system", "content": system},
             {"role": "user", "content": prompt}
         ]
-        
+
         response = await self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
             response_format={"type": "json_object"},
             temperature=0.3
         )
-        
+
         content = response.choices[0].message.content
         if response.usage:
             u = response.usage
-            print(f"TOKENS SKILLTECH - Interprete: Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
-            
+            print(
+                f"TOKENS SKILLTECH - Interprete: Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
+
         return json.loads(content)
+
 
 class ArquitectoAgent(BaseAgent):
     """
     Agente Arquitecto: Construye el contenido exacto basado en la ruta del Interprete.
     """
+
     def __init__(self):
         super().__init__()
         self.output_schema = """
@@ -100,7 +104,7 @@ class ArquitectoAgent(BaseAgent):
         system = """
         ERES EL AGENTE ARQUITECTO DE SKILLTECH.
         Construyes el contenido exacto basado estrictamente en la estructura del Agente Interprete.
-        
+
         REGLAS DE ORO PARA LA GENERACIÓN (IA ARQUITECTA):
         1. SIEMPRE PLANTEA UNA SITUACIÓN: El `enunciado` NO puede ser una pregunta teórica fría (ej: "¿Qué es X?"). Debe ser SIEMPRE un escenario, caso de uso o situación narrativa (ej: "Estás en una reunión y el cliente te pide X, pero notas que Y...").
         2. ANÁLISIS DE REACCIÓN OBLIGATORIO: El campo `explicacion_breve` es CRÍTICO. Debe contener un "Análisis de Reacción" (feedback) sobre por qué la respuesta es correcta o qué implica el error cometido. NUNCA lo dejes vacío.
@@ -112,32 +116,34 @@ class ArquitectoAgent(BaseAgent):
         5. COHERENCIA TÉCNICA: La `respuesta_correcta` debe coincidir exactamente con una de las `opciones`.
         6. Idioma: Español. Salida: JSON estricto.
         """
-        
+
         prompt = f"""
         PLAN DE SESIÓN (INTERPRETE): {json.dumps(plan_sesion)}
         CONTEXTO DE LA RUTA: {contexto_ruta}
-        
+
         GENERA EL CONTENIDO DE LA SESIÓN SIGUIENDO ESTE ESQUEMA: {self.output_schema}
         """
-        
+
         messages = [
             {"role": "system", "content": system},
             {"role": "user", "content": prompt}
         ]
-        
+
         response = await self.client.chat.completions.create(
             model=self.model_name,
             messages=messages,
             response_format={"type": "json_object"},
             temperature=0.4
         )
-        
+
         content = response.choices[0].message.content
         if response.usage:
             u = response.usage
-            print(f"TOKENS SKILLTECH - Arquitecto: Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
-            
+            print(
+                f"TOKENS SKILLTECH - Arquitecto: Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
+
         return json.loads(content)
+
 
 INTERPRETE = InterpreteAgent()
 ARQUITECTO = ArquitectoAgent()

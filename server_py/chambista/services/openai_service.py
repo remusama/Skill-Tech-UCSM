@@ -1,9 +1,9 @@
-import os
 import json
 from openai import OpenAI
 from server_py.config import settings
 from pydantic import BaseModel
 from typing import List
+
 
 class SearchAnalysis(BaseModel):
     categoria: str
@@ -13,6 +13,7 @@ class SearchAnalysis(BaseModel):
     tipo_trabajo: str
     skills: List[str]
     keywords: List[str]
+
 
 class OpenAIService:
     def __init__(self):
@@ -27,7 +28,7 @@ class OpenAIService:
     def analyze_problem(self, problem_description: str) -> dict:
         if not self.client:
             raise Exception("OpenAI client not initialized")
-            
+
         system_prompt = """Eres un asistente experto en clasificación de problemas de mantenimiento y servicios técnicos.
 Tu objetivo es analizar la descripción del problema del usuario y devolver un JSON estructurado con los siguientes campos:
 - categoria: (e.g. Plomería, Electricidad, Gasfitería, etc.)
@@ -41,14 +42,14 @@ RESPONDE ÚNICAMENTE CON EL JSON."""
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo", # Use an affordable model, could be gpt-4o-mini
+                model="gpt-3.5-turbo",  # Use an affordable model, could be gpt-4o-mini
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": problem_description}
                 ],
-                response_format={ "type": "json_object" }
+                response_format={"type": "json_object"}
             )
-            
+
             content = response.choices[0].message.content
             return json.loads(content)
         except Exception as e:
@@ -58,8 +59,8 @@ RESPONDE ÚNICAMENTE CON EL JSON."""
     def generate_explanation(self, problem: str, recommended_candidates: list) -> str:
         if not self.client:
             raise Exception("OpenAI client not initialized")
-            
-        system_prompt = """Eres un asistente amigable de 'Chambista'. 
+
+        system_prompt = """Eres un asistente amigable de 'Chambista'.
 El usuario ha reportado un problema y el sistema ha encontrado a los mejores profesionales.
 Tu tarea es escribir un mensaje amigable y breve (2-3 oraciones) explicando por qué estos profesionales fueron seleccionados según su problema.
 NO inventes nombres, básate en que hemos encontrado opciones con experiencia comprobada, buena reputación y precios justos.
@@ -73,10 +74,11 @@ RESPONDE SÓLO CON EL MENSAJE."""
                     {"role": "user", "content": f"Problema: {problem}\nGenera la explicación."}
                 ]
             )
-            
+
             return response.choices[0].message.content.strip()
         except Exception as e:
             print(f"Error en OpenAI generate_explanation: {e}")
             return "Se han encontrado profesionales excelentes para ayudarte con tu problema."
+
 
 openai_service = OpenAIService()

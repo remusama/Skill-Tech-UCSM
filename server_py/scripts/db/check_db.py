@@ -1,9 +1,9 @@
+import json
+from server_py.core.database import SessionLocal, ExamResult, UserSkill
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
-from server_py.core.database import SessionLocal, ExamResult, UserSkill
-import json
 
 def check_db():
     db = SessionLocal()
@@ -11,7 +11,7 @@ def check_db():
     skills = db.query(UserSkill).all()
     for s in skills:
         print(f"Area: {s.area}, Level: {s.level}")
-    
+
     print("\n--- Latest Exam Result ---")
     latest = db.query(ExamResult).order_by(ExamResult.timestamp.desc()).first()
     if latest:
@@ -20,6 +20,7 @@ def check_db():
     else:
         print("No exams found.")
     db.close()
+
 
 if __name__ == "__main__":
     check_db()
