@@ -26,7 +26,7 @@ async def get_profile(db: Session = Depends(get_db), user_id: int = Depends(get_
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+
     return {
         "id": user.id,
         "username": user.username,
@@ -48,29 +48,30 @@ async def update_profile(update_data: UserProfileUpdate, db: Session = Depends(g
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+
     # Update fields if provided
     update_dict = update_data.dict(exclude_unset=True)
     for key, value in update_dict.items():
         setattr(user, key, value)
-    
+
     db.commit()
     db.refresh(user)
     return {"status": "ok", "message": "Perfil actualizado correctamente"}
+
 
 @router.put("/settings")
 async def update_settings(settings: UserSettingsUpdate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+
     # Merge existing preferences with updates
     current_prefs = dict(user.preferences) if user.preferences else {}
     current_prefs.update(settings.preferences)
-    
+
     # SQLAlchemy requires explicit reassignment for JSON mutation tracking or use flag_modified
     user.preferences = current_prefs
-    
+
     # flag_modified(user, "preferences") # If needed, but reassignment often works
     from sqlalchemy.orm.attributes import flag_modified
     flag_modified(user, "preferences")
