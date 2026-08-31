@@ -8,6 +8,7 @@ SERVER_PY_DIR = os.path.dirname(SCRIPTS_DIR)
 ROOT_DIR = os.path.dirname(SERVER_PY_DIR)
 DB_PATH = os.path.join(ROOT_DIR, "skill_tech_v2.db")
 
+
 def migrate():
     print(f"Checking database at {DB_PATH}")
     if not os.path.exists(DB_PATH):
@@ -16,7 +17,7 @@ def migrate():
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    
+
     try:
         print("Attempting to add 'last_welcome_at' column to 'eleonor_sessions'...")
         cursor.execute("ALTER TABLE eleonor_sessions ADD COLUMN last_welcome_at TIMESTAMP")
@@ -29,6 +30,7 @@ def migrate():
             print(f"❌ Migration failed: {e}")
     finally:
         conn.close()
+
 
 if __name__ == "__main__":
     migrate()

@@ -1,8 +1,8 @@
+import sqlite3
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
 
-import sqlite3
 
 def fix_schema():
     # Database path
@@ -50,6 +50,7 @@ def fix_schema():
         print(f"❌ Unexpected error: {e}")
     finally:
         conn.close()
+
 
 if __name__ == "__main__":
     fix_schema()

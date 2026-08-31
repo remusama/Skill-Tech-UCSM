@@ -3,6 +3,7 @@ from .base_agent import BaseAgent
 from sqlalchemy.orm import Session
 from server_py.memoria.database import User, ExamResult
 
+
 class GlobalProfileAgent(BaseAgent):
     def __init__(self):
         super().__init__()
@@ -32,11 +33,12 @@ class GlobalProfileAgent(BaseAgent):
         Analiza el historial de exámenes para encontrar patrones globales y actualizar el perfil del usuario.
         """
         # Obtener los últimos 10 exámenes para encontrar patrones
-        exams = db.query(ExamResult).filter(ExamResult.user_id == user_id).order_by(ExamResult.timestamp.desc()).limit(10).all()
-        
+        exams = db.query(ExamResult).filter(ExamResult.user_id == user_id).order_by(
+            ExamResult.timestamp.desc()).limit(10).all()
+
         if not exams:
             return None
-            
+
         history_data = []
         for ex in exams:
             # Parse the JSON string to a dict
@@ -44,7 +46,7 @@ class GlobalProfileAgent(BaseAgent):
                 data_dict = json.loads(ex.data) if isinstance(ex.data, str) else (ex.data or {})
             except Exception:
                 data_dict = {}
-                
+
             # Filter out massive payload fields like 'raw_responses' and 'analytics_pipeline' to save tokens
             filtered_data = {
                 "nivel": data_dict.get("nivel"),
@@ -53,42 +55,42 @@ class GlobalProfileAgent(BaseAgent):
                 "errores": data_dict.get("errores"),
                 "observaciones": data_dict.get("observaciones")
             }
-            
+
             history_data.append({
                 "area": ex.area,
                 "score": ex.score,
                 "data": filtered_data
             })
-            
+
         system = f"""
         ERES EL MOTOR DE PATRONES COGNITIVOS GLOBALES.
         Tu objetivo es analizar el historial de evaluaciones de un usuario en múltiples áreas para:
         1. Separar las habilidades o errores que son ESPECÍFICOS de una materia (ej. no saber una fórmula de física).
         2. Identificar las habilidades o debilidades BASE que se repiten transversalmente (ej. mala comprensión lectora, razonamiento estructurado fuerte).
         3. Calcular un índice cognitivo global (0-100) y un vector de razonamiento global basado en la tendencia histórica.
-        
+
         DEBES RESPONDER EXCLUSIVAMENTE CON UN JSON VÁLIDO QUE CUMPLA ESTE ESQUEMA: {self.output_schema}
         """
-        
+
         prompt = f"HISTORIAL DE EXÁMENES (MÁS RECIENTE A MÁS ANTIGUO):\n{json.dumps(history_data, indent=2)}"
-        
+
         analysis = await self._generate(system, prompt)
-        
+
         if analysis and "error" not in analysis:
             user = db.query(User).filter(User.id == user_id).first()
             if user:
                 user.global_cognitive_index = analysis.get("global_cognitive_index", user.global_cognitive_index)
                 user.global_reasoning_vector = analysis.get("global_reasoning_vector", user.global_reasoning_vector)
-                
+
                 # Podemos guardar las fortalezas/debilidades en un nuevo campo o en el vector de razonamiento
                 if not isinstance(user.global_reasoning_vector, dict):
                     user.global_reasoning_vector = {}
-                    
+
                 user.global_reasoning_vector["patrones"] = {
                     "habilidades_base": analysis.get("habilidades_base_globales", []),
                     "debilidades_recurrentes": analysis.get("debilidades_recurrentes", []),
                     "patron_dominante": analysis.get("patron_dominante", "")
                 }
                 db.commit()
-                
+
         return analysis

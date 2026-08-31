@@ -1,6 +1,5 @@
 import os
-from redisvl.extensions.llmcache import SemanticCache
-from redis import Redis
+
 
 class RedisSkillCache:
     def __init__(self):
@@ -22,7 +21,7 @@ class RedisSkillCache:
     def check(self, prompt: str):
         if not self.llm_cache:
             return None
-        
+
         results = self.llm_cache.check(prompt=prompt)
         if results:
             print(f"[REDIS CACHE] Hit semántico para: {prompt[:50]}...")
@@ -32,12 +31,13 @@ class RedisSkillCache:
     def update(self, prompt: str, response: str):
         if not self.llm_cache:
             return
-        
+
         try:
             self.llm_cache.update(prompt=prompt, response=response)
-            print(f"[REDIS CACHE] Cache actualizado.")
+            print("[REDIS CACHE] Cache actualizado.")
         except Exception as e:
             print(f"[REDIS] Error actualizando cache: {e}")
+
 
 # Instancia global
 skill_cache = RedisSkillCache()

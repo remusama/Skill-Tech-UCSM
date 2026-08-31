@@ -3,6 +3,7 @@ from typing import Optional, Literal, Dict, Any
 from datetime import datetime
 from uuid import UUID
 
+
 class UserSummary(BaseModel):
     id: int
     email: str
@@ -10,6 +11,7 @@ class UserSummary(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class SessionSchema(BaseModel):
     id: UUID
@@ -23,6 +25,7 @@ class SessionSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
 class MessageSchema(BaseModel):
     id: UUID
     session_id: UUID
@@ -32,6 +35,7 @@ class MessageSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class DiagnosisSchema(BaseModel):
     id: UUID
@@ -44,6 +48,7 @@ class DiagnosisSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
 class MediaRefSchema(BaseModel):
     id: UUID
     bucket: str
@@ -54,6 +59,7 @@ class MediaRefSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class JobSchema(BaseModel):
     id: UUID

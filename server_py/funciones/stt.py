@@ -1,6 +1,7 @@
 import os
 import tempfile
-from server_py.config.app_config import client as client_openai, OPENAI_API_KEY
+from server_py.config.app_config import client as client_openai
+
 
 async def transcribe_audio_whisper(audio_bytes: bytes, filename: str = "temp_audio.webm"):
     """
@@ -25,7 +26,7 @@ async def transcribe_audio_whisper(audio_bytes: bytes, filename: str = "temp_aud
             transcript = await client_openai.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                language="es" # Forzamos español para mejor precisión
+                language="es"  # Forzamos español para mejor precisión
             )
 
         print(f"📝 [STT] Resultado: '{transcript.text}'")
