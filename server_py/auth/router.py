@@ -102,7 +102,8 @@ async def get_current_user_id(authorization: str = Header(None)):
 @router.post("/api/auth/register")
 async def register(req: AuthRequest, db: Session = Depends(get_db)):
     if any(c.isspace() for c in req.username) or (req.email and any(c.isspace() for c in req.email)) or any(c.isspace() for c in req.password):
-        raise HTTPException(status_code=400, detail="el nombre de usuario, correo electrónico o contraseña no deben contener espacios")
+        raise HTTPException(
+            status_code=400, detail="el nombre de usuario, correo electrónico o contraseña no deben contener espacios")
 
     if len(req.password) < 8:
         raise HTTPException(status_code=400, detail="la contraseña debe tener al menos 8 caracteres")

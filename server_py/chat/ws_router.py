@@ -124,10 +124,16 @@ async def websocket_chat(websocket: WebSocket):
             db.commit()
 
             # Load context
-            past_messages = db.query(ChatMessage).filter(ChatMessage.user_id == user_id).order_by(ChatMessage.timestamp.desc()).limit(4).all()
+            past_messages = db.query(ChatMessage).filter(ChatMessage.user_id == user_id).order_by(
+                ChatMessage.timestamp.desc()).limit(4).all()
             past_messages.reverse()
 
-            last_hito = db.query(EleonorHistory).filter(EleonorHistory.user_id == user_id).order_by(EleonorHistory.timestamp.desc()).first()
+            last_hito = (
+                db.query(EleonorHistory)
+                .filter(EleonorHistory.user_id == user_id)
+                .order_by(EleonorHistory.timestamp.desc())
+                .first()
+            )
             hilo_context = f"HILO: {last_hito.summary}" if last_hito else ""
 
             formatted_history = [{"role": msg.role, "content": msg.content} for msg in past_messages]
@@ -137,7 +143,12 @@ async def websocket_chat(websocket: WebSocket):
             cognitive_context = ""
             if is_explain_errors:
                 # Query DB for the latest exam and extract incorrect answers
-                latest_exam = db.query(ExamResult).filter(ExamResult.user_id == user_id).order_by(ExamResult.timestamp.desc()).first()
+                latest_exam = (
+                    db.query(ExamResult)
+                    .filter(ExamResult.user_id == user_id)
+                    .order_by(ExamResult.timestamp.desc())
+                    .first()
+                )
 
                 incorrect_details = []
                 if latest_exam and latest_exam.data:
@@ -176,7 +187,7 @@ async def websocket_chat(websocket: WebSocket):
                             focus_lost = tel.get("focus_lost_count", 0)
                             telemetry_str = f" (Tiempo dedicado: {time_spent:.1f}s, Borrados de texto: {deletions}, Pérdidas de foco: {focus_lost})"
 
-                        error_context += f"Pregunta {idx+1}: {err['question']}\n"
+                        error_context += f"Pregunta {idx + 1}: {err['question']}\n"
                         error_context += f"- Respuesta del usuario: \"{err['user_answer']}\"\n"
                         if telemetry_str:
                             error_context += f"- Telemetría de fricción:{telemetry_str}\n"
@@ -195,12 +206,18 @@ async def websocket_chat(websocket: WebSocket):
             elif snapshot:
                 print("⚡ [VISION] Memoria cognitiva desactivada para ahorrar tokens.")
             else:
-                latest_exam = db.query(ExamResult).filter(ExamResult.user_id == user_id).order_by(ExamResult.timestamp.desc()).first()
+                latest_exam = (
+                    db.query(ExamResult)
+                    .filter(ExamResult.user_id == user_id)
+                    .order_by(ExamResult.timestamp.desc())
+                    .first()
+                )
                 if latest_exam:
                     print(f"📊 [DB] Datos de examen encontrados para el usuario {user_id}", flush=True)
                     snapshot_data = get_skill_snapshot(db, user_id)
                     trends = get_trends(db, user_id)
-                    history_milestones = db.query(EleonorHistory).filter(EleonorHistory.user_id == user_id).order_by(EleonorHistory.timestamp.desc()).limit(5).all()
+                    history_milestones = db.query(EleonorHistory).filter(
+                        EleonorHistory.user_id == user_id).order_by(EleonorHistory.timestamp.desc()).limit(5).all()
                     history_list = [{"summary": h.summary, "signals": h.signals} for h in history_milestones]
                     cognitive_context = await generate_unified_prompt(latest_exam.data, snapshot_data, trends, history_list, session_state={
                         "valence": session.valence,
@@ -321,12 +338,14 @@ async def websocket_chat(websocket: WebSocket):
                 # Capture usage data at the end of the stream
                 if chunk.usage:
                     u = chunk.usage
-                    print(f"📊 [TOKENS] Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
+                    print(
+                        f"📊 [TOKENS] Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
 
             # 5. Fallback if tags were missing
             if not is_resp and full_content.strip():
                 print("⚠️ Tag [TEXTO] no encontrado o incompleto. Aplicando limpieza Regex intensiva.")
-                cleaned_text = re.sub(r'\[(DECISION|ANALISIS|ANALYSIS|GAME|TEXTO)\].*?(\[|$)', '', full_content, flags=re.DOTALL).strip()
+                cleaned_text = re.sub(r'\[(DECISION|ANALISIS|ANALYSIS|GAME|TEXTO)\].*?(\[|$)',
+                                      '', full_content, flags=re.DOTALL).strip()
                 cleaned_text = re.sub(r'\[.*?\]', '', cleaned_text).strip()
 
                 if cleaned_text:

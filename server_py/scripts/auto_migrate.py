@@ -113,7 +113,5 @@ def run_auto_migrations():
                     errors += 1
 
     logger.info(
-        f"[AutoMigrate] Completado - {added} agregadas, {skipped} ya existian, {errors} errores"
+        f"[AutoMigrate] Completado — {added} agregadas, {skipped} ya existían, {errors} errores"
     )
-
->>>>>>> feature/mi-trabajo-local

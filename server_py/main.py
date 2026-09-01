@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from server_py.config import settings  # noqa: E402
 
 # Modular imports
-<<<<<<< HEAD
 from server_py.chat import router as chat_router  # noqa: E402
 from server_py.chat import ws_router as ws_chat_router  # noqa: E402
 from server_py.diagnostico import router as diagnosis_router  # noqa: E402

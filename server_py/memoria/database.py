@@ -214,10 +214,10 @@ def init_db():
     from server_py.mentoria import models as _mentoria_models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
->>>>>>> feature/mi-trabajo-local

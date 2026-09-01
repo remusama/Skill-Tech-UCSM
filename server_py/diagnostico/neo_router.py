@@ -54,5 +54,6 @@ async def submit_neo(submission: NeoSubmission, db: Session = Depends(get_db), u
     domain_raw = [sum(x) for x in facet_raw]
     facets_t = [[raw_to_t(v, False, submission.gender) for v in arr] for arr in facet_raw]
     domains_t = {d: raw_to_t(domain_raw[i], True, submission.gender) for i, d in enumerate(DOMAINS)}
-    update_user_skills(db, area="personalidad_neo", ai_diagnosis={"dominios": domains_t, "facetas": facets_t, "gender": submission.gender, "raw": {"facetRaw": facet_raw, "domainRaw": domain_raw}, "observaciones": f"NEO PI-R T perfil {domains_t}"}, user_id=user_id)
+    update_user_skills(db, area="personalidad_neo", ai_diagnosis={"dominios": domains_t, "facetas": facets_t, "gender": submission.gender, "raw": {
+                       "facetRaw": facet_raw, "domainRaw": domain_raw}, "observaciones": f"NEO PI-R T perfil {domains_t}"}, user_id=user_id)
     return {"facets": facets_t, "domains": domains_t, "raw": {"facetRaw": facet_raw, "domainRaw": domain_raw}, "gender": submission.gender}
