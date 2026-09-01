@@ -7,7 +7,6 @@ from server_py.auth.router import get_current_user_id
 
 router = APIRouter(prefix="/api/user", tags=["User"])
 
-
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     bio: Optional[str] = None
@@ -19,10 +18,8 @@ class UserProfileUpdate(BaseModel):
     avatar_url: Optional[str] = None
     email: Optional[str] = None
 
-
 class UserSettingsUpdate(BaseModel):
     preferences: Dict[str, Any]
-
 
 @router.get("/profile")
 async def get_profile(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
@@ -45,7 +42,6 @@ async def get_profile(db: Session = Depends(get_db), user_id: int = Depends(get_
         "preferences": user.preferences,
         "created_at": user.created_at
     }
-
 
 @router.put("/profile")
 async def update_profile(update_data: UserProfileUpdate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):

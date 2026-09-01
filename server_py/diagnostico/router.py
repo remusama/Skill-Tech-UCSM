@@ -8,7 +8,6 @@ import json
 # Updated imports to point to the new modular package
 from server_py.diagnostico.agents import analyze_exam, ELEONOR_SYNTH
 from server_py.memoria.database import get_db, UserSkill, ExamResult, EleonorHistory
-from server_py.mentoria.models import Agent
 from server_py.memoria.skills import update_user_skills, get_skill_snapshot, get_trends, AREA_MAPPING
 from server_py.diagnostico.agents.game_generator import GAME_GENERATOR
 from server_py.auth.router import get_current_user_id
@@ -39,7 +38,6 @@ class ExamSubmission(BaseModel):
     technicalSummary: Optional[str] = None
     csat_score: Optional[int] = None
     rage_clicks: Optional[int] = 0
-    agent_id: Optional[int] = None
 
 
 class GameTelemetry(BaseModel):
@@ -108,24 +106,10 @@ async def submit_exam(submission: ExamSubmission, db: Session = Depends(get_db),
         # Construimos un dict que pasaremos al LLM, inyectándole la analítica
         payload_for_ai = submission.dict()
         payload_for_ai["analytics_data"] = analytics_result
-
-        # 1. Connect mentor-created agents to the diagnostic engine when present.
-        mentor_agent = None
-        if submission.agent_id is not None:
-            agent = db.query(Agent).filter(Agent.id == submission.agent_id).first()
-            if not agent:
-                raise HTTPException(status_code=422, detail="El agente de mentoría seleccionado no existe.")
-            mentor_agent = {
-                "id": agent.id,
-                "name": agent.name,
-                "system_prompt": agent.system_prompt,
-                "competencies": agent.competencies or [],
-            }
-            payload_for_ai["mentor_agent"] = mentor_agent
-
-        # 2. Analyze with AI (Synchronous for immediate feedback)
-        ai_result = await analyze_exam(submission.area, payload_for_ai, mentor_agent=mentor_agent)
-
+        
+        # 1. Analyze with AI (Synchronous for immediate feedback)
+        ai_result = await analyze_exam(submission.area, payload_for_ai)
+        
         # --- ITEM RESPONSE THEORY (TRI) CALCULATION (Phase 3) ---
         try:
             from server_py.diagnostico.analytics.irt import estimate_latent_ability

@@ -1,6 +1,6 @@
 import {
     Microscope, Calculator, BookMarked, Code, Stethoscope, BrainCircuit,
-    Zap, Lightbulb, Scale, RefreshCw, User, Brain
+    Zap, Lightbulb, Scale, RefreshCw, User, Brain, Crown, Heart
 } from "lucide-react"
 
 export const academicAreas = [
@@ -125,6 +125,17 @@ export const personalAreas = [
             { id: "aut-ges", title: "Autogestión del Aprendizaje", professor: "IA SkillTech", duration: "10 min", questions: 10, date: "Siempre", status: "Disponible", difficulty: 70 },
             { id: "aut-ini", title: "Iniciativa Operativa", professor: "IA SkillTech", duration: "10 min", questions: 10, date: "Siempre", status: "Disponible", difficulty: 80 },
             { id: "aut-dir", title: "Autodirección Personal", professor: "IA SkillTech", duration: "10 min", questions: 10, date: "Siempre", status: "Disponible", difficulty: 90 },
+        ],
+    },
+    {
+        id: "psicometria",
+        name: "Psicometría",
+        icon: Brain,
+        color: "from-violet-400 to-purple-600",
+        textColor: "text-violet-400",
+        exams: [
+            { id: "lewin-33", title: "Test de Liderazgo — Kurt Lewin", professor: "Kurt Lewin (33 ítems A/D)", duration: "15 min", questions: 33, date: "Siempre", status: "Disponible", difficulty: 50 },
+            { id: "neo-240", title: "NEO PI-R — Personalidad (240 ítems)", professor: "Costa & McCrae — requiere licencia TEA/PAR o IPIP-NEO", duration: "40 min", questions: 240, date: "Siempre", status: "Disponible", difficulty: 50 },
         ],
     },
 ]

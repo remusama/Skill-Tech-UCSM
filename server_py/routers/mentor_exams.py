@@ -169,7 +169,6 @@ async def get_student_mentor_exams(db: Session = Depends(get_db), current_user_i
                     "id": exam.id,
                     "title": exam.title,
                     "description": exam.description,
-                    "agent_id": exam.agent_id,
                     "agent_name": agent.name if agent else "Desconocido",
                     "competencies": agent.competencies if agent else [],
                     "status": assignment.status,
