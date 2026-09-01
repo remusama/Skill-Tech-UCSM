@@ -150,6 +150,7 @@ const AvatarDisplay = () => {
     }, [presence, currentPage, isGuideActive, isMobile])
 
     const cameraMode = getCameraMode();
+    const isPip = cameraMode === 'DIAGNOSIS';
 
     const updateCameraLerp = useCallback((app: any, model: any) => {
         const vh = window.innerHeight;
@@ -692,7 +693,7 @@ const AvatarDisplay = () => {
         setIsMounted(true);
     }, []);
 
-    const isPip = cameraMode === 'DIAGNOSIS';
+
 
     const content = (
         <div

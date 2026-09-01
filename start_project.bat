@@ -29,14 +29,17 @@ cd /d "%project_root%"
 IF "%mode%"=="2" GOTO MODO_RED
 
 :MODO_LOCAL
-ECHO [1/3] Iniciando Next.js en MODO LOCAL...
-START "SkillTech Frontend" cmd /k "npm run dev"
+ECHO [1/3] Iniciando Next.js en MODO LOCAL (Escuchando en 0.0.0.0)...
+ECHO Accesible localmente en: http://localhost:3000
+ECHO Accesible en tu red local en: http://%LOCAL_IP%:3000
+START "SkillTech Frontend" cmd /k "npx next dev --webpack --hostname 0.0.0.0"
 GOTO SIGUIENTE_PASO
+
 
 :MODO_RED
 ECHO [1/3] Iniciando Next.js en MODO RED (0.0.0.0)...
 ECHO Tu IP para el movil: http://%LOCAL_IP%:3000
-START "SkillTech Frontend RED" cmd /k "npx next dev --hostname 0.0.0.0"
+START "SkillTech Frontend RED" cmd /k "npx next dev --webpack --hostname 0.0.0.0"
 GOTO SIGUIENTE_PASO
 
 :SIGUIENTE_PASO

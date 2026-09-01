@@ -86,6 +86,7 @@ class User(Base):
     role = Column(String, default="student")  # student, teacher, admin
     school = Column(String, nullable=True)  # E.g. "Francisco Mostajo"
     classroom = Column(String, nullable=True)  # E.g. "5º B"
+    secure_token = Column(String, unique=True, index=True, nullable=True)
 
     # Settings / Preferences
     preferences = Column(JSON, default={
@@ -213,10 +214,10 @@ def init_db():
     from server_py.mentoria import models as _mentoria_models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
-
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+>>>>>>> feature/mi-trabajo-local

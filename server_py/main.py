@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from server_py.config import settings  # noqa: E402
 
 # Modular imports
+<<<<<<< HEAD
 from server_py.chat import router as chat_router  # noqa: E402
 from server_py.chat import ws_router as ws_chat_router  # noqa: E402
 from server_py.diagnostico import router as diagnosis_router  # noqa: E402
@@ -23,6 +24,7 @@ from server_py.diagnostico import gamification_router, voice_router  # noqa: E40
 from server_py.routers import mentor  # noqa: E402
 from server_py.routers import mentor_agents  # noqa: E402
 from server_py.routers import mentor_exams  # noqa: E402
+from server_py.routers import attendance  # noqa: E402
 from server_py.memoria.database import init_db  # noqa: E402
 from server_py.scripts.auto_migrate import run_auto_migrations  # noqa: E402
 
@@ -62,6 +64,7 @@ app.include_router(voice_router.router)
 app.include_router(mentor.router)
 app.include_router(mentor_agents.router)
 app.include_router(mentor_exams.router)
+app.include_router(attendance.router)
 
 
 # Simple Health check

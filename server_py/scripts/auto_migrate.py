@@ -54,6 +54,7 @@ MIGRATIONS = [
     ("users", "role", "VARCHAR DEFAULT 'student'", "VARCHAR DEFAULT 'student'"),
     ("users", "school", "VARCHAR", "VARCHAR"),
     ("users", "classroom", "VARCHAR", "VARCHAR"),
+    ("users", "secure_token", "VARCHAR", "VARCHAR"),
     # ── Preferences ──────────────────────────────────────────────────────
     ("users", "preferences", "JSONB", "JSON"),
     # ── UserSkills extras ────────────────────────────────────────────────
@@ -98,7 +99,7 @@ def run_auto_migrations():
                 sql = f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
                 conn.execute(text(sql))
                 conn.commit()
-                logger.info(f"[AutoMigrate] ✅ {table}.{column} ({col_type}) agregada")
+                logger.info(f"[AutoMigrate] OK: {table}.{column} ({col_type}) agregada")
                 added += 1
 
             except Exception as e:
@@ -108,9 +109,11 @@ def run_auto_migrations():
                 if "duplicate column" in err_str or "already exists" in err_str:
                     skipped += 1
                 else:
-                    logger.warning(f"[AutoMigrate] ⚠️  {table}.{column}: {e}")
+                    logger.warning(f"[AutoMigrate] WARNING: {table}.{column}: {e}")
                     errors += 1
 
     logger.info(
-        f"[AutoMigrate] Completado — {added} agregadas, {skipped} ya existían, {errors} errores"
+        f"[AutoMigrate] Completado - {added} agregadas, {skipped} ya existian, {errors} errores"
     )
+
+>>>>>>> feature/mi-trabajo-local
