@@ -8,16 +8,20 @@ from server_py.auth.router import get_current_user_id
 
 router = APIRouter(prefix="/api/diagnosis/leadership", tags=["Leadership"])
 
+
 class LewinAnswer(BaseModel):
     itemId: int
     value: str
 
+
 class LewinSubmission(BaseModel):
     answers: List[LewinAnswer]
 
-ESTILO_1 = {1,4,7,10,13,16,19,22,25,28,31}
-ESTILO_2 = {2,5,8,11,14,17,20,23,26,29,32}
-ESTILO_3 = {3,6,9,12,15,18,21,24,27,30,33}
+
+ESTILO_1 = {1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31}
+ESTILO_2 = {2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32}
+ESTILO_3 = {3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33}
+
 
 @router.post("/submit")
 async def submit_lewin_test(submission: LewinSubmission, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):

@@ -23,7 +23,7 @@ class Settings(BaseModel):
     # ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000") # <- testeo
     # para esto hay que agregar el dominio real en el .env, osea ALLOWED_ORIGINS=https://...
     # estan avisado xd
-    
+
     # Session state config: true enables database session state, false uses local state.py fallback
     ENABLE_DB_SESSION: bool = os.getenv("ENABLE_DB_SESSION", "false").lower() == "true"
 

@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from server_py.memoria.database import get_db, User, MentorGroup, GroupStudent
-from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment
+from server_py.memoria.database import get_db, User
+from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorGroup, GroupStudent
 from server_py.routers.mentor import check_is_mentor
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic

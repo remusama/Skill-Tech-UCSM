@@ -106,10 +106,10 @@ async def submit_exam(submission: ExamSubmission, db: Session = Depends(get_db),
         # Construimos un dict que pasaremos al LLM, inyectándole la analítica
         payload_for_ai = submission.dict()
         payload_for_ai["analytics_data"] = analytics_result
-        
+
         # 1. Analyze with AI (Synchronous for immediate feedback)
         ai_result = await analyze_exam(submission.area, payload_for_ai)
-        
+
         # --- ITEM RESPONSE THEORY (TRI) CALCULATION (Phase 3) ---
         try:
             from server_py.diagnostico.analytics.irt import estimate_latent_ability
