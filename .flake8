@@ -1,0 +1,12 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E501, E203, W503
+exclude =
+    .git,
+    __pycache__,
+    .next,
+    node_modules,
+    venv,
+    build,
+    dist,
+    server_py/tests

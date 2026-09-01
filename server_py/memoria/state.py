@@ -1,9 +1,9 @@
 # Definición del Estado del Agente
 
 eleonor_state = {
-    "valence": "neutra", 
-    "tension": 0.5,      
-    "engagement": 0.5    
+    "valence": "neutra",
+    "tension": 0.5,
+    "engagement": 0.5
 }
 
 # Memoria de Fricción y Límites
@@ -13,8 +13,8 @@ eleonor_friction = {
     "emotional_volatility": 0.0
 }
 
-eleonor_boundary = "none" # none | warning | hold | close
-last_diagnosis = None # Almacena el último JSON de diagnóstico de Gemini Flash
+eleonor_boundary = "none"  # none | warning | hold | close
+last_diagnosis = None  # Almacena el último JSON de diagnóstico de Gemini Flash
 
 # Señales de Gemini (Capa 1) para uso en Personalidad (Capa 2)
 gemini_signals = {
@@ -27,7 +27,7 @@ gemini_signals = {
 # Modelo de Uso (Estadístico y Frío)
 user_usage_model = {
     "avg_clarity_score": 0.5,
-    "response_density_pref": "medium", # short | medium | detailed
+    "response_density_pref": "medium",  # short | medium | detailed
     "structure_adherence": 0.5
 }
 

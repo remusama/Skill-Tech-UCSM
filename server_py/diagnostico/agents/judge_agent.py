@@ -2,6 +2,7 @@ import json
 from .base_agent import BaseAgent
 from .rubrica_base import get_nivel_madurez, get_criterios_llm_para_area
 
+
 class JudgeAgent(BaseAgent):
     def __init__(self):
         super().__init__()
@@ -68,7 +69,7 @@ Utiliza estos criterios para guiar tu evaluación de las respuestas:
         Se te han entregado dos reportes sobre el mismo examen de un evaluado:
         1. Reporte Conceptual (experto en la materia).
         2. Reporte Conductual (experto en telemetría y esfuerzo).
-        
+
         TU MISIÓN:
         Fusionar ambos reportes y emitir un perfil orientativo final.
         - Preserva y propaga la `bloom_matrix` y los `graded_items` del Reporte Conceptual.
@@ -90,17 +91,17 @@ Utiliza estos criterios para guiar tu evaluación de las respuestas:
 
         DEBES RESPONDER EXCLUSIVAMENTE CON UN JSON VÁLIDO QUE CUMPLA ESTE ESQUEMA: {self.output_schema}
         """
-        
+
         prompt = f"""
         [REPORTE CONCEPTUAL]:
         {json.dumps(subject_analysis, indent=2)}
-        
+
         [REPORTE CONDUCTUAL]:
         {json.dumps(behavioral_analysis, indent=2)}
-        
+
         Emite tu perfil orientativo final en JSON.
         """
-        
+
         result = await self._generate(system, prompt)
 
         # Capa de seguridad: si el LLM no llenó nivel_etiqueta/nivel_rango, lo calculamos en Python
@@ -115,7 +116,7 @@ Utiliza estos criterios para guiar tu evaluación de las respuestas:
             # Agregar siempre la descripción orientativa y nota de incertidumbre
             result["nivel_descripcion_orientativa"] = madurez["descripcion_orientativa"]
             result["nota_incertidumbre"] = madurez["nota_incertidumbre"]
-            
+
             print(f"📊 [MADUREZ] {result.get('area', area)} → {result['nivel_etiqueta']} (Rango estimado: {result['nivel_rango']}) | Confianza: {result.get('confianza_score', '?')}")
 
         return result

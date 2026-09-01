@@ -12,7 +12,46 @@ import json
 router = APIRouter()
 
 SECRET_KEY = os.environ.get("JWT_SECRET", "super-secret-key-eleonor")
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "JWT_SECRET no está configurado. Define una clave secreta fuerte y aleatoria "
+        "en la variable de entorno JWT_SECRET antes de iniciar el backend "
+        "(ej: python -c \"import secrets; print(secrets.token_hex(32))\")."
+    )
+
 ALGORITHM = "HS256"
+
+
+# Clave para permitir el auto-registro como docente. Debe configurarse por entorno;
+# si no está presente, usa fallback "87654321" para desarrollo.
+TEACHER_REGISTRATION_KEY = os.environ.get("TEACHER_REGISTRATION_KEY", "87654321")
+
+# Roles que un usuario puede auto-asignarse en /api/auth/register o /api/auth/google. "admin" y "mentor" NUNCA se asignan desde estos endpoints públicos.
+PUBLIC_SELF_ASSIGNABLE_ROLES = {"student", "teacher"}
+
+
+# Valida que el rol solicitado por un usuario no autenticado sea uno que puede auto-asignarse, y que si pide 'teacher' presente la clave correcta
+def _validate_and_resolve_role(requested_role: str, teacher_key: str = None) -> str:
+    role = (requested_role or "student").strip().lower()
+
+    if role not in PUBLIC_SELF_ASSIGNABLE_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail="El rol solicitado no está permitido para el auto-registro."
+        )
+
+    if role == "teacher":
+        if not TEACHER_REGISTRATION_KEY:
+            raise HTTPException(
+                status_code=403,
+                detail="El registro de docentes no está disponible en este momento."
+            )
+        if teacher_key != TEACHER_REGISTRATION_KEY:
+            raise HTTPException(status_code=400, detail="Contraseña de docente incorrecta")
+
+    return role
+
 
 class AuthRequest(BaseModel):
     username: str
@@ -21,6 +60,8 @@ class AuthRequest(BaseModel):
     school: str = None
     classroom: str = None
     role: str = "student"
+    teacher_key: str = None
+
 
 class LoginRequest(BaseModel):
     username: str
@@ -28,15 +69,19 @@ class LoginRequest(BaseModel):
     role: str = "student"
     teacher_key: str = None
 
+
 class GoogleAuthRequest(BaseModel):
     token: str
     role: str = "student"
+    teacher_key: str = None
+
 
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.datetime.utcnow() + datetime.timedelta(days=7)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 async def get_current_user_id(authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
@@ -53,69 +98,81 @@ async def get_current_user_id(authorization: str = Header(None)):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
+
 @router.post("/api/auth/register")
 async def register(req: AuthRequest, db: Session = Depends(get_db)):
     if any(c.isspace() for c in req.username) or (req.email and any(c.isspace() for c in req.email)) or any(c.isspace() for c in req.password):
-        raise HTTPException(status_code=400, detail="el nombre de usuario, correo electrónico o contraseña no deben contener espacios")
-        
+        raise HTTPException(
+            status_code=400, detail="el nombre de usuario, correo electrónico o contraseña no deben contener espacios")
+
+    if len(req.password) < 8:
+        raise HTTPException(status_code=400, detail="la contraseña debe tener al menos 8 caracteres")
+
+    # Valida y resuelve el rol de forma segura: nunca confiar directamente en req.role
+    resolved_role = _validate_and_resolve_role(req.role, req.teacher_key)
+
     # Check if user exists by username
     existing_user = db.query(User).filter(User.username == req.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="el nombre de usuario ya está en uso")
-    
+
     # Check if email exists
     if req.email:
         existing_email = db.query(User).filter(User.email == req.email).first()
         if existing_email:
             raise HTTPException(status_code=400, detail="el correo electrónico ya está registrado")
-    
+
     hashed = bcrypt.hashpw(req.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     new_user = User(
-        username=req.username, 
-        email=req.email, 
+        username=req.username,
+        email=req.email,
         hashed_password=hashed,
         school=req.school,
         classroom=req.classroom,
-        role=req.role
+        role=resolved_role
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     # Initialize Eleonor session for this user
     session = EleonorSession(id=f"sess_{new_user.id}", user_id=new_user.id)
     db.add(session)
     db.commit()
-    
+
     return {"status": "ok", "user_id": new_user.id}
+
 
 @router.post("/api/auth/login")
 async def login(req: LoginRequest, db: Session = Depends(get_db)):
-    if req.role == "teacher" and req.teacher_key != "87654321":
-        raise HTTPException(status_code=400, detail="Contraseña de docente incorrecta")
+    # aqui me parece que has estado seteando al profesor, razon del cambio
+    if req.role == "teacher":
+        if not TEACHER_REGISTRATION_KEY or req.teacher_key != TEACHER_REGISTRATION_KEY:
+            raise HTTPException(status_code=400, detail="Contraseña de docente incorrecta")
 
     # Intentar buscar por nombre de usuario o por email y rol
     user = db.query(User).filter(
         (User.username == req.username) | (User.email == req.username),
         User.role == req.role
     ).first()
-    
+
     if not user:
         raise HTTPException(status_code=400, detail="Credenciales inválidas o rol incorrecto")
-    
+
     if not bcrypt.checkpw(req.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
         raise HTTPException(status_code=400, detail="Credenciales inválidas")
-    
+
     token = create_access_token({"user_id": user.id, "username": user.username})
     return {
-        "token": token, 
+        "token": token,
         "user": {
-            "id": user.id, 
+            "id": user.id,
             "username": user.username,
             "has_onboarded": bool(user.has_onboarded),
             "role": user.role
         }
     }
+
 
 @router.post("/api/auth/google")
 async def google_login(req: GoogleAuthRequest, db: Session = Depends(get_db)):
@@ -143,12 +200,15 @@ async def google_login(req: GoogleAuthRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
+        # Valida y resuelve el rol de forma segura antes de crear la cuenta
+        resolved_role = _validate_and_resolve_role(req.role, req.teacher_key)
+
         # Registrar un usuario nuevo
         base_username = email.split("@")[0].replace(".", "").replace("-", "").replace("_", "")
         base_username = "".join(c for c in base_username if c.isalnum())
         if not base_username:
             base_username = "user"
-            
+
         username = base_username
         suffix = 1
         while db.query(User).filter(User.username == username).first():
@@ -164,7 +224,7 @@ async def google_login(req: GoogleAuthRequest, db: Session = Depends(get_db)):
             username=username,
             email=email,
             hashed_password=hashed,
-            role=req.role,
+            role=resolved_role,  # para que concuerde con los datos
             full_name=google_data.get("name"),
             avatar_url=google_data.get("picture"),
             has_onboarded=0
@@ -190,12 +250,13 @@ async def google_login(req: GoogleAuthRequest, db: Session = Depends(get_db)):
         }
     }
 
+
 @router.post("/api/auth/onboarding_complete")
 async def onboarding_complete(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+
     user.has_onboarded = 1
     db.commit()
     return {"status": "ok"}

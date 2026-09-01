@@ -17,14 +17,16 @@ const ResultsPage = dynamic(() => import("@/components/quiz/ResultsPage").then(m
 const MentorDashboard = dynamic(() => import("@/components/mentor/MentorDashboard").then(mod => mod.MentorDashboard), { ssr: false })
 const AgentCreator = dynamic(() => import("@/components/mentor/AgentCreator").then(mod => mod.AgentCreator), { ssr: false })
 const ExamCreator = dynamic(() => import("@/components/mentor/ExamCreator").then(mod => mod.ExamCreator), { ssr: false })
+const MentorAttendance = dynamic(() => import("@/components/mentor/MentorAttendance").then(mod => mod.MentorAttendance), { ssr: false })
 const AvatarDisplay = dynamic(() => import("@/components/avatar/AvatarDisplay"), { ssr: false })
+
 import { useEleonor } from "@/contexts/eleonor-context"
 import { API_BASE_URL } from "@/lib/config"
 
 // Importar AvatarDisplay lazy para usarlo en el grid ya definido arriba
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false) 
   const [currentPage, setCurrentPage] = useState("skillmap")
   const [isLoaded, setIsLoaded] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -42,12 +44,16 @@ export default function Home() {
       // Verificar si ya completó el onboarding
       const userStr = localStorage.getItem("eleonor_user")
       if (userStr) {
-        const user = JSON.parse(userStr)
-        setUserRole(user.role || "student")
-        if (user.has_onboarded || user.role === "teacher") {
-          setShowOnboarding(false)
-        } else {
-          setShowOnboarding(true)
+        try {
+          const user = JSON.parse(userStr)
+          setUserRole(user.role || "student")
+          if (user.has_onboarded || user.role === "teacher") {
+            setShowOnboarding(false)
+          } else {
+            setShowOnboarding(true)
+          }
+        } catch (e) {
+          console.error("Error parsing user profile:", e)
         }
       }
     }
@@ -77,9 +83,13 @@ export default function Home() {
       // Resetear flag en localStorage para que el onboarding fluya completamente
       const userStr = localStorage.getItem("eleonor_user")
       if (userStr) {
-        const user = JSON.parse(userStr)
-        user.has_onboarded = false
-        localStorage.setItem("eleonor_user", JSON.stringify(user))
+        try {
+          const user = JSON.parse(userStr)
+          user.has_onboarded = false
+          localStorage.setItem("eleonor_user", JSON.stringify(user))
+        } catch (e) {
+          console.error("Error restarting onboarding:", e)
+        }
       }
       setShowOnboarding(true)
     }
@@ -104,12 +114,17 @@ export default function Home() {
     // Verificar si el usuario ya hizo el onboarding antes de mostrarlo
     const userStr = localStorage.getItem("eleonor_user")
     if (userStr) {
-      const user = JSON.parse(userStr)
-      setUserRole(user.role || "student")
-      if (!user.has_onboarded && user.role !== "teacher") {
+      try {
+        const user = JSON.parse(userStr)
+        setUserRole(user.role || "student")
+        if (!user.has_onboarded && user.role !== "teacher") {
+          setShowOnboarding(true)
+        } else {
+          setShowOnboarding(false)
+        }
+      } catch (e) {
+        console.error("Error parsing user role on login:", e)
         setShowOnboarding(true)
-      } else {
-        setShowOnboarding(false)
       }
     } else {
       setShowOnboarding(true)
@@ -136,9 +151,13 @@ export default function Home() {
 
       // Actualizar localStorage localmente para evitar re-triggers en esta sesión
       if (userStr) {
-        const user = JSON.parse(userStr)
-        user.has_onboarded = true
-        localStorage.setItem("eleonor_user", JSON.stringify(user))
+        try {
+          const user = JSON.parse(userStr)
+          user.has_onboarded = true
+          localStorage.setItem("eleonor_user", JSON.stringify(user))
+        } catch (e) {
+          console.error("Error parsing user role on onboarding complete:", e)
+        }
       }
     } catch (err) {
       console.error("Error al marcar onboarding como completo:", err)
@@ -164,11 +183,13 @@ export default function Home() {
         {userRole === "teacher" ? (
         <>
             {(currentPage === "mentor-dashboard" || currentPage === "skillmap") && <MentorDashboard view="dashboard" />}
+            {currentPage === "mentor-attendance" && <MentorAttendance />}
             {currentPage === "mentor-students" && <MentorDashboard view="students" />}
             {currentPage === "mentor-groups" && <MentorDashboard view="groups" />}
             {currentPage === "mentor-agents" && <AgentCreator />}
             {currentPage === "mentor-exams" && <ExamCreator />}
             {currentPage === "mentor-archives" && <MentorDashboard view="archives" />}
+
           </>
         ) : (
           <>

@@ -164,7 +164,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
 
     const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login"
     const body = isRegister
-      ? { username: cleanUsername, password, email: cleanEmail, school, classroom, role: isTeacher ? "teacher" : "student" }
+      ? { username: cleanUsername, password, email: cleanEmail, school, classroom, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
       : { username: cleanUsername, password, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
 
     const baseUrl = API_BASE_URL
@@ -207,13 +207,13 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0B0121] p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#dce8a0] to-[#a3ca02] p-4 relative overflow-hidden">
       {/* Background Particles */}
       <Particles
         className="absolute inset-0 pointer-events-none"
         quantity={200}
         ease={80}
-        color="#B500D1"
+        color="#f6f6ed"
         refresh={false}
       />
 
@@ -225,16 +225,16 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
               src="/new-logo.png"
               alt="SkillMeter Logo"
               fill
-              className="object-contain drop-shadow-[0_0_20px_rgba(181,0,209,0.6)]"
+              className="object-contain drop-shadow-[0_0_20px_rgba(208,176,77,0.6)]"
             />
           </div>
-          <h1 className="text-5xl font-black bg-gradient-to-r from-[#B500D1] via-[#D100B5] to-[#FFFFFF] bg-clip-text text-transparent tracking-tighter">
+          <h1 className="text-5xl font-black bg-gradient-to-r from-[#0d971f] via-[#d0b04d] to-[#d0b04d] bg-clip-text text-transparent tracking-tighter">
             SkillTech
           </h1>
-          <p className="text-[#B500D1]/60 text-[10px] uppercase tracking-[0.4em] font-black mt-2">Learning Ecosystem</p>
+          <p className="text-[#0d971f]/60 text-[10px] uppercase tracking-[0.4em] font-black mt-2">Learning Ecosystem</p>
         </div>
 
-        <Card className="border-white/10 bg-[#20144F]/40 backdrop-blur-3xl shadow-[0_30px_60px_rgba(0,0,0,0.4)] border-t-[#B500D1]/30">
+        <Card className="border-[#d0b04d]/30 bg-[#063924]/90 shadow-[0_20px_50px_rgba(6,57,36,0.35)] rounded-2xl">
           <CardHeader>
             <CardTitle className="text-white">{isRegister ? "Crear cuenta" : "Iniciar sesión"}</CardTitle>
             <CardDescription className="text-white/50">
@@ -251,15 +251,19 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-white/70 text-xs font-bold uppercase tracking-widest">Usuario</Label>
+                <Label htmlFor="username" className="text-white/70 text-xs font-bold uppercase tracking-widest">
+                  Usuario
+                </Label>
                 <Input
                   id="username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                  onChange={(e) =>
+                    setUsername(e.target.value.replace(/\s/g, ""))
+                  }
                   placeholder={isRegister ? "Tu nombre de usuario" : "Usuario"}
-                  className={`bg-white/5 border-white/10 text-white focus:border-[#B500D1]/50 transition-all h-12 rounded-xl ${!isRegister ? "focus:border-cyan-500/50 transition-colors" : ""}`}
+                  className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-colors"
                   required
-                />
+                  />
               </div>
 
               {isRegister && (
@@ -271,7 +275,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value.replace(/\s/g, ""))}
                     placeholder="correo@ejemplo.com"
-                    className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 transition-colors"
+                    className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-colors"
                     required
                   />
                 </div>
@@ -281,7 +285,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-white/70 text-xs font-bold uppercase tracking-widest">Contraseña</Label>
                   {!isRegister && (
-                    <a href="#" className="text-[10px] text-[#B500D1] hover:text-white transition-colors uppercase tracking-widest font-black">
+                    <a href="#" className="text-[10px] text-[#d0b04d] hover:text-white transition-colors uppercase tracking-widest font-black">
                       ¿Olvidaste?
                     </a>
                   )}
@@ -292,7 +296,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value.replace(/\s/g, ""))}
                   placeholder="••••••••"
-                  className="bg-white/5 border-white/10 text-white focus:border-[#B500D1]/50 transition-all h-12 rounded-xl"
+                  className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-all h-12 rounded-xl"
                   required
                 />
               </div>
@@ -307,7 +311,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ""))}
                       placeholder="••••••••"
-                      className="bg-white/5 border-white/10 text-white focus:border-[#B500D1]/50 transition-all h-12 rounded-xl"
+                      className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-all h-12 rounded-xl"
                       required
                     />
                   </div>
@@ -316,7 +320,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                     <div className="space-y-2">
                       <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Colegio</Label>
                       <Select value={school} onValueChange={setSchool} required>
-                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#B500D1]/50 focus:ring-[#B500D1]/50 transition-all h-12 rounded-xl">
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#a3ca02]/50 focus:ring-[#a3ca02]/50 transition-all h-12 rounded-xl">
                           <SelectValue placeholder="Seleccionar" />
                         </SelectTrigger>
                         <SelectContent className="bg-[#20144F] border-white/10 text-white z-[999]">
@@ -330,7 +334,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                     <div className="space-y-2">
                       <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Grado/Sección</Label>
                       <Select value={classroom} onValueChange={setClassroom} required>
-                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#B500D1]/50 focus:ring-[#B500D1]/50 transition-all h-12 rounded-xl">
+                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#a3ca02]/50 focus:ring-[#a3ca02]/50 transition-all h-12 rounded-xl">
                           <SelectValue placeholder="Seleccionar" />
                         </SelectTrigger>
                         <SelectContent className="bg-[#20144F] border-white/10 text-white z-[999]">
@@ -354,7 +358,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                   id="teacher-toggle"
                   onClick={() => { setIsTeacher(prev => !prev); setTeacherKey("") }}
                   className={`relative w-10 h-5 rounded-full transition-all duration-300 shrink-0 ${
-                    isTeacher ? "bg-[#B500D1] shadow-[0_0_10px_rgba(181,0,209,0.5)]" : "bg-white/10"
+                    isTeacher ? "bg-[#a3ca02] shadow-[0_0_10px_rgba(163,202,2,0.35)]" : "bg-white/10"
                   }`}
                 >
                   <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${
@@ -369,21 +373,21 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
               {/* Campo contraseña docente */}
               {isTeacher && (
                 <div className="space-y-2">
-                  <Label htmlFor="teacherKey" className="text-[#B500D1] text-xs font-bold uppercase tracking-widest">Contraseña de docente (Código)</Label>
+                  <Label htmlFor="teacherKey" className="text-[#d0b04d] text-xs font-bold uppercase tracking-widest">Contraseña de docente (Código)</Label>
                   <Input
                     id="teacherKey"
                     type="password"
                     value={teacherKey}
                     onChange={(e) => setTeacherKey(e.target.value)}
                     placeholder="Ingresa la contraseña o código de docente"
-                    className="bg-white/5 border-[#B500D1]/30 text-white focus:border-[#B500D1]/70 transition-all h-12 rounded-xl"
+                    className="bg-white/5 border-[#a3ca02]/30 text-white focus:border-[#a3ca02]/70 transition-all h-12 rounded-xl"
                     required
                   />
-                  {isRegister && <p className="text-[10px] text-[#B500D1]/60 uppercase tracking-widest">Solo el personal autorizado puede crear cuentas docentes.</p>}
+                  {isRegister && <p className="text-[10px] text-[#a3ca02]/70 uppercase tracking-widest">Solo el personal autorizado puede crear cuentas docentes.</p>}
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-12 bg-[#8B00FF] hover:bg-[#9D00FF] text-white font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-xl shadow-[#8B00FF]/20 rounded-xl mt-4" disabled={isLoading}>
+              <Button type="submit" className="w-full h-12 bg-[#a3ca02] hover:bg-[#b5df08] text-[#063924] font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-xl shadow-[#a3ca02]/20 rounded-xl mt-4">
                 {isLoading ? (
                   <>
                     <svg
@@ -417,16 +421,22 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center w-full">
               {isRegister ? (
-                <p className="text-gray-400">
+                <p className="text-[#063924]">
                   ¿Ya tienes una cuenta?{" "}
-                  <button onClick={() => setIsRegister(false)} className="text-cyan-400 hover:underline">
+                  <button
+                    onClick={() => setIsRegister(false)}
+                    className="text-[#a3ca02] hover:underline"
+                  >
                     Inicia sesión
                   </button>
                 </p>
               ) : (
-                <p className="text-gray-400">
+                <p className="text-[#f6f6ed]">
                   ¿No tienes una cuenta?{" "}
-                  <button onClick={() => setIsRegister(true)} className="text-cyan-400 hover:underline">
+                  <button
+                    onClick={() => setIsRegister(true)}
+                    className="text-[#d0b04b] hover:underline"
+                  >
                     Regístrate
                   </button>
                 </p>
@@ -440,13 +450,25 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                   if (deferredPrompt) {
                     handleInstallClick();
                   } else {
-                    alert("Para descargar la app, busca el ícono de instalación (una pantalla con una flecha) en la barra de direcciones de tu navegador, web superior derecha. O actívalo desde las opciones de tu navegador móvil 'Agregar a la pantalla principal'.");
+                    alert(
+                      "Para descargar la app, busca el ícono de instalación (una pantalla con una flecha) en la barra de direcciones de tu navegador, web superior derecha. O actívalo desde las opciones de tu navegador móvil 'Agregar a la pantalla principal'."
+                    );
                   }
                 }}
-                className="w-full mb-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-black tracking-widest uppercase transition-all shadow-lg shadow-emerald-500/20"
+                className="w-full mb-1 bg-[#a3ca02] hover:bg-[#8fb500] text-[#063924] font-black tracking-widest uppercase transition-all shadow-lg shadow-[#a3ca02]/20"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
                 </svg>
                 Descargar App
               </Button>
@@ -454,10 +476,13 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
 
             <div className="relative w-full">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/5"></span>
+                <span className="w-full border-t border-[#a3ca02]/30"></span>
               </div>
+
               <div className="relative flex justify-center text-xs">
-                <span className="bg-[#000008] px-2 text-gray-500">O continúa con</span>
+                <span className="bg-[#1b4b30] px-2 text-white/60">
+                  O continúa con
+                </span>
               </div>
             </div>
 
@@ -466,9 +491,12 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                 type="button"
                 onClick={handleGoogleLogin}
                 variant="outline"
-                className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
+                className="border-white/20 bg-white/5 hover:bg-[#a3ca02]/20 text-white"
               >
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 mr-2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -488,15 +516,21 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10 text-white">
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+
+              <Button
+                variant="outline"
+                className="border-white/20 bg-white/5 hover:bg-[#a3ca02]/20 text-white"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
                 </svg>
                 Facebook
               </Button>
             </div>
-
-
           </CardFooter>
         </Card>
 

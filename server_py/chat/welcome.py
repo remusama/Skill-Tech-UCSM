@@ -1,8 +1,8 @@
-import json
 from sqlalchemy.orm import Session
 from server_py.memoria.database import ExamResult, EleonorSession
 from server_py.config.app_config import client
 import datetime
+
 
 async def generate_welcome_message(db: Session, user_id: int) -> dict:
     """
@@ -14,17 +14,19 @@ async def generate_welcome_message(db: Session, user_id: int) -> dict:
     try:
         # 1. Fetch Context
         session = db.query(EleonorSession).filter(EleonorSession.user_id == user_id).first()
-        
+
         # Check flood control (30 mins)
         now = datetime.datetime.utcnow()
         if session and session.last_welcome_at:
             delta = now - session.last_welcome_at
-            if delta.total_seconds() < 1800: # 30 minutes
+            if delta.total_seconds() < 1800:  # 30 minutes
                 print(f"⏱️ [WELCOME] Skipping welcome (last was {int(delta.total_seconds())}s ago)", flush=True)
                 return {"text": None, "can_speak": False}
 
-        latest_exam = db.query(ExamResult).filter(ExamResult.user_id == user_id).order_by(ExamResult.timestamp.desc()).first()
-        
+        latest_exam = db.query(ExamResult).filter(
+            ExamResult.user_id == user_id
+        ).order_by(ExamResult.timestamp.desc()).first()
+
         user_context = "El usuario no ha realizado ningún examen aún."
         if latest_exam:
             # Simplificamos los datos para no saturar el prompt
@@ -35,10 +37,10 @@ async def generate_welcome_message(db: Session, user_id: int) -> dict:
         system_prompt = f"""
         Eres Eleonor. Estás saludando al usuario al inicio de una sesión.
         Tu objetivo es demostrar que tienes MEMORIA.
-        
+
         CONTEXTO DEL USUARIO:
         {user_context}
-        
+
         INSTRUCCIONES:
         - Saluda brevemente.
         - Si hay datos de examen, MENCIÓNALOS sutilmente para confirmar que "sabes" cómo le fue.
@@ -57,16 +59,17 @@ async def generate_welcome_message(db: Session, user_id: int) -> dict:
         completion = await client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            stream=False, # No streaming for welcome message to keep it simple
+            stream=False,  # No streaming for welcome message to keep it simple
             max_tokens=100
         )
 
         response_text = completion.choices[0].message.content
-        
+
         # 4. Log Tokens
         if completion.usage:
             u = completion.usage
-            print(f"📊 [WELCOME TOKENS] Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
+            print(
+                f"📊 [WELCOME TOKENS] Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens}", flush=True)
 
         # Update persistent timestamp
         if session:
