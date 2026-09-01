@@ -15,6 +15,7 @@ import { QuizInterface } from "../quiz/QuizInterface"
 import { getRandomQuestions } from "../quiz/QuizData"
 import { cn } from "@/lib/utils"
 import { JourneyVisualizer } from "./JourneyVisualizer"
+import { API_BASE_URL } from "@/lib/config"
 
 import { academicAreas, personalAreas } from "@/lib/data/courseData"
 
@@ -172,7 +173,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     const token = localStorage.getItem('eleonor_token')
     if (!token) return
     setLoadingMentorExams(true)
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/student/mentor-exams`, {
+    fetch(`${API_BASE_URL}/api/student/mentor-exams`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.json()).then(data => {
       setMentorExams(Array.isArray(data) ? data : [])

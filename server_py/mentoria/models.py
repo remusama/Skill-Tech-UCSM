@@ -81,3 +81,39 @@ class MentorExamAssignment(Base):
     exam = relationship("MentorExam", back_populates="assignments")
     student = relationship("User", foreign_keys=[student_id])
     group = relationship("MentorGroup", foreign_keys=[group_id])
+
+
+class AttendanceClass(Base):
+    __tablename__ = "attendance_classes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    mentor_id = Column(Integer, ForeignKey("users.id"))
+    group_id = Column(Integer, ForeignKey("mentor_groups.id"), nullable=True)
+    name = Column(String, index=True)
+    code = Column(String, unique=True, index=True) # Unique class code (e.g. "CLASS-XYZ")
+    date = Column(String) # YYYY-MM-DD
+    start_time = Column(String) # HH:MM
+    late_time = Column(String) # HH:MM (late threshold)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # Relationships
+    mentor = relationship("User", foreign_keys=[mentor_id])
+    group = relationship("MentorGroup", foreign_keys=[group_id])
+    records = relationship("AttendanceRecord", back_populates="attendance_class", cascade="all, delete-orphan")
+
+
+class AttendanceRecord(Base):
+    __tablename__ = "attendance_records"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    class_id = Column(Integer, ForeignKey("attendance_classes.id"), index=True)
+    student_id = Column(Integer, ForeignKey("users.id"), index=True)
+    status = Column(String) # "presente", "tardanza", "falta"
+    registered_at = Column(DateTime, nullable=True)
+    scan_type = Column(String, nullable=True) # "qr", "nfc"
+    
+    # Relationships
+    attendance_class = relationship("AttendanceClass", back_populates="records")
+    student = relationship("User", foreign_keys=[student_id])
+

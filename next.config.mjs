@@ -14,6 +14,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Permite acceso desde la red local (otros dispositivos en la misma red)
+  allowedDevOrigins: [
+    "192.168.18.53",
+    "http://192.168.18.53",
+    "http://192.168.18.53:3000",
+  ],
 };
 
 export default withPWA(nextConfig);

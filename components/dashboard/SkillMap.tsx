@@ -111,8 +111,10 @@ export function SkillMap() {
 
 
   // Utility to normalize strings for comparison (remove accents and casing)
-  const normalize = (str: string) =>
-    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const normalize = (str: string) => {
+    if (!str) return "";
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
 
   const isSoftSkill = (area: string) => {
     const softKeywords = ["razonamiento", "aprendizaje", "criterio", "adaptabilidad", "autonomia", "cognitivo", "pensamiento", "metacognicion", "flexibilidad", "autogestion", "liderazgo", "equipo", "creatividad", "actuacion"];

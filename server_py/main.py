@@ -23,6 +23,8 @@ from server_py.diagnostico import gamification_router, voice_router
 from server_py.routers import mentor
 from server_py.routers import mentor_agents
 from server_py.routers import mentor_exams
+from server_py.routers import attendance
+
 from server_py.chambista.router import router as chambista_router
 from server_py.chambista.database import init_chambista_db
 from server_py.memoria.database import init_db
@@ -64,7 +66,9 @@ app.include_router(voice_router.router)
 app.include_router(mentor.router)
 app.include_router(mentor_agents.router)
 app.include_router(mentor_exams.router)
+app.include_router(attendance.router)
 app.include_router(chambista_router)
+
 
 # Simple Health check
 @app.get("/health")

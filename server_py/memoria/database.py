@@ -25,12 +25,13 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     db_file = os.path.join(BASE_DIR, "skill_tech_v2.db")
     DATABASE_URL = f"sqlite:///{db_file}"
-    print(f"[DB] Modo desarrollo → SQLite: {db_file}")
+    print(f"[DB] Modo desarrollo -> SQLite: {db_file}")
 else:
     # Supabase a veces entrega URLs con "postgres://" (sin ql), SQLAlchemy requiere "postgresql://"
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    print(f"[DB] Modo producción → Supabase/PostgreSQL ✅")
+    print(f"[DB] Modo produccion -> Supabase/PostgreSQL OK")
+
 
 connect_args = {}
 engine_kwargs = {
@@ -85,6 +86,8 @@ class User(Base):
     role = Column(String, default="student") # student, teacher, admin
     school = Column(String, nullable=True) # E.g. "Francisco Mostajo"
     classroom = Column(String, nullable=True) # E.g. "5º B"
+    secure_token = Column(String, unique=True, index=True, nullable=True)
+
     
     # Settings / Preferences
     preferences = Column(JSON, default={

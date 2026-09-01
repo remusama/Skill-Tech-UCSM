@@ -58,7 +58,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
             {/* CAPA 2: Contenido Principal (Z-200) */}
             <div className="relative z-[200] min-h-screen font-sans">
-                <PageTransition>{children}</PageTransition>
+                {children}
             </div>
         </div>
     )

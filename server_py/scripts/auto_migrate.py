@@ -69,19 +69,22 @@ MIGRATIONS = [
     ("exam_results", "rage_clicks", "INTEGER", "INTEGER"),
     ("exam_results", "score_tri", "FLOAT", "REAL"),
     ("mentor_exam_questions", "correct_answer", "VARCHAR", "VARCHAR"),
+    ("users", "secure_token", "VARCHAR", "VARCHAR"),
 ]
+
+
 
 
 def run_auto_migrations():
     """
     Ejecuta todas las migraciones definidas en MIGRATIONS.
-    Se puede llamar de forma segura múltiples veces — solo agrega
-    columnas que no existen todavía.
+    Se puede llamar de forma segura multiples veces - solo agrega
+    columnas que no existen todavia.
     """
     db_url = str(engine.url)
     is_postgres = db_url.startswith("postgresql") or db_url.startswith("postgres")
     dialect = "PostgreSQL" if is_postgres else "SQLite"
-    logger.info(f"[AutoMigrate] Iniciando migraciones automáticas ({dialect})...")
+    logger.info(f"[AutoMigrate] Iniciando migraciones automaticas ({dialect})...")
 
     added = 0
     skipped = 0
@@ -98,7 +101,7 @@ def run_auto_migrations():
                 sql = f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
                 conn.execute(text(sql))
                 conn.commit()
-                logger.info(f"[AutoMigrate] ✅ {table}.{column} ({col_type}) agregada")
+                logger.info(f"[AutoMigrate] OK: {table}.{column} ({col_type}) agregada")
                 added += 1
 
             except Exception as e:
@@ -108,9 +111,10 @@ def run_auto_migrations():
                 if "duplicate column" in err_str or "already exists" in err_str:
                     skipped += 1
                 else:
-                    logger.warning(f"[AutoMigrate] ⚠️  {table}.{column}: {e}")
+                    logger.warning(f"[AutoMigrate] WARNING: {table}.{column}: {e}")
                     errors += 1
 
     logger.info(
-        f"[AutoMigrate] Completado — {added} agregadas, {skipped} ya existían, {errors} errores"
+        f"[AutoMigrate] Completado - {added} agregadas, {skipped} ya existian, {errors} errores"
     )
+
