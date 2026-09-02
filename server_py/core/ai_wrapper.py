@@ -1,63 +1,59 @@
-"""
-AI Wrapper (PR F) — Central interface for all LLM API calls.
+"""Interfaz central para realizar llamadas asíncronas a OpenAI.
 
-Features:
-- Token counting via tiktoken before each call
-- Per-user daily token quota enforcement (stored in-process dict; upgrade to Redis in prod)
-- Exponential backoff on rate-limit (429) errors
-- Structured logging of every call: tokens_used, provider_latency, model
-- Single import point for all routers — never import openai directly in route handlers
+Gestiona el conteo de tokens, las cuotas de uso por usuario, los reintentos
+ante errores de límite y el registro estructurado de las solicitudes.
 """
 import asyncio
 import time
 from typing import Optional
 
 import tiktoken
-from openai import AsyncOpenAI, RateLimitError, APIStatusError
+from openai import APIStatusError, AsyncOpenAI, RateLimitError
 
 from server_py.config import settings
 from server_py.core.structured_logger import get_logger
 
 logger = get_logger("ai_wrapper")
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Token quota configuration (in-process; swap to Redis for multi-worker setups)
-# ─────────────────────────────────────────────────────────────────────────────
-DAILY_TOKEN_LIMIT = int(getattr(settings, "DAILY_TOKEN_LIMIT", 50_000))  # tokens/user/day
+DAILY_TOKEN_LIMIT = int(
+    getattr(settings, "DAILY_TOKEN_LIMIT", 50_000)
+)
 
-# Simple in-memory counter: {user_id -> token_count_today}
-# Reset is not automatic here — for production use a Redis key with TTL=86400
+# Contador de tokens por usuario durante la vida del proceso.
 _token_usage: dict[str, int] = {}
 
 
 def get_tokens_used(user_key: str) -> int:
+    """Obtiene el total de tokens registrados para un usuario."""
     return _token_usage.get(user_key, 0)
 
 
-def _count_tokens(text: str, model: str = "gpt-4o-mini") -> int:
+def _count_tokens(
+    text: str,
+    model: str = "gpt-4o-mini",
+) -> int:
+    """Cuenta los tokens de un texto usando el modelo indicado."""
     try:
-        enc = tiktoken.encoding_for_model(model)
-        return len(enc.encode(text))
+        encoding = tiktoken.encoding_for_model(model)
+        return len(encoding.encode(text))
     except Exception:
-        return len(text) // 4  # safe fallback
+        return len(text) // 4
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Shared async client (singleton)
-# ─────────────────────────────────────────────────────────────────────────────
+# Cliente asíncrono compartido.
 _openai_client: Optional[AsyncOpenAI] = None
 
 
 def get_openai_client() -> AsyncOpenAI:
+    """Obtiene el cliente compartido de OpenAI."""
     global _openai_client
     if _openai_client is None:
-        _openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        _openai_client = AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY
+        )
     return _openai_client
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Core wrapper function
-# ─────────────────────────────────────────────────────────────────────────────
 async def chat_complete(
     messages: list[dict],
     model: str = "gpt-4o-mini",
@@ -65,65 +61,93 @@ async def chat_complete(
     json_output: bool = False,
     max_retries: int = 3,
 ) -> str:
-    """
-    Call OpenAI chat completions with:
-      - quota check before the call
-      - token counting after the call
-      - exponential backoff on rate limit (429)
-      - structured logging for observability
+    """Realiza una solicitud asíncrona de chat a OpenAI.
+
+    Verifica la cuota de tokens antes de la llamada, cuenta el consumo
+    posterior, aplica reintentos y registra información de observabilidad.
 
     Args:
-        messages: OpenAI-format message list.
-        model: Model identifier.
-        user_key: Unique key per user/session (for quota tracking).
-        json_output: If True, requests JSON-only response_format.
-        max_retries: Number of retry attempts on rate limit.
+        messages: Mensajes con el formato esperado por OpenAI.
+        model: Identificador del modelo que se utilizará.
+        user_key: Identificador del usuario o sesión.
+        json_output: Solicita una respuesta en formato JSON cuando es True.
+        max_retries: Número total de intentos permitidos.
 
     Returns:
-        The assistant message content as a string.
+        Contenido de la respuesta del asistente.
 
     Raises:
-        ValueError: If user has exceeded their daily token quota.
-        APIStatusError: On non-recoverable API errors.
+        ValueError: Si se supera la cuota diaria de tokens.
+        APIStatusError: Si OpenAI devuelve un error no recuperable.
+        RuntimeError: Si se agotan todos los intentos disponibles.
     """
-    # Pre-call quota check
-    current_usage = get_tokens_used(user_key)
-    if current_usage >= DAILY_TOKEN_LIMIT:
-        logger.error(f"Token quota exceeded for user_key={user_key}: {current_usage}/{DAILY_TOKEN_LIMIT}")
-        raise ValueError(f"Daily token quota exceeded ({current_usage}/{DAILY_TOKEN_LIMIT} tokens).")
 
-    # Estimate prompt tokens upfront for early rejection
-    prompt_text = " ".join(m.get("content", "") for m in messages if isinstance(m.get("content"), str))
+    current_usage = get_tokens_used(user_key)
+
+    if current_usage >= DAILY_TOKEN_LIMIT:
+        logger.error(
+            "Token quota exceeded for user_key=%s: %s/%s",
+            user_key,
+            current_usage,
+            DAILY_TOKEN_LIMIT,
+        )
+        raise ValueError(
+            "Daily token quota exceeded "
+            f"({current_usage}/{DAILY_TOKEN_LIMIT} tokens)."
+        )
+
+    prompt_text = " ".join(
+        message.get("content", "")
+        for message in messages
+        if isinstance(message.get("content"), str)
+    )
     estimated_prompt_tokens = _count_tokens(prompt_text, model)
 
     if current_usage + estimated_prompt_tokens > DAILY_TOKEN_LIMIT:
-        logger.error(f"Estimated prompt tokens would exceed quota for user_key={user_key}")
+        logger.error(
+            "Estimated prompt tokens would exceed quota for user_key=%s",
+            user_key,
+        )
         raise ValueError("Request exceeds remaining daily token quota.")
 
     client = get_openai_client()
-    kwargs: dict = {
+    request_kwargs: dict = {
         "model": model,
         "messages": messages,
     }
-    if json_output:
-        kwargs["response_format"] = {"type": "json_object"}
 
-    # Retry loop with exponential backoff
+    if json_output:
+        request_kwargs["response_format"] = {"type": "json_object"}
+
     last_error: Optional[Exception] = None
+
     for attempt in range(max_retries):
         try:
-            t_start = time.perf_counter()
-            response = await client.chat.completions.create(**kwargs)
-            latency = time.perf_counter() - t_start
+            start_time = time.perf_counter()
+            response = await client.chat.completions.create(
+                **request_kwargs
+            )
+            latency = time.perf_counter() - start_time
 
             content = response.choices[0].message.content or ""
             usage = response.usage
 
-            tokens_prompt = usage.prompt_tokens if usage else estimated_prompt_tokens
-            tokens_completion = usage.completion_tokens if usage else _count_tokens(content, model)
-            tokens_total = usage.total_tokens if usage else (tokens_prompt + tokens_completion)
+            tokens_prompt = (
+                usage.prompt_tokens
+                if usage
+                else estimated_prompt_tokens
+            )
+            tokens_completion = (
+                usage.completion_tokens
+                if usage
+                else _count_tokens(content, model)
+            )
+            tokens_total = (
+                usage.total_tokens
+                if usage
+                else tokens_prompt + tokens_completion
+            )
 
-            # Update in-process usage counter
             _token_usage[user_key] = current_usage + tokens_total
 
             logger.info(
@@ -142,20 +166,38 @@ async def chat_complete(
             )
             return content
 
-        except RateLimitError as e:
-            wait = (2 ** attempt) + 0.5
+        except RateLimitError as error:
+            wait_time = (2**attempt) + 0.5
             logger.error(
-                f"chat_complete: RateLimitError on attempt {attempt + 1}/{max_retries}. Retrying in {wait}s. Error: {e}")
-            last_error = e
-            await asyncio.sleep(wait)
+                "chat_complete: RateLimitError on attempt %s/%s. "
+                "Retrying in %ss. Error: %s",
+                attempt + 1,
+                max_retries,
+                wait_time,
+                error,
+            )
+            last_error = error
+            await asyncio.sleep(wait_time)
 
-        except APIStatusError as e:
-            logger.error(f"chat_complete: APIStatusError (non-retriable) on attempt {attempt + 1}: {e}")
+        except APIStatusError as error:
+            logger.error(
+                "chat_complete: APIStatusError on attempt %s: %s",
+                attempt + 1,
+                error,
+            )
             raise
 
-        except Exception as e:
-            logger.error(f"chat_complete: Unexpected error on attempt {attempt + 1}: {e}", exc_info=True)
-            last_error = e
+        except Exception as error:
+            logger.error(
+                "chat_complete: Unexpected error on attempt %s: %s",
+                attempt + 1,
+                error,
+                exc_info=True,
+            )
+            last_error = error
             await asyncio.sleep(1)
 
-    raise RuntimeError(f"chat_complete: All {max_retries} retries exhausted. Last error: {last_error}")
+    raise RuntimeError(
+        f"chat_complete: All {max_retries} retries exhausted. "
+        f"Last error: {last_error}"
+    )
