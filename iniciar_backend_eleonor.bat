@@ -15,6 +15,8 @@ if not exist "server_py\main.py" (
 )
 
 SET PYTHONUNBUFFERED=1
+SET PYTHONUTF8=1
+SET PYTHONIOENCODING=utf-8
 
 echo [1/2] Verificando dependencias...
 python -m pip install -q -r server_py\requirements.txt

@@ -10,6 +10,7 @@ import { fetchUserSkills, fetchStudentSkills } from "@/lib/api/skills"
 import Link from "next/link"
 import { NaturalWorkflow } from "./NaturalWorkflow"
 import { EleonorAIChat } from "../chat/EleonorAIChat"
+import { API_BASE_URL } from "@/lib/config"
 
 export function ResultsPage({ studentId }: { studentId?: number }) {
     const [loading, setLoading] = useState(true)
@@ -30,7 +31,7 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
             // Load completed mentor exams to generate extra nodes
             if (!studentId) {
                 const token = localStorage.getItem('eleonor_token')
-                const base = process.env.NEXT_PUBLIC_API_URL || ''
+                const base = API_BASE_URL
                 const mResp = await fetch(`${base}/api/student/mentor-exams`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })

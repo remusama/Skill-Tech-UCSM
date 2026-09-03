@@ -1,8 +1,6 @@
 import edge_tts
 import base64
-import json
-import os
-from server_py.config.app_config import client as client_openai, OPENAI_API_KEY, VOICE_EDGE, VOICE_OPENAI, ELEVENLABS_API_KEY
+from server_py.config.app_config import client as client_openai, VOICE_EDGE, VOICE_OPENAI
 from .eleven_labs import generate_eleven_audio_base64
 
 # Configuración de Motores de Voz
@@ -125,7 +123,7 @@ async def generate_openai_tts_base64(text: str, state: dict) -> str:
 
 async def generate_ssml_tts_base64(text: str, mode: str = "neutral_atenta", state: dict = None) -> str:
     """Fachada principal para generación de voz. Selecciona motor según flag."""
-    
+
     # Limpiamos posibles etiquetas de control o emoción que el LLM pudiera haber colado
     import re
     clean_text = re.sub(r'\[(DECISION|ANALISIS|ANALYSIS|GAME|TEXTO)\].*?(\[|$)', '', text, flags=re.DOTALL).strip()

@@ -36,6 +36,7 @@ ELEONOR_SYNTH = EleonorSynthesizer()
 BEHAVIORAL_AGENT = BehavioralAgent()
 JUDGE_AGENT = JudgeAgent()
 
+
 async def analyze_exam(area: str, quiz_data: dict) -> dict:
     """
     Routes the analysis request to the specialized subject agent and behavioral agent,
@@ -43,7 +44,7 @@ async def analyze_exam(area: str, quiz_data: dict) -> dict:
     """
     key = area.lower()
     subject_agent = AGENTS.get(key)
-    
+
     if not subject_agent:
         # Fallback if area not found
         print(f"⚠️ Agente no encontrado para: {key}")

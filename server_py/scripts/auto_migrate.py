@@ -69,6 +69,8 @@ MIGRATIONS = [
     ("exam_results", "rage_clicks", "INTEGER", "INTEGER"),
     ("exam_results", "score_tri", "FLOAT", "REAL"),
     ("mentor_exam_questions", "correct_answer", "VARCHAR", "VARCHAR"),
+    ("mentor_exam_questions", "dimension", "VARCHAR", "VARCHAR"),
+    ("mentor_exam_assignments", "demographics", "JSONB", "JSON"),
 ]
 
 
