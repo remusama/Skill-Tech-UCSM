@@ -221,7 +221,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
         {/* Logos and Title */}
 <div className="w-full max-w-md grid grid-cols-2 items-center justify-items-center mb-6 pt-8">
 
-  {/* LADO IZQUIERDO: SkillTech completo */}
+  {/* LOGO SKILLTECH */}
   <div className="flex flex-col items-center">
     <div className="relative w-20 h-20 mb-1">
       <Image
@@ -241,7 +241,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
     </p>
   </div>
 
-  {/* LADO DERECHO: Logo Liderazgo */}
+  {/* LOGO LIDERAZGO */}
   <div className="relative w-60 h-36 flex items-center justify-center -translate-x-6">
     <Image
       src="/Logo.png"

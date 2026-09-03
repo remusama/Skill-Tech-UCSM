@@ -131,7 +131,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             onClick={() => setIsOpen(true)}
-            className="fixed top-6 left-6 z-50 bg-black/60 backdrop-blur-2xl p-3 rounded-2xl border border-white/10 text-white shadow-2xl hover:bg-white/20 transition-all active:scale-95 group md:hidden"
+            className="fixed top-6 left-6 z-50 bg-[#032318]/80 backdrop-blur-2xl p-3 rounded-2xl border border-[#baef00]/20 text-[#baef00] shadow-2xl hover:bg-[#3c5a21]/50 transition-all active:scale-95 group md:hidden"
           >
             <Menu size={24} className="group-hover:rotate-90 transition-transform duration-500" />
           </motion.button>
