@@ -11,8 +11,7 @@ import json
 
 router = APIRouter()
 
-SECRET_KEY = os.environ.get("JWT_SECRET", "super-secret-key-eleonor")
-
+SECRET_KEY = os.environ.get("JWT_SECRET")
 if not SECRET_KEY:
     raise RuntimeError(
         "JWT_SECRET no está configurado. Define una clave secreta fuerte y aleatoria "
