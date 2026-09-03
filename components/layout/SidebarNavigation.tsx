@@ -152,7 +152,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             animate={{
               x: 0,
               opacity: 1,
-              boxShadow: isSidebarHighlighted ? '0 0 50px rgba(181,0,209,0.3)' : '0 20px 60px rgba(0,0,0,0.6)'
+              boxShadow: isSidebarHighlighted ? '0 0 50px rgba(208,176,77,0.3)' : '0 20px 60px rgba(0,0,0,0.6)'
             }}
             exit={{ x: -320, opacity: 0 }}
             transition={{ type: "spring", stiffness: 450, damping: 30 }}
@@ -168,17 +168,17 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             <div className="flex flex-col h-full p-6 relative z-10">
               {/* Logo y título */}
               <div className="flex items-center gap-4 mb-12 px-2 group cursor-pointer">
-                <div className="relative w-14 h-14 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(181,0,209,0.8)]">
+                <div className="relative w-14 h-14 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(208,176,77,0.8)]">
                   <Image
                     src="/new-logo.png"
                     alt="SkillTech Logo"
                     fill
-                    className="object-contain drop-shadow-[0_0_15px_rgba(181,0,209,0.6)]"
+                    className="object-contain drop-shadow-[0_0_15px_rgba(208,176,77,0.6)]"
                   />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-2xl font-black tracking-tighter text-white leading-none">SkillTech</span>
-                  <span className="text-[9px] uppercase tracking-[0.4em] font-black text-[#B500D1] mt-1">Learning Ecosystem</span>
+                  <span className="text-[9px] uppercase tracking-[0.4em] font-black text-[#d0b04d] mt-1">Learning Ecosystem</span>
                 </div>
               </div>
 
@@ -190,17 +190,17 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     if (isMobile) setIsOpen(false)
                   }
                 }}
-                className={`p-4 mb-10 bg-white/5 border border-white/5 rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 ${role === "student" ? "cursor-pointer hover:border-white/20 transition-all duration-300 animate-pulse-subtle" : ""}`}
+                className={`p-4 mb-10 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 ${role === "student" ? "cursor-pointer hover:border-[#d0b04d]/40 transition-all duration-300" : ""}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#B500D1]/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#d0b04d]/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 <div className="flex items-center gap-3 relative z-10">
-                  <Avatar className="h-12 w-12 border-2 border-[#B500D1]/30">
+                  <Avatar className="h-12 w-12 border-2 border-[#d0b04d]/40">
                     <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                    <AvatarFallback className="bg-gradient-to-br from-[#B500D1] to-[#D100B5] text-white font-black text-sm">AD</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-[#0d971f] to-[#063924] text-[#d0b04d] font-black text-sm">AD</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-black text-white truncate uppercase tracking-tighter">Usuario Demo</p>
-                    <p className="text-[9px] text-white/40 truncate tracking-widest font-bold uppercase mt-0.5">Fundador</p>
+                    <p className="text-[9px] text-[#d0b04d]/70 truncate tracking-widest font-bold uppercase mt-0.5">Fundador</p>
                   </div>
                 </div>
               </div>
@@ -222,14 +222,14 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                       whileHover={{ x: 5 }}
                       whileTap={{ scale: 0.98 }}
                       animate={isHighlighted ? {
-                        scale: 1.05,
-                        backgroundColor: "rgba(181,0,209,0.2)",
-                        boxShadow: "0 0 30px rgba(181,0,209,0.3)",
-                        borderColor: "rgba(181,0,209,0.5)"
+                      scale: 1.02,
+                      backgroundColor: "rgba(13, 151, 31, 0.3)",
+                      boxShadow: "0 0 20px rgba(13, 151, 31, 0.4)",
+                      borderColor: "#0d971f"
                       } : {
-                        scale: 1,
-                        backgroundColor: isActive ? "rgba(181,0,209,0.15)" : "rgba(181,0,209,0)",
-                        borderColor: isActive ? "rgba(181,0,209,0.2)" : "rgba(181,0,209,0)"
+                      scale: 1,
+                      backgroundColor: isActive ? "rgba(13, 151, 31, 0.25)" : "rgba(255, 255, 255, 0.02)",
+                      borderColor: isActive ? "#0d971f" : "rgba(255, 255, 255, 0.05)"
                       }}
                       onClick={() => {
                         if (isGuideActive && guideHighlight === 'assistant' && item.page === 'assistant') {
@@ -245,12 +245,16 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                       {isActive && (
                         <motion.div
                           layoutId="active-nav-bg"
-                          className="absolute inset-0 bg-gradient-to-r from-[#B500D1]/20 to-transparent rounded-2xl -z-10"
+                          className="absolute inset-0 bg-gradient-to-r from-[#0d971f]/30 to-transparent rounded-2xl -z-10"
                         />
                       )}
 
-                      <div className={`p-2 rounded-xl transition-all duration-500 ${isActive || isHighlighted ? "bg-[#B500D1] text-white shadow-[0_0_15px_rgba(181,0,209,0.5)]" : "bg-white/5 text-white/30 group-hover:bg-white/10 group-hover:text-white"}`}>
-                        <item.icon size={18} className="transition-transform duration-500 group-hover:rotate-12" />
+                      <div className={`p-2 rounded-xl transition-all duration-300 ${
+                        isActive || isHighlighted 
+                          ? "bg-[#0d971f] text-white shadow-[0_0_12px_rgba(13,151,31,0.6)]" 
+                          : "bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white"
+                      }`}>
+                        <item.icon size={18} className="transition-transform duration-300 group-hover:rotate-12" />
                       </div>
 
                       <span className={`text-xs font-black uppercase tracking-widest transition-all duration-500 ${isActive || isHighlighted ? 'translate-x-1' : ''}`}>
