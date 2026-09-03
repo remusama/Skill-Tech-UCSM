@@ -38,6 +38,14 @@ app = FastAPI(title="Eleonor Backend Modular")
 # CORS configuration restricted to ALLOWED_ORIGINS
 allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
+# VALIDACION PARA PRODUCCION - Activarlo por seguridad para evitar solicitudes X cuando tengan acceso a la web
+if "*" in allowed_origins:
+    raise RuntimeError(
+        "ALLOWED_ORIGINS no puede ser '*' (o incluir '*') porque el backend usa "
+        "allow_credentials=True. Configura ALLOWED_ORIGINS con la lista explícita de "
+        "orígenes permitidos, separados por comas (ej: https://miapp.com,http://localhost:3000)."
+    )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
