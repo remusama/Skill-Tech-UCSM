@@ -6,16 +6,17 @@ from server_py.memoria.database import get_db, User
 from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorExamAnswer, MentorGroup, GroupStudent
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic
-import datetime
 from collections import defaultdict
 
 router = APIRouter(tags=["Mentor Exams"])
+
 
 def check_is_mentor(user_id: int, db: Session) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     if not user or user.role not in ["teacher", "admin", "mentor"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: Se requiere rol de mentor.")
     return user
+
 
 class QuestionRequest(BaseModel):
     question: str
@@ -25,28 +26,31 @@ class QuestionRequest(BaseModel):
     correct_answer: Optional[str] = None
     dimension: Optional[str] = None
 
+
 class CreateExamRequest(BaseModel):
     agent_id: int
     title: str
     description: Optional[str] = None
     questions: List[QuestionRequest] = []
 
+
 class AssignExamRequest(BaseModel):
     student_ids: List[int] = []
     group_ids: List[int] = []
+
 
 @router.post("/api/mentor/exams")
 async def create_exam(req: CreateExamRequest, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     """
     Creates a new mentor exam. Agent must be selected first.
     """
-    mentor = check_is_mentor(current_user_id, db)
-    
+    check_is_mentor(current_user_id, db)
+
     # Validate agent exists
     agent = db.query(Agent).filter(Agent.id == req.agent_id).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agente no encontrado. Debes seleccionar un Agente antes de crear el examen.")
-    
+
     exam = MentorExam(
         mentor_id=current_user_id,
         agent_id=req.agent_id,
@@ -57,7 +61,7 @@ async def create_exam(req: CreateExamRequest, db: Session = Depends(get_db), cur
     db.add(exam)
     db.commit()
     db.refresh(exam)
-    
+
     # Add questions
     for q in req.questions:
         opts = None
@@ -75,9 +79,9 @@ async def create_exam(req: CreateExamRequest, db: Session = Depends(get_db), cur
             dimension=q.dimension,
         )
         db.add(question)
-    
+
     db.commit()
-    
+
     return {
         "id": exam.id,
         "title": exam.title,
@@ -86,17 +90,18 @@ async def create_exam(req: CreateExamRequest, db: Session = Depends(get_db), cur
         "competencies": agent.competencies or []
     }
 
+
 @router.post("/api/mentor/exams/{exam_id}/assign")
 async def assign_exam(exam_id: int, req: AssignExamRequest, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     """
     Assigns a mentor exam to specific students or groups.
     """
     check_is_mentor(current_user_id, db)
-    
+
     exam = db.query(MentorExam).filter(MentorExam.id == exam_id, MentorExam.mentor_id == current_user_id).first()
     if not exam:
         raise HTTPException(status_code=404, detail="Examen no encontrado o no tienes permiso.")
-    
+
     # Assign to individual students
     for student_id in req.student_ids:
         student = db.query(User).filter(User.id == student_id, User.role == "student").first()
@@ -104,7 +109,7 @@ async def assign_exam(exam_id: int, req: AssignExamRequest, db: Session = Depend
             existing = db.query(MentorExamAssignment).filter(
                 MentorExamAssignment.exam_id == exam_id,
                 MentorExamAssignment.student_id == student_id,
-                MentorExamAssignment.group_id == None
+                MentorExamAssignment.group_id is None
             ).first()
             if not existing:
                 db.add(MentorExamAssignment(
@@ -113,7 +118,7 @@ async def assign_exam(exam_id: int, req: AssignExamRequest, db: Session = Depend
                     group_id=None,
                     status="pending"
                 ))
-    
+
     # Assign to groups (which expands to all students in the group)
     for group_id in req.group_ids:
         group = db.query(MentorGroup).filter(MentorGroup.id == group_id).first()
@@ -129,12 +134,13 @@ async def assign_exam(exam_id: int, req: AssignExamRequest, db: Session = Depend
                     group_id=group_id,
                     status="pending"
                 ))
-    
+
     # Publish exam when assigned
     exam.status = "published"
     db.commit()
-    
+
     return {"message": "Examen asignado correctamente", "exam_id": exam_id, "status": exam.status}
+
 
 @router.get("/api/student/mentor-exams")
 async def get_student_mentor_exams(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
@@ -145,24 +151,24 @@ async def get_student_mentor_exams(db: Session = Depends(get_db), current_user_i
     student = db.query(User).filter(User.id == current_user_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+
     # Direct assignments
     direct = db.query(MentorExamAssignment).filter(
         MentorExamAssignment.student_id == current_user_id,
-        MentorExamAssignment.group_id == None
+        MentorExamAssignment.group_id is None
     ).all()
-    
+
     # Group-based assignments
     student_groups = db.query(GroupStudent).filter(GroupStudent.student_id == current_user_id).all()
     group_ids = [gs.group_id for gs in student_groups]
-    
+
     group_assignments = db.query(MentorExamAssignment).filter(
         MentorExamAssignment.group_id.in_(group_ids)
     ).all() if group_ids else []
-    
+
     all_exam_ids = set()
     result = []
-    
+
     for assignment in direct + group_assignments:
         if assignment.exam_id not in all_exam_ids:
             all_exam_ids.add(assignment.exam_id)
@@ -180,22 +186,23 @@ async def get_student_mentor_exams(db: Session = Depends(get_db), current_user_i
                     "assigned_at": assignment.assigned_at.isoformat() if assignment.assigned_at else None,
                     "questions": [{"id": q.id, "question": q.question, "question_type": q.question_type, "options": q.options or [], "correct_answer": q.correct_answer, "order": q.order, "dimension": q.dimension} for q in questions]
                 })
-    
+
     return result
+
 
 @router.get("/api/mentor/exams/{exam_id}/detail")
 async def get_exam_detail(exam_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     """Returns full detail of a mentor exam including questions and assignments."""
     check_is_mentor(current_user_id, db)
-    
+
     exam = db.query(MentorExam).filter(MentorExam.id == exam_id).first()
     if not exam:
         raise HTTPException(status_code=404, detail="Examen no encontrado")
-    
+
     agent = db.query(Agent).filter(Agent.id == exam.agent_id).first()
     questions = db.query(MentorExamQuestion).filter(MentorExamQuestion.exam_id == exam_id).order_by(MentorExamQuestion.order).all()
     assignments = db.query(MentorExamAssignment).filter(MentorExamAssignment.exam_id == exam_id).all()
-    
+
     return {
         "id": exam.id,
         "title": exam.title,
