@@ -16,7 +16,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
     // --- SERVICE WORKER REGISTRATION (TRUE PWA) ---
     React.useEffect(() => {
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
             const registerSW = () => {
                 navigator.serviceWorker.register('/sw.js')
                     .then((registration) => {
