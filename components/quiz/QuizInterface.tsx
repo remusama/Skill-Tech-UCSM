@@ -315,9 +315,13 @@ export function QuizInterface({
         setExplanationText(data.explanation)
         setShowExplanationText(true)
         // Reproducir audio via endpoint de TTS ya existente
+        const ttsToken = localStorage.getItem("eleonor_token")
         const ttsResp = await fetch(`${API_BASE_URL}/api/tts`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
+          },
           body: JSON.stringify({ text: data.explanation })
         })
         const ttsData = await ttsResp.json()
