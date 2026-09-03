@@ -19,8 +19,10 @@ import {
   Compass,
   Users,
   Folder,
-  Archive
+  Archive,
+  Calendar
 } from "lucide-react"
+
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -32,19 +34,22 @@ const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
   { icon: Clock, label: "Examenes", page: "practice" },
   { icon: Brain, label: "Diagnostico", page: "diagnosis" },
-  // { icon: Award, label: "Logros", page: "achievements" },
+  { icon: User, label: "Perfil / Credencial", page: "profile" },
   { icon: MessageSquare, label: "Eleonor AI", page: "assistant" },
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
 
+
 const teacherNavItems = [
   { icon: BarChart2, label: "Dashboard", page: "mentor-dashboard" },
+  { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
   { icon: Folder, label: "Grupos", page: "mentor-groups" },
   { icon: FileText, label: "Exámenes", page: "mentor-exams" },
   { icon: Settings, label: "Agentes IA", page: "mentor-agents" },
   { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
+
 
 import { useEleonor } from "@/contexts/eleonor-context"
 
@@ -178,7 +183,15 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
               </div>
 
               {/* Perfil del usuario */}
-              <div className="p-4 mb-10 bg-white/5 border border-white/5 rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0">
+              <div 
+                onClick={() => {
+                  if (role === "student") {
+                    setCurrentPage("profile")
+                    if (isMobile) setIsOpen(false)
+                  }
+                }}
+                className={`p-4 mb-10 bg-white/5 border border-white/5 rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 ${role === "student" ? "cursor-pointer hover:border-white/20 transition-all duration-300 animate-pulse-subtle" : ""}`}
+              >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#B500D1]/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 <div className="flex items-center gap-3 relative z-10">
                   <Avatar className="h-12 w-12 border-2 border-[#B500D1]/30">
@@ -191,6 +204,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                   </div>
                 </div>
               </div>
+
 
               {/* Navegación */}
               <nav className="flex-1 space-y-3">

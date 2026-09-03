@@ -101,7 +101,7 @@ export function JourneyVisualizer({ areaId, areaName, theme }: VisualizerProps) 
         const token = localStorage.getItem("eleonor_token")
 
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+            const baseUrl = API_BASE_URL
             const resp = await fetch(`${baseUrl}/api/journey/generate?area=${encodeURIComponent(areaName)}&force=${force}`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` }

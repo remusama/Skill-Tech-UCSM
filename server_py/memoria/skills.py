@@ -19,10 +19,10 @@ AREA_MAPPING = {
     "adaptabilidad": "Adaptabilidad",
     "autonomia": "Autonomía",
     "autonomía": "Autonomía",
+    "cognitivo-academico": "Cognitivo-Académico",
     "liderazgo": "Liderazgo",
-    "comunicacion": "Comunicación",
-    "comunicación": "Comunicación",
-    "cognitivo-academico": "Cognitivo-Académico"
+    "personalidad_neo": "Personalidad",
+    "personalidad": "Personalidad",
 }
 
 
@@ -121,7 +121,8 @@ def get_skill_snapshot(db: Session, user_id: int):
     for s in skills:
         history = s.current_diagnosis or []
         # Support both single object (legacy) and list of diagnoses
-        diag = history[-1] if isinstance(history, list) and len(history) > 0 else (history if isinstance(history, dict) else {})
+        diag = history[-1] if isinstance(history,
+                                         list) and len(history) > 0 else (history if isinstance(history, dict) else {})
 
         snapshot[s.area.lower()] = {
             "nivel_label": "alto" if s.level > 70 else "medio" if s.level > 40 else "bajo",

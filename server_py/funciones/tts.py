@@ -1,17 +1,10 @@
 import edge_tts
 import base64
 from server_py.config.app_config import client as client_openai, VOICE_EDGE, VOICE_OPENAI
-from server_py.config import settings
 from .eleven_labs import generate_eleven_audio_base64
 
 # Configuración de Motores de Voz
 TTS_ENGINE = "edge"  # "edge" | "openai" | "eleven"
-
-
-def is_tts_enabled() -> bool:
-    """Whether server-side speech synthesis is enabled for this deployment."""
-    return settings.TTS_ENABLED
-
 
 SSML_MODES = {
     "neutral_atenta": {
@@ -130,9 +123,6 @@ async def generate_openai_tts_base64(text: str, state: dict) -> str:
 
 async def generate_ssml_tts_base64(text: str, mode: str = "neutral_atenta", state: dict = None) -> str:
     """Fachada principal para generación de voz. Selecciona motor según flag."""
-    if not is_tts_enabled():
-        # Do not contact Edge TTS or any other speech provider in text-only mode.
-        return None
 
     # Limpiamos posibles etiquetas de control o emoción que el LLM pudiera haber colado
     import re
@@ -189,8 +179,6 @@ async def generate_ssml_tts_base64(text: str, mode: str = "neutral_atenta", stat
 
 async def generate_tts_base64(text: str, rate="+0%", pitch="+0Hz") -> str:
     """Generador simple (Legacy/Fallback)."""
-    if not is_tts_enabled():
-        return None
     try:
         communicate = edge_tts.Communicate(text, VOICE_EDGE, rate=rate, pitch=pitch)
         audio_data = b""

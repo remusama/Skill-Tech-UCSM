@@ -23,15 +23,12 @@ class Settings(BaseModel):
     # ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000") # <- testeo
     # para esto hay que agregar el dominio real en el .env, osea ALLOWED_ORIGINS=https://...
     # estan avisado xd
-    
+
     # Session state config: true enables database session state, false uses local state.py fallback
     ENABLE_DB_SESSION: bool = os.getenv("ENABLE_DB_SESSION", "false").lower() == "true"
 
     # LLM cost control: max tokens per user per day (default 50k)
     DAILY_TOKEN_LIMIT: int = int(os.getenv("DAILY_TOKEN_LIMIT", 50000))
-
-    # Voice synthesis is opt-in while the product runs in text-only mode.
-    TTS_ENABLED: bool = os.getenv("TTS_ENABLED", "false").lower() == "true"
 
 
 settings = Settings()

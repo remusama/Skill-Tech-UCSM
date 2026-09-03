@@ -164,7 +164,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
 
     const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login"
     const body = isRegister
-      ? { username: cleanUsername, password, email: cleanEmail, school, classroom, role: isTeacher ? "teacher" : "student" }
+      ? { username: cleanUsername, password, email: cleanEmail, school, classroom, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
       : { username: cleanUsername, password, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
 
     const baseUrl = API_BASE_URL

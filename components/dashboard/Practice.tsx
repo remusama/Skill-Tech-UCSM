@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { QuizInterface } from "../quiz/QuizInterface"
+import { LewinLeadershipTest } from "../quiz/LewinLeadershipTest"
+import { NeoPiRTest } from "../quiz/NeoPiRTest"
+import { CepvSurvey } from "../quiz/CepvSurvey"
 import { getRandomQuestions } from "../quiz/QuizData"
 import { cn } from "@/lib/utils"
 import { JourneyVisualizer } from "./JourneyVisualizer"
@@ -91,6 +94,20 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
     badge: "text-rose-400 bg-rose-400/10 border-rose-400/20",
     tab: "bg-rose-500",
     via: "via-rose-400"
+  },
+  psicometria: {
+    color: "from-violet-400 to-purple-600",
+    textColor: "text-violet-400",
+    badge: "text-violet-400 bg-violet-400/10 border-violet-400/20",
+    tab: "bg-violet-500",
+    via: "via-violet-400"
+  },
+  expectativas: {
+    color: "from-cyan-400 to-teal-600",
+    textColor: "text-cyan-400",
+    badge: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+    tab: "bg-cyan-500",
+    via: "via-cyan-400"
   }
 };
 
@@ -180,18 +197,32 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   }, [])
 
   useEffect(() => {
+    if (currentAreas.length === 0) return
     if (!currentAreas.find(a => a.id === selectedArea)) {
       setSelectedArea(currentAreas[0].id)
     }
   }, [activeCategory, currentAreas, selectedArea])
 
   const currentArea = useMemo(() => {
+    if (currentAreas.length === 0) return null
     return allAreas.find(a => a.id === selectedArea) || currentAreas[0]
   }, [selectedArea, currentAreas])
 
-  const theme = THEMES[currentArea.id] || THEMES.ciencias
+  const theme = (currentArea ? THEMES[currentArea.id] : THEMES.psicometria) || THEMES.psicometria
 
   const handleStartExam = (exam: any) => {
+    if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
+      setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
+      return
+    }
+    if (currentArea.id === "psicometria" && exam.id === "neo-240") {
+      setActiveExam({ ...exam, areaName: currentArea.name, isNeo: true })
+      return
+    }
+    if (currentArea.id === "expectativas" && exam.id === "cepv-20") {
+      setActiveExam({ ...exam, areaName: currentArea.name, isCepv: true })
+      return
+    }
     const questions = getRandomQuestions(currentArea.id, exam.title, exam.questions)
     setActiveExam({ ...exam, questions, areaName: currentArea.name })
   }
@@ -214,7 +245,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   }
 
   const handleStartMentorExam = (exam: any) => {
-    // Convert mentor exam questions to QuizInterface Question[] format
     const questions = (exam.questions || []).map((q: any, i: number) => ({
       id: i + 1,
       text: q.question,
@@ -254,6 +284,27 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   }
 
   if (activeExam) {
+    if ((activeExam as any).isCepv) {
+      return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+          <CepvSurvey onExit={handleCancelExam} />
+        </motion.div>
+      )
+    }
+    if ((activeExam as any).isLewin) {
+      return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+          <LewinLeadershipTest onExit={handleCancelExam} onComplete={() => {}} />
+        </motion.div>
+      )
+    }
+    if ((activeExam as any).isNeo) {
+      return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+          <NeoPiRTest onExit={handleCancelExam} />
+        </motion.div>
+      )
+    }
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
@@ -269,7 +320,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           initialAnswers={activeExam.initialAnswers}
           initialIndex={activeExam.initialIndex}
           examId={activeExam.id}
-          mentorAgentId={activeExam.agent_id}
           onComplete={(score, answers) => {
             // Remove saved progress on completion
             localStorage.removeItem(`mentor_exam_progress_${activeExam.id}`)
@@ -303,7 +353,20 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
       <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
 
-        {/* Category locked to Mentoría — tabs removed per user request */}
+        <div className="flex gap-2 p-1 bg-white/[0.04] border border-white/10 rounded-2xl w-fit">
+          {(["mentoria", "personal", "academica"] as const).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                "px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                activeCategory === cat ? "bg-white text-black shadow" : "text-white/50 hover:text-white"
+              )}
+            >
+              {cat === "mentoria" ? "Mentoría" : cat === "personal" ? "Personal" : "Académica"}
+            </button>
+          ))}
+        </div>
 
         {/* Area Selector — solo visible en modo académico/personal */}
         {activeCategory !== 'mentoria' && (
@@ -439,6 +502,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         {/* Scrollable Cards Grid - only shown when not in mentoria mode */}
         {activeCategory !== 'mentoria' && (
         <div ref={modulesRef} data-practice-container className="flex-1 overflow-y-auto pb-20 custom-scrollbar pr-2">
+          {currentAreas.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-600 border border-dashed border-white/10 rounded-3xl">
+              <FileText className="w-10 h-10 mb-3 opacity-40" />
+              <p className="font-medium">Sección vacía</p>
+              <p className="text-sm mt-1 text-gray-700">No hay exámenes disponibles en esta sección.</p>
+            </div>
+          ) : (
           <AnimatePresence mode="wait">
             {selectedTab === 'examenes' && (
               <motion.div
@@ -447,7 +517,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {currentArea.exams.map((exam, i) => (
+                {currentArea!.exams.map((exam: any, i: number) => (
                   <motion.div
                     key={exam.id}
                     initial={{ opacity: 0, y: 30 }}
@@ -530,8 +600,8 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 exit={{ opacity: 0, y: -20 }}
               >
                 <JourneyVisualizer
-                  areaId={currentArea.id}
-                  areaName={currentArea.name}
+                  areaId={currentArea!.id}
+                  areaName={currentArea!.name}
                   theme={theme}
                 />
               </motion.div>
@@ -554,6 +624,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
               </motion.div>
             )}
           </AnimatePresence>
+          )}
         </div>
       )}
       </div>
