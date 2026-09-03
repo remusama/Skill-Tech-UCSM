@@ -517,7 +517,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                {currentArea!.exams.map((exam, i) => (
+                {currentArea!.exams.map((exam: any, i: number) => (
                   <motion.div
                     key={exam.id}
                     initial={{ opacity: 0, y: 30 }}
