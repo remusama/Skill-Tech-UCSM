@@ -26,6 +26,10 @@ ALGORITHM = "HS256"
 # si no está presente, usa fallback "87654321" para desarrollo.
 TEACHER_REGISTRATION_KEY = os.environ.get("TEACHER_REGISTRATION_KEY", "87654321")
 
+# No estoy de acuerdo, pero boe, aqui te lo dejo por siaca
+# TEACHER_REGISTRATION_KEY = os.environ.get("TEACHER_REGISTRATION_KEY")
+
+
 # Roles que un usuario puede auto-asignarse en /api/auth/register o /api/auth/google. "admin" y "mentor" NUNCA se asignan desde estos endpoints públicos.
 PUBLIC_SELF_ASSIGNABLE_ROLES = {"student", "teacher"}
 
@@ -100,9 +104,17 @@ async def get_current_user_id(authorization: str = Header(None)):
 
 @router.post("/api/auth/register")
 async def register(req: AuthRequest, db: Session = Depends(get_db)):
-    if any(c.isspace() for c in req.username) or (req.email and any(c.isspace() for c in req.email)) or any(c.isspace() for c in req.password):
-        raise HTTPException(
-            status_code=400, detail="el nombre de usuario, correo electrónico o contraseña no deben contener espacios")
+    # if any(c.isspace() for c in req.username) or (req.email and any(c.isspace() for c in req.email)) or any(c.isspace() for c in req.password):
+    #     raise HTTPException(status_code=400, detail="el nombre de usuario, correo electrónico o contraseña no deben contener espacios")
+
+    # El username puede contener espacios (ej. nombre completo de un alumno registrado en lote), pero no debe empezar/terminar en espacio ni tener espacios dobles.
+    normalized_username = " ".join(req.username.split())
+    if normalized_username != req.username or not normalized_username:
+        raise HTTPException(status_code=400, detail="el nombre de usuario no debe tener espacios al inicio/final ni espacios dobles")
+    req.username = normalized_username
+    #Esta es una validacion para el correo electronico y la contraseña, asegurando que no contengan espacios en blanco.
+    if (req.email and any(c.isspace() for c in req.email)) or any(c.isspace() for c in req.password):
+        raise HTTPException(status_code=400, detail="el correo electrónico o la contraseña no deben contener espacios")
 
     if len(req.password) < 8:
         raise HTTPException(status_code=400, detail="la contraseña debe tener al menos 8 caracteres")
