@@ -95,19 +95,19 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
     tab: "bg-rose-500",
     via: "via-rose-400"
   },
-  psicometria: {
-    color: "from-violet-400 to-purple-600",
-    textColor: "text-violet-400",
-    badge: "text-violet-400 bg-violet-400/10 border-violet-400/20",
-    tab: "bg-violet-500",
-    via: "via-violet-400"
+psicometria: {
+    color: "from-[#d0b04d] to-[#997a23]",
+    textColor: "text-[#d0b04d]",
+    badge: "text-[#d0b04d] bg-[#d0b04d]/10 border-[#d0b04d]/20",
+    tab: "bg-[#d0b04d]",
+    via: "via-[#d0b04d]"
   },
   expectativas: {
-    color: "from-cyan-400 to-teal-600",
-    textColor: "text-cyan-400",
-    badge: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
-    tab: "bg-cyan-500",
-    via: "via-cyan-400"
+    color: "from-[#c7c7c7] to-[#3c5a21]",
+    textColor: "text-[#c7c7c7]",
+    badge: "text-[#3c5a21] bg-[#3c5a21]/10 border-[#c7c7c7]/20",
+    tab: "bg-[#3c5a21]",
+    via: "via-[#3c5a21]"
   }
 };
 
@@ -286,21 +286,21 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   if (activeExam) {
     if ((activeExam as any).isCepv) {
       return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0a6b17] overflow-auto">
           <CepvSurvey onExit={handleCancelExam} />
         </motion.div>
       )
     }
     if ((activeExam as any).isLewin) {
       return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0a6b17] overflow-auto">
           <LewinLeadershipTest onExit={handleCancelExam} onComplete={() => {}} />
         </motion.div>
       )
     }
     if ((activeExam as any).isNeo) {
       return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0a6b17] overflow-auto">
           <NeoPiRTest onExit={handleCancelExam} />
         </motion.div>
       )
@@ -438,7 +438,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         {activeCategory === 'mentoria' && (
           <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-purple-400 to-blue-500" />
+              <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#d0b04d] to-[#baef00] drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
               <h2 className="text-lg font-black uppercase tracking-widest text-white/80">Exámenes de Mentoría</h2>
             </div>
             {loadingMentorExams ? (
@@ -526,12 +526,14 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                     className="group relative h-full"
                   >
                     {/* Glow ring when highlighted by onboarding guide */}
-                    {highlightedAreas.some(h => currentArea.id.includes(h) || exam.title.toLowerCase().includes(h)) && (
-                      <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
-                    )}
-                    <div className="h-full bg-[#120824]/60 backdrop-blur-xl border border-[#ffffff10] rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 hover:border-white/20 hover:bg-[#1a0b36]/80 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.05)] hover:-translate-y-1">
+                      {highlightedAreas.some(h => currentArea.id.includes(h) || exam.title.toLowerCase().includes(h)) && (
+                        <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
+                      )}
 
-                      <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity", theme.via)} />
+                      <div className="h-full bg-[#063924]/60 backdrop-blur-xl border border-[#3c5a21] rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 hover:border-[#4ade80]/60 hover:bg-[#094d31]/80 hover:shadow-[0_0_25px_rgba(74,222,128,0.25)]">
+
+
+                      <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3c5a21] to-transparent opacity-0 group-hover:opacity-100 transition-opacity")} />
 
                       <div className="flex justify-between items-start mb-6">
                         <div className="flex flex-col">

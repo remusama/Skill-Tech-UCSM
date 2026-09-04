@@ -39,7 +39,6 @@ const navItems = [
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
 
-
 const teacherNavItems = [
   { icon: BarChart2, label: "Dashboard", page: "mentor-dashboard" },
   { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
@@ -49,7 +48,6 @@ const teacherNavItems = [
   { icon: Settings, label: "Agentes IA", page: "mentor-agents" },
   { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
-
 
 import { useEleonor } from "@/contexts/eleonor-context"
 
@@ -68,18 +66,14 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
   const sidebarRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // Sidebar fluid border based on guideHighlight
   const isSidebarHighlighted = guideHighlight === 'sidebar'
-  // Si el guideHighlight es un page de nav, también abrimos el sidebar para mostrarlo
   const isNavItemHighlighted = currentItems.some(item => item.page === guideHighlight)
 
-  // Forzar apertura si la guía está activa Y destaca el sidebar o un item de nav
   useEffect(() => {
     if (isGuideActive) {
       if (guideHighlight === 'sidebar' || isNavItemHighlighted) {
         setIsOpen(true)
       } else {
-        // Cuando el guía pasa a otro paso, cerrar el sidebar en móvil
         if (isMobile) {
           setIsOpen(false)
         }
@@ -87,14 +81,12 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
     }
   }, [isGuideActive, guideHighlight, isMobile, isNavItemHighlighted])
 
-  // Cerrar sidebar al cambiar de página en móvil (por navegación de guía o manual)
   useEffect(() => {
     if (isMobile && currentPage && guideHighlight !== 'sidebar' && !isNavItemHighlighted) {
       setIsOpen(false)
     }
   }, [currentPage, isMobile, guideHighlight, isNavItemHighlighted])
 
-  // Detectar si es dispositivo móvil
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -136,7 +128,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             onClick={() => setIsOpen(true)}
-            className="fixed top-6 left-6 z-50 bg-[#032318]/80 backdrop-blur-2xl p-3 rounded-2xl border border-[#baef00]/20 text-[#baef00] shadow-2xl hover:bg-[#3c5a21]/50 transition-all active:scale-95 group md:hidden"
+            className="fixed top-6 left-6 z-50 bg-[#032318]/80 backdrop-blur-2xl p-3 rounded-2xl border border-[#d0b04d]/20 text-[#d0b04d] shadow-2xl hover:bg-[#3c5a21]/50 transition-all active:scale-95 group md:hidden"
           >
             <Menu size={24} className="group-hover:rotate-90 transition-transform duration-500" />
           </motion.button>
@@ -144,7 +136,6 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        {/* En desktop siempre se renderiza (isMobile check), en mobile depende de isOpen */}
         {(isOpen || !isMobile) && (
           <motion.div
             ref={sidebarRef}
@@ -156,12 +147,11 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             }}
             exit={{ x: -320, opacity: 0 }}
             transition={{ type: "spring", stiffness: 450, damping: 30 }}
-            // En desktop: relative/h-full (el grid controla posición). En mobile: fixed overlay.
             className={`
             fixed md:sticky top-0 left-0 h-screen md:translate-x-0 md:opacity-100
             bg-white/5 backdrop-blur-[60px] border-r border-white/5 z-40 w-72 md:w-72 flex-shrink-0
-            overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#B500D1]/50' : ''}
-          `}
+            overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#d0b04d]/50' : ''}
+            `}
           >
             <Meteors number={15} className="opacity-20" />
             <div className="flex flex-col h-full p-6 relative z-10">
@@ -187,13 +177,12 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
 
               {/* Logo y título de SkillTech */}
               <div className="flex items-center gap-3 mb-10 px-2 group cursor-pointer">
-                {/* Cambiamos w-14 a w-16 para que coincida exactamente con el de arriba */}
                 <div className="relative w-16 h-16 flex-shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(208,176,77,0.8)] flex items-center justify-center">
                   <Image
                     src="/new-logo.png"
                     alt="SkillTech Logo"
                     fill
-                    className="object-contain drop-shadow-[0_0_15px_rgba(128,0,128,0.7)]"
+                    className="object-contain drop-shadow-[0_0_15px_rgba(208,176,77,0.7)]"
                   />
                 </div>
                 <div className="flex flex-col min-w-0">
@@ -201,7 +190,6 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                   <span className="text-[9px] uppercase tracking-[0.4em] font-black text-[#d0b04d] mt-1">Learning Ecosystem</span>
                 </div>
               </div>
-
 
               {/* Perfil del usuario */}
               <div 
@@ -225,7 +213,6 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                   </div>
                 </div>
               </div>
-
 
               {/* Navegación */}
               <nav className="flex-1 space-y-3">
