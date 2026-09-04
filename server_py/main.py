@@ -39,8 +39,21 @@ auto_seed_students()
 
 app = FastAPI(title="Eleonor Backend Modular")
 
-# CORS configuration restricted to ALLOWED_ORIGINS
-allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()]
+# CORS configuration restricted to ALLOWED_ORIGINS and FRONTEND_URL
+raw_origins = settings.ALLOWED_ORIGINS
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in raw_origins:
+    raw_origins = f"{raw_origins},{settings.FRONTEND_URL}"
+
+allowed_origins = []
+for origin in raw_origins.split(","):
+    o = origin.strip()
+    if o:
+        clean_origin = o.rstrip("/")
+        if clean_origin not in allowed_origins:
+            allowed_origins.append(clean_origin)
+
+if "https://skill-tech-ucsm.netlify.app" not in allowed_origins:
+    allowed_origins.append("https://skill-tech-ucsm.netlify.app")
 
 # VALIDACION PARA PRODUCCION - Activarlo por seguridad para evitar solicitudes X cuando tengan acceso a la web
 if "*" in allowed_origins:
@@ -53,6 +66,7 @@ if "*" in allowed_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

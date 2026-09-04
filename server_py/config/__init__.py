@@ -23,7 +23,12 @@ class Settings(BaseModel):
     PORT: int = int(os.getenv("PORT", 8000))
     DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")
     # ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS", "*")
-    ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000") # <- testeo
+    ALLOWED_ORIGINS: str = (
+        os.getenv("ALLOWED_ORIGINS")
+        or os.getenv("FRONTEND_URL")
+        or "https://skill-tech-ucsm.netlify.app,http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000"
+    )
+    FRONTEND_URL: Optional[str] = os.getenv("FRONTEND_URL")
     # para esto hay que agregar el dominio real en el .env, osea ALLOWED_ORIGINS=https://...
     # estan avisado xd
     

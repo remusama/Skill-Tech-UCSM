@@ -72,3 +72,17 @@ def test_logger_pii_masking():
     assert "+1-555-0199" not in masked_text
     assert "[MASKED_EMAIL]" in masked_text
     assert "[MASKED_PHONE]" in masked_text
+
+def test_cors_options_preflight():
+    from fastapi.testclient import TestClient
+    from server_py.main import app
+
+    client = TestClient(app)
+    headers = {
+        "Origin": "https://skill-tech-ucsm.netlify.app",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+    }
+    response = client.options("/api/auth/login", headers=headers)
+    assert response.headers.get("access-control-allow-origin") == "https://skill-tech-ucsm.netlify.app"
+
