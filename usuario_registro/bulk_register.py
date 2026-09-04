@@ -3,7 +3,7 @@ Script de registro masivo de alumnos desde Excel/ODS.
 
 Uso:
     python bulk_register.py --file lista_completa.ods --dry-run
-    python bulk_register.py --file lista_completa.ods --api http://localhost:8000
+    python bulk_register.py --file lista_completa.ods --api https://eleonor-backend.onrender.com
 
 El archivo (.xlsx o .ods) debe tener las columnas:
     Id, Ap. Paterno, Ap. Materno, Nombres, Tipo Partic., Estado, Correo
@@ -34,6 +34,9 @@ def load_rows(file_path: str):
         raise ValueError(f"Al archivo le faltan estas columnas: {faltantes}")
 
     students = []
+    seen_emails = set()
+    seen_usernames = set()
+
     for _, row in df.iterrows():
         raw_id = row.get("Id")
         if pd.isna(raw_id):
@@ -46,13 +49,20 @@ def load_rows(file_path: str):
         nombres = str(row.get("Nombres", "")).strip()
         ap_paterno = str(row.get("Ap. Paterno", "")).strip()
         ap_materno = str(row.get("Ap. Materno", "")).strip()
-        correo = str(row.get("Correo", "")).strip()
+        correo = str(row.get("Correo", "")).strip().lower()
 
-        if not nombres or not ap_paterno or not correo or correo.lower() == "nan":
+        if not nombres or not ap_paterno or not correo or correo == "nan":
             print(f"⚠️  Fila con Id={raw_id} incompleta (falta nombre/apellido/correo), la salto.")
             continue
 
         username = " ".join(f"{nombres} {ap_paterno} {ap_materno}".split())  # colapsa espacios extra
+
+        if correo in seen_emails or username.lower() in seen_usernames:
+            print(f"⚠️  Fila duplicada en archivo para {username} <{correo}>, se omite.")
+            continue
+
+        seen_emails.add(correo)
+        seen_usernames.add(username.lower())
 
         students.append({
             "id_excel": int(raw_id),
@@ -63,40 +73,53 @@ def load_rows(file_path: str):
     return students
 
 
-def register_student(api_base: str, student: dict) -> tuple[bool, str]:
+def register_student(api_base: str, student: dict, school: str = None, classroom: str = None) -> tuple[str, str]:
+    payload = {
+        "username": student["username"],
+        "email": student["email"],
+        "password": DEFAULT_PASSWORD,
+        "role": "student",
+    }
+    if school:
+        payload["school"] = school
+    if classroom:
+        payload["classroom"] = classroom
+
     try:
         resp = requests.post(
             f"{api_base}/api/auth/register",
-            json={
-                "username": student["username"],
-                "email": student["email"],
-                "password": DEFAULT_PASSWORD,
-                "role": "student",
-            },
+            json=payload,
             timeout=15,
         )
     except requests.RequestException as e:
-        return False, f"Error de conexión: {e}"
+        return "FAIL", f"Error de conexión: {e}"
 
     if resp.status_code == 200:
-        return True, "OK"
+        return "OK", "Registrado exitosamente"
     else:
         try:
             detail = resp.json().get("detail", resp.text)
         except Exception:
             detail = resp.text
-        return False, f"{resp.status_code}: {detail}"
+
+        detail_str = str(detail).lower()
+        if "ya está en uso" in detail_str or "ya está registrado" in detail_str:
+            return "EXISTS", f"Ya registrado previo ({detail})"
+
+        return "FAIL", f"{resp.status_code}: {detail}"
 
 
 def main():
     parser = argparse.ArgumentParser(description="Registro masivo de alumnos desde Excel/ODS")
     parser.add_argument("--file", required=True, help="Ruta al archivo .xlsx o .ods")
     parser.add_argument("--api", default="http://localhost:8000", help="URL base del backend")
+    parser.add_argument("--school", default=None, help="Nombre de la institución educativa (opcional)")
+    parser.add_argument("--classroom", default=None, help="Aula / Grado / Sección (opcional)")
     parser.add_argument("--dry-run", action="store_true", help="Solo muestra qué se registraría, sin llamar al API")
     args = parser.parse_args()
 
     students = load_rows(args.file)
-    print(f"📋 {len(students)} alumnos con Estado=FINALIZADO listos para registrar.\n")
+    print(f"📋 {len(students)} alumnos únicos con Estado=FINALIZADO listos para registrar.\n")
 
     if args.dry_run:
         for s in students:
@@ -108,6 +131,7 @@ def main():
     report_path = f"reporte_registro_{timestamp}.csv"
 
     ok_count = 0
+    exists_count = 0
     fail_count = 0
 
     with open(report_path, "w", newline="", encoding="utf-8") as f:
@@ -115,20 +139,27 @@ def main():
         writer.writerow(["id_excel", "username", "email", "resultado", "detalle"])
 
         for s in students:
-            success, detail = register_student(args.api, s)
-            status = "✅" if success else "❌"
-            print(f"{status} {s['username']} <{s['email']}> — {detail}")
-            writer.writerow([s["id_excel"], s["username"], s["email"], "OK" if success else "FALLO", detail])
-
-            if success:
+            status, detail = register_student(args.api, s, args.school, args.classroom)
+            if status == "OK":
+                icon = "✅"
                 ok_count += 1
+            elif status == "EXISTS":
+                icon = "ℹ️"
+                exists_count += 1
             else:
+                icon = "❌"
                 fail_count += 1
+
+            print(f"{icon} {s['username']} <{s['email']}> — {detail}")
+            writer.writerow([s["id_excel"], s["username"], s["email"], status, detail])
 
             time.sleep(REQUEST_DELAY_SECONDS)
 
-    print(f"\n🏁 Listo. {ok_count} registrados, {fail_count} con error.")
-    print(f"📄 Reporte guardado en: {report_path}")
+    print(f"\n🏁 Proceso finalizado.")
+    print(f"   - ✅ Registrados nuevos: {ok_count}")
+    print(f"   - ℹ️ Omitidos (ya existían): {exists_count}")
+    print(f"   - ❌ Fallidos con error: {fail_count}")
+    print(f"📄 Reporte detallado guardado en: {report_path}")
 
 
 if __name__ == "__main__":

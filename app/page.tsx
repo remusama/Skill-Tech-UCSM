@@ -32,7 +32,8 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [userRole, setUserRole] = useState("student")
 
-  const { hide: hideEleonor, setPage, preload } = useEleonor()
+  const { hide: hideEleonor, setPage, preload, presence, isGuideActive } = useEleonor()
+  const showEleonorColumn = currentPage === "assistant" || isGuideActive || presence === "GUIDE_ACTIVE"
 
   // Verificar si hay una sesión activa al cargar
   useEffect(() => {
@@ -169,7 +170,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-white relative overflow-hidden app-grid">
+    <div className={`min-h-screen bg-transparent text-white relative overflow-hidden app-grid ${!showEleonorColumn ? "without-eleonor" : ""}`}>
       <div className="zone-sidebar">
         <SidebarNavigation
           currentPage={currentPage}
@@ -205,7 +206,7 @@ export default function Home() {
       </main>
 
       {/* Eleonor Zone: Solo renderizar aquí cuando está en modo 'side' */}
-      <div className="zone-eleonor pointer-events-none md:pointer-events-auto">
+      <div className={`zone-eleonor pointer-events-none md:pointer-events-auto ${!showEleonorColumn ? "hidden" : ""}`}>
         {/* Renderizamos AvatarDisplay aquí. El componente interno decidirá su visualización 
              pero ahora está anclado al grid en desktop */}
         <AvatarDisplay />

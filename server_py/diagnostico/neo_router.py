@@ -54,6 +54,23 @@ async def submit_neo(submission: NeoSubmission, db: Session = Depends(get_db), u
     domain_raw = [sum(x) for x in facet_raw]
     facets_t = [[raw_to_t(v, False, submission.gender) for v in arr] for arr in facet_raw]
     domains_t = {d: raw_to_t(domain_raw[i], True, submission.gender) for i, d in enumerate(DOMAINS)}
-    update_user_skills(db, area="personalidad_neo", ai_diagnosis={"dominios": domains_t, "facetas": facets_t, "gender": submission.gender, "raw": {
-                       "facetRaw": facet_raw, "domainRaw": domain_raw}, "observaciones": f"NEO PI-R T perfil {domains_t}"}, user_id=user_id)
-    return {"facets": facets_t, "domains": domains_t, "raw": {"facetRaw": facet_raw, "domainRaw": domain_raw}, "gender": submission.gender}
+    
+    mean_t = round(sum(domains_t.values()) / len(domains_t))
+    nivel = max(0, min(100, round((mean_t / 80) * 100)))
+
+    ai_diag = {
+        "nivel": nivel,
+        "dominios": domains_t,
+        "facetas": facets_t,
+        "gender": submission.gender,
+        "raw": {"facetRaw": facet_raw, "domainRaw": domain_raw},
+        "observaciones": f"Evaluación NEO PI-R de Personalidad completada (Baremo: {submission.gender}, T medio: {mean_t}).\nPuntajes T por dominio: N={domains_t['N']}, E={domains_t['E']}, O={domains_t['O']}, A={domains_t['A']}, C={domains_t['C']}.",
+        "razonamiento": f"PERSONALIDAD NEO PI-R (T Media: {mean_t})",
+        "analisis_profundo": f"Perfil quinqué-dimensional Costa & McCrae. Neuroticismo: {domains_t['N']}, Extraversión: {domains_t['E']}, Apertura: {domains_t['O']}, Amabilidad: {domains_t['A']}, Responsabilidad: {domains_t['C']}.",
+        "puntos_fuertes": [f"Baremo {submission.gender} aplicado"],
+        "recomendaciones": ["Consultar reporte de facetas en Skill Nexus"]
+    }
+
+    update_user_skills(db, area="personalidad_neo", ai_diagnosis=ai_diag, user_id=user_id)
+    update_user_skills(db, area="psicometria", ai_diagnosis=ai_diag, user_id=user_id)
+    return {"facets": facets_t, "domains": domains_t, "raw": {"facetRaw": facet_raw, "domainRaw": domain_raw}, "gender": submission.gender, "nivel": nivel}

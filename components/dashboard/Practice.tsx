@@ -284,24 +284,33 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   }
 
   if (activeExam) {
+    const finishAndDiagnose = () => {
+      window.dispatchEvent(new CustomEvent('refresh-skills'))
+      handleFinishQuiz()
+    }
+
+    const handleSkillRefreshOnly = () => {
+      window.dispatchEvent(new CustomEvent('refresh-skills'))
+    }
+
     if ((activeExam as any).isCepv) {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
-          <CepvSurvey onExit={handleCancelExam} />
+          <CepvSurvey onExit={finishAndDiagnose} />
         </motion.div>
       )
     }
     if ((activeExam as any).isLewin) {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
-          <LewinLeadershipTest onExit={handleCancelExam} onComplete={() => {}} />
+          <LewinLeadershipTest onExit={finishAndDiagnose} onComplete={handleSkillRefreshOnly} />
         </motion.div>
       )
     }
     if ((activeExam as any).isNeo) {
       return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
-          <NeoPiRTest onExit={handleCancelExam} />
+          <NeoPiRTest onExit={finishAndDiagnose} />
         </motion.div>
       )
     }

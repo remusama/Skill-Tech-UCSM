@@ -33,6 +33,9 @@ import { Button } from "@/components/ui/button"
 import { academicAreas, personalAreas } from "@/lib/data/courseData"
 import { fetchUserProfile } from "@/lib/api/user"
 import { DiagnosisEleonorOverlay } from "./DiagnosisEleonorOverlay"
+import { LewinResults } from "./LewinResults"
+import { NeoPiRResults } from "./NeoPiRResults"
+import { CepvResults } from "./CepvResults"
 
 // --- Types ---
 
@@ -266,10 +269,39 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
 
         const findSkill = (name: string) => {
             const normalizedTarget = normalize(name);
-            return skills.find(s => {
-                const normalizedSkill = normalize(s.area);
+            const matches = skills.filter(s => {
+                const normalizedSkill = normalize(s.area || '');
+                if (normalizedTarget.includes('psicometria')) {
+                    return normalizedSkill.includes('psicometria') ||
+                           normalizedSkill.includes('liderazgo') ||
+                           normalizedSkill.includes('personalidad');
+                }
+                if (normalizedTarget.includes('expectativas')) {
+                    return normalizedSkill.includes('expectativas') ||
+                           normalizedSkill.includes('cepv');
+                }
                 return normalizedSkill.includes(normalizedTarget) || normalizedTarget.includes(normalizedSkill);
             });
+
+            if (matches.length === 0) return null;
+
+            const levels = matches.map(m => m.level || 0).filter(l => l > 0);
+            const avgLevel = levels.length ? Math.round(levels.reduce((a, b) => a + b, 0) / levels.length) : (matches[0]?.level || 0);
+
+            const combinedDiagnoses: any[] = [];
+            matches.forEach(m => {
+                const history = m.current_diagnosis;
+                if (Array.isArray(history)) {
+                    combinedDiagnoses.push(...history);
+                } else if (history) {
+                    combinedDiagnoses.push(history);
+                }
+            });
+
+            return {
+                level: avgLevel,
+                current_diagnosis: combinedDiagnoses.length > 0 ? combinedDiagnoses : null
+            };
         }
 
         const cx = 0
@@ -640,23 +672,61 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
             </AnimatePresence>
 
             <AnimatePresence>
-                {showFullReport && selectedNodeData && selectedNodeData.diagnosis && (
-                    <DiagnosisEleonorOverlay 
-                        analysis={(() => {
-                            const raw = Array.isArray(selectedNodeData.diagnosis) 
-                                ? selectedNodeData.diagnosis[activeStage] || selectedNodeData.diagnosis[selectedNodeData.diagnosis.length - 1]
-                                : selectedNodeData.diagnosis;
-                            return {
-                                ...raw,
-                                razonamiento: raw.razonamiento || raw.razonamiento_tipo || "ANÁLISIS COGNITIVO",
-                                puntos_fuertes: raw.puntos_fuertes || [],
-                                recomendaciones: raw.recomendaciones || [],
-                                analisis_profundo: raw.analisis_profundo || ""
-                            };
-                        })()} 
-                        onClose={() => setShowFullReport(false)} 
-                    />
-                )}
+                {showFullReport && selectedNodeData && selectedNodeData.diagnosis && (() => {
+                    const raw = Array.isArray(selectedNodeData.diagnosis) 
+                        ? selectedNodeData.diagnosis[activeStage] || selectedNodeData.diagnosis[selectedNodeData.diagnosis.length - 1]
+                        : selectedNodeData.diagnosis;
+
+                    if (!raw) return null;
+
+                    // 1. Lewin Test custom results screen
+                    if (raw.estilo_dominante || raw.detalle || raw.counts || (raw.observaciones && raw.observaciones.toLowerCase().includes('lewin'))) {
+                        const counts = raw.detalle || raw.counts || { autoritario: 6, democratico: 3, "laissez-faire": 2 };
+                        const dominant = raw.estilo_dominante || raw.dominant || "autoritario";
+                        return (
+                            <LewinResults 
+                                result={{ counts, dominant, isTied: raw.isTied }} 
+                                onExit={() => setShowFullReport(false)} 
+                            />
+                        );
+                    }
+
+                    // 2. NEO PI-R custom results screen
+                    if (raw.dominios && raw.facetas) {
+                        return (
+                            <NeoPiRResults 
+                                result={{ domains: raw.dominios, facets: raw.facetas, gender: raw.gender || "M", raw: raw.raw }} 
+                                onExit={() => setShowFullReport(false)} 
+                            />
+                        );
+                    }
+
+                    // 3. CEPV-20 custom results screen
+                    if (raw.avg) {
+                        return (
+                            <CepvResults 
+                                result={{ avg: raw.avg, openAns: raw.openAns, overall_avg: raw.overall_avg }} 
+                                onExit={() => setShowFullReport(false)} 
+                            />
+                        );
+                    }
+
+                    // 4. Default / Generic Diagnosis Overlay
+                    const analysisData = {
+                        ...raw,
+                        razonamiento: raw.razonamiento || raw.razonamiento_tipo || "ANÁLISIS COGNITIVO",
+                        puntos_fuertes: raw.puntos_fuertes || [],
+                        recomendaciones: raw.recomendaciones || [],
+                        analisis_profundo: raw.analisis_profundo || ""
+                    };
+
+                    return (
+                        <DiagnosisEleonorOverlay 
+                            analysis={analysisData} 
+                            onClose={() => setShowFullReport(false)} 
+                        />
+                    );
+                })()}
             </AnimatePresence>
         </div>
     )

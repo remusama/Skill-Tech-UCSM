@@ -34,8 +34,7 @@ const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
   { icon: Clock, label: "Examenes", page: "practice" },
   { icon: Brain, label: "Diagnostico", page: "diagnosis" },
-  { icon: User, label: "Perfil / Credencial", page: "profile" },
-  { icon: MessageSquare, label: "Eleonor AI", page: "assistant" },
+  { icon: MessageSquare, label: "Moya", page: "assistant" },
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
 
@@ -65,8 +64,29 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
   const { isGuideActive, guideHighlight, completeOnboarding } = useEleonor()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [userName, setUserName] = useState("Estudiante")
+  const [userSubtitle, setUserSubtitle] = useState("Fundador")
   const sidebarRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("eleonor_user")
+      if (stored) {
+        const u = JSON.parse(stored)
+        if (u.full_name || u.username) {
+          setUserName(u.full_name || u.username)
+        }
+        if (u.classroom) {
+          setUserSubtitle(u.classroom)
+        } else if (u.role) {
+          setUserSubtitle(u.role === "teacher" ? "Docente" : u.role === "admin" ? "Administrador" : "Estudiante")
+        }
+      }
+    } catch (e) {
+      console.error("Error reading user from localStorage:", e)
+    }
+  }, [])
 
   // Sidebar fluid border based on guideHighlight
   const isSidebarHighlighted = guideHighlight === 'sidebar'
@@ -196,11 +216,13 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                 <div className="flex items-center gap-3 relative z-10">
                   <Avatar className="h-12 w-12 border-2 border-[#B500D1]/30">
                     <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                    <AvatarFallback className="bg-gradient-to-br from-[#B500D1] to-[#D100B5] text-white font-black text-sm">AD</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-[#B500D1] to-[#D100B5] text-white font-black text-sm">
+                      {userName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "ST"}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-white truncate uppercase tracking-tighter">Usuario Demo</p>
-                    <p className="text-[9px] text-white/40 truncate tracking-widest font-bold uppercase mt-0.5">Fundador</p>
+                    <p className="text-xs font-black text-white truncate uppercase tracking-tighter">{userName}</p>
+                    <p className="text-[9px] text-white/40 truncate tracking-widest font-bold uppercase mt-0.5">{userSubtitle}</p>
                   </div>
                 </div>
               </div>

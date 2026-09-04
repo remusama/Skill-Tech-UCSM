@@ -39,12 +39,17 @@ async def submit_lewin_test(submission: LewinSubmission, db: Session = Depends(g
     winners = [k for k, v in counts.items() if v == counts[dominant]]
     is_tied = len(winners) > 1
     nivel = round((counts[dominant] / 11) * 100)
-    update_user_skills(db, area="liderazgo", ai_diagnosis={
+    ai_diag = {
         "nivel": nivel,
         "estilo_dominante": dominant,
         "detalle": counts,
         "isTied": is_tied,
-        "observaciones": f"Test Lewin: dominante {dominant} ({counts[dominant]}/11).",
-        "razonamiento": dominant,
-    }, user_id=user_id)
+        "observaciones": f"Test Kurt Lewin de Liderazgo: Estilo dominante {dominant.upper()} ({counts[dominant]}/11 respuestas). Nivel de desarrollo {nivel}%.",
+        "razonamiento": f"LIDERAZGO: {dominant.upper()}",
+        "analisis_profundo": f"Análisis determinístico de liderazgo de Kurt Lewin. Estilo predominante: {dominant}. Autoritario: {counts['autoritario']}, Democrático: {counts['democratico']}, Laissez-faire: {counts['laissez-faire']}.",
+        "puntos_fuertes": [f"Estilo de Liderazgo: {dominant}"],
+        "recomendaciones": ["Aprovechar las fortalezas del estilo de liderazgo en trabajos de equipo"]
+    }
+    update_user_skills(db, area="liderazgo", ai_diagnosis=ai_diag, user_id=user_id)
+    update_user_skills(db, area="psicometria", ai_diagnosis=ai_diag, user_id=user_id)
     return {"counts": counts, "dominant": dominant, "isTied": is_tied, "nivel": nivel}

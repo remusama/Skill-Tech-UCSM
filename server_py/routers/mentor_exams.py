@@ -1,3 +1,5 @@
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from server_py.memoria.database import get_db, User # Aqui se arreglo el import de User para que funcione correctamente

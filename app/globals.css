@@ -250,6 +250,12 @@ body {
     grid-template-areas: "sidebar content eleonor";
   }
 
+  .app-grid.without-eleonor {
+    /* 2 Columnas: Sidebar | Content (aprovecha todo el ancho disponible) */
+    grid-template-columns: var(--sidebar-width) 1fr;
+    grid-template-areas: "sidebar content";
+  }
+
   .zone-sidebar {
     grid-area: sidebar;
     position: sticky;
