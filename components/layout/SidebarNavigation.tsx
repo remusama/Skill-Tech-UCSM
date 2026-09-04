@@ -158,29 +158,50 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             transition={{ type: "spring", stiffness: 450, damping: 30 }}
             // En desktop: relative/h-full (el grid controla posición). En mobile: fixed overlay.
             className={`
-              fixed md:relative md:translate-x-0 md:opacity-100 top-0 left-0 h-full 
-              bg-white/5 backdrop-blur-[60px] border-r border-white/5 z-40 w-72 md:w-full
-              overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#B500D1]/50' : ''}
-            `}
+            fixed md:sticky top-0 left-0 h-screen md:translate-x-0 md:opacity-100
+            bg-white/5 backdrop-blur-[60px] border-r border-white/5 z-40 w-72 md:w-72 flex-shrink-0
+            overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#B500D1]/50' : ''}
+          `}
           >
             <Meteors number={15} className="opacity-20" />
-
             <div className="flex flex-col h-full p-6 relative z-10">
-              {/* Logo y título */}
-              <div className="flex items-center gap-4 mb-12 px-2 group cursor-pointer">
-                <div className="relative w-14 h-14 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(208,176,77,0.8)]">
+              
+              {/* Programa de Liderazgo */}
+              <div className="flex items-center gap-3 mb-4 px-2 group cursor-pointer">
+                <div className="relative w-16 h-16 flex-shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(13,151,31,0.8)]">
+                  <Image
+                    src="/LogoChiquito.png"
+                    alt="Logo Liderazgo"
+                    fill
+                    className="object-contain drop-shadow-[0_0_15px_rgba(13,151,31,0.6)]"
+                  />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-black tracking-tight text-white leading-tight uppercase">Programa de Liderazgo</span>
+                  <span className="text-[9px] uppercase tracking-[0.3em] font-black text-[#d0b04d] mt-1">UCSM 2026</span>
+                </div>
+              </div>
+
+              {/* Línea divisoria */}
+              <div className="w-full h-px bg-white/10 mb-5 mx-2" />
+
+              {/* Logo y título de SkillTech */}
+              <div className="flex items-center gap-3 mb-10 px-2 group cursor-pointer">
+                {/* Cambiamos w-14 a w-16 para que coincida exactamente con el de arriba */}
+                <div className="relative w-16 h-16 flex-shrink-0 transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(208,176,77,0.8)] flex items-center justify-center">
                   <Image
                     src="/new-logo.png"
                     alt="SkillTech Logo"
                     fill
-                    className="object-contain drop-shadow-[0_0_15px_rgba(208,176,77,0.6)]"
+                    className="object-contain drop-shadow-[0_0_15px_rgba(128,0,128,0.7)]"
                   />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <span className="text-2xl font-black tracking-tighter text-white leading-none">SkillTech</span>
                   <span className="text-[9px] uppercase tracking-[0.4em] font-black text-[#d0b04d] mt-1">Learning Ecosystem</span>
                 </div>
               </div>
+
 
               {/* Perfil del usuario */}
               <div 

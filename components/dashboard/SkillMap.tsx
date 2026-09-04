@@ -29,9 +29,12 @@ import { API_URL } from "@/lib/config"
 const CustomTooltip = ({ active, payload, label, theme }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className={`p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/80'
-        }`}>
-        <p className="text-xs font-black uppercase tracking-widest text-[#B500D1] mb-2">{label}</p>
+      <div className={`p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl ${
+        theme === 'dark' ? 'bg-black/80' : 'bg-white/80'
+      }`}>
+        
+        <p className="text-xs font-black uppercase tracking-widest text-[#d0b04d] mb-2">{label}</p>
+        
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
@@ -48,8 +51,10 @@ const CustomTooltip = ({ active, payload, label, theme }: any) => {
 
 const ChartHeader = ({ title, description, icon: Icon }: any) => (
   <div className="flex items-start gap-4 mb-6">
-    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#B500D1]/20 to-cyan-500/20 border border-white/10 shadow-lg">
-      <Icon className="w-6 h-6 text-[#B500D1]" />
+   
+    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#d0b04d]/20 to-cyan-500/20 border border-white/10 shadow-lg">
+      
+      <Icon className="w-6 h-6 text-[#d0b04d]" />
     </div>
     <div className="flex flex-col">
       <h3 className="text-xl font-black text-white tracking-tight uppercase italic">{title}</h3>
@@ -147,11 +152,11 @@ export function SkillMap() {
 
 
   const colors = useMemo(() => ({
-    primary: "#B500D1",
-    secondary: "#00FFFF",
-    accent: "#8B00FF",
-    grid: "rgba(255, 255, 255, 0.05)",
-    text: "rgba(255, 255, 255, 0.6)",
+  primary: "#d0b04d", // 
+  secondary: "#00FFFF", 
+  accent: "#0d971f", 
+  grid: "rgba(255, 255, 255, 0.05)",
+  text: "rgba(255, 255, 255, 0.6)",
   }), [])
 
   const handleRefresh = () => {
@@ -160,40 +165,46 @@ export function SkillMap() {
 
   if (!mounted) return null
 
-  return (
-    <div className="min-h-screen p-4 md:p-12 bg-transparent relative overflow-hidden">
-      {/* Fondo Ambientales */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#B500D1]/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
+return (
+    <div className="min-h-screen p-4 md:p-12 bg-transparent relative overflow-hidden w-full">
+      {/* Fondo Ambientales con tonos dorado y verde */}
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#d0b04d]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#0d971f]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Header Principal */}
-      <BlurFade delay={0.1} inView>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10 pl-20 md:pl-0">
+      {/* Header Principal sin padding lateral forzado que rompa el ancho */}
+      <div className="relative z-10 mb-12 w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8">
           <div className="flex flex-col gap-2">
-            <MagicTitle variant="sparkles" className="text-4xl md:text-7xl tracking-[0.2em] font-black">
-              SKILLMAP
-            </MagicTitle>
+            <BlurFade delay={0.1} inView>
+              <h1 className="text-4xl md:text-7xl tracking-[0.2em] font-black text-white">
+                SKILLMAP
+              </h1>
+            </BlurFade>
+            
+            {/* Tu única línea con el degradado correcto */}
+            <div className="h-[2px] w-48 bg-gradient-to-r from-[#baef00] to-[#032318] mb-4" />
+            
             <div className="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-md">
-              <div className="w-2 h-2 rounded-full bg-[#B500D1] animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-[#0d971f] animate-pulse" />
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Análisis en tiempo real habilitado</span>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-4 relative z-10">
+        <div className="flex flex-col md:flex-row items-center gap-4">
           {gamification && <StreakFire count={gamification.streak_count} />}
 
           <Button
-            variant="outline"
+            variant="default"
             onClick={() => window.dispatchEvent(new CustomEvent('restart-onboarding'))}
-            className="group relative overflow-hidden bg-white/5 border-white/10 hover:border-[#B500D1]/50 text-white rounded-2xl h-14 px-8 transition-all duration-500 active:scale-95"
+            className="group relative overflow-hidden bg-white/5 border border-white/10 hover:border-[#d0b04d]/50 text-white rounded-2xl h-14 px-8 transition-all duration-500 active:scale-95"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#B500D1]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Sparkles className="w-4 h-4 mr-3 transition-transform duration-300 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#d0b04d]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Sparkles className="w-4 h-4 mr-3 transition-transform duration-300 group-hover:scale-110 text-[#d0b04d]" />
             <span className="text-[11px] font-black uppercase tracking-[0.2em]">Repetir Onboarding</span>
           </Button>
         </div>
-      </BlurFade>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
         <TabsList className="mb-12 bg-white/5 border border-white/5 p-1.5 rounded-[2rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full">
@@ -204,7 +215,7 @@ export function SkillMap() {
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="data-[state=active]:bg-[#B500D1] data-[state=active]:text-white rounded-[1.5rem] px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_20px_rgba(181,0,209,0.4)]"
+              className="data-[state=active]:bg-[#0d971f] data-[state=active]:text-white text-white/70 rounded-[1.5rem] px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.4)]"
             >
               <tab.icon size={16} />
               {tab.label}
@@ -223,7 +234,7 @@ export function SkillMap() {
           >
             {/* TABS CONTENT: MATRIX */}
             {activeTab === "matrix" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
                 <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group">
                   <ChartHeader
                     title="Académico"
@@ -235,8 +246,8 @@ export function SkillMap() {
                       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={academicData}>
                         <defs>
                           <linearGradient id="colorRadar" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#B500D1" stopOpacity={0.8} />
-                            <stop offset="100%" stopColor="#00FFFF" stopOpacity={0.4} />
+                            <stop offset="0%" stopColor="#0d971f" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="#d0b04d" stopOpacity={0.4} />
                           </linearGradient>
                         </defs>
                         <PolarGrid stroke={colors.grid} />
@@ -247,14 +258,13 @@ export function SkillMap() {
                         <Radar
                           name="Nivel"
                           dataKey="A"
-                          stroke="#B500D1"
+                          stroke="#0d971f"
                           strokeWidth={2}
                           fill="url(#colorRadar)"
                           fillOpacity={0.6 + (academicData.reduce((acc, curr: any) => acc + (curr.xp || 0), 0) / 1000 * 0.4)}
                         />
                         <Tooltip content={<CustomTooltip theme={theme} />} />
                       </RadarChart>
-
                     </ResponsiveContainer>
                   </div>
                 </MagicCard>
@@ -270,8 +280,8 @@ export function SkillMap() {
                       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={softSkillsData}>
                         <defs>
                           <linearGradient id="colorRadarSoft" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#8B00FF" stopOpacity={0.8} />
-                            <stop offset="100%" stopColor="#B500D1" stopOpacity={0.4} />
+                            <stop offset="0%" stopColor="#d0b04d" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="#0d971f" stopOpacity={0.4} />
                           </linearGradient>
                         </defs>
                         <PolarGrid stroke={colors.grid} />
@@ -282,14 +292,13 @@ export function SkillMap() {
                         <Radar
                           name="Nivel"
                           dataKey="A"
-                          stroke="#8B00FF"
+                          stroke="#d0b04d"
                           strokeWidth={2}
                           fill="url(#colorRadarSoft)"
                           fillOpacity={0.6}
                         />
                         <Tooltip content={<CustomTooltip theme={theme} />} />
                       </RadarChart>
-
                     </ResponsiveContainer>
                   </div>
                 </MagicCard>
@@ -298,7 +307,7 @@ export function SkillMap() {
 
             {/* TABS CONTENT: COMPARISON */}
             {activeTab === "comparison" && (
-              <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-10 rounded-[2.5rem]">
+              <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-10 rounded-[2.5rem] w-full">
                 <ChartHeader
                   title="Análisis Comparativo"
                   description="Posicionamiento relativo frente a la media del sistema"
@@ -325,7 +334,7 @@ export function SkillMap() {
                       <Bar
                         dataKey="Nivel"
                         name="Tu Rendimiento"
-                        fill="#B500D1"
+                        fill="#0d971f"
                         radius={[20, 20, 0, 0]}
                         barSize={35}
                       />
@@ -351,7 +360,7 @@ export function SkillMap() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay: 0.5, duration: 0.8 }}
-        className="mt-20 p-12 bg-white/5 backdrop-blur-[100px] border border-white/10 rounded-[3rem] shadow-2xl relative overflow-hidden"
+        className="mt-20 p-12 bg-white/5 backdrop-blur-[100px] border border-white/10 rounded-[3rem] shadow-2xl relative overflow-hidden w-full"
       >
         <div className="absolute top-0 right-0 p-8 text-white/5 pointer-events-none">
           <Info size={120} strokeWidth={1} />
@@ -359,8 +368,8 @@ export function SkillMap() {
 
         <div className="flex flex-col md:flex-row gap-12 relative z-10">
           <div className="flex-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#B500D1]/20 rounded-full border border-[#B500D1]/20 mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#B500D1]">Intelligence Insight</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0d971f]/20 rounded-full border border-[#0d971f]/20 mb-6">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#0d971f]">Intelligence Insight</span>
             </div>
             <h3 className="text-3xl font-black text-white italic tracking-tighter mb-4 uppercase">Interpretación del SkillMap</h3>
             <p className="text-sm text-white/60 leading-relaxed font-medium">
@@ -373,12 +382,12 @@ export function SkillMap() {
               {
                 title: "Matriz Radar",
                 txt: "Permite ver el equilibrio entre tus fortalezas técnicas y tu inteligencia emocional.",
-                color: "text-[#B500D1]"
+                color: "text-[#0d971f]"
               },
               {
                 title: "Benchmark",
                 txt: "Comprende tu posición respecto a los niveles globales para optimizar tu especialización.",
-                color: "text-purple-400"
+                color: "text-[#d0b04d]"
               }
             ].map((item, i) => (
               <div key={i} className="p-6 bg-white/5 border border-white/5 rounded-3xl hover:bg-white/10 transition-colors duration-500 group">

@@ -336,7 +336,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     <div ref={practiceContainerRef} id="practice-scroll-container" className="relative min-h-screen text-white overflow-y-auto overflow-x-hidden font-sans flex flex-col pt-6">
       {/* Ancla invisible para scroll-back — scrollIntoView funciona con body overflow:hidden */}
       <div ref={topAnchorRef} className="absolute top-0 left-0 w-0 h-0" aria-hidden />
-      <div className="fixed inset-0 bg-[#032318] opacity-60 z-[-5]" />
+      
 
       {/* TOP HEADER */}
       <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">

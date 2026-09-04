@@ -47,7 +47,7 @@ export function BackgroundAnimation() {
     const numberOfParticles = level === 'low' ? 10 : (level === 'medium' ? 30 : (isMobile ? 25 : 80))
     const enableConnections = level !== 'low' && !isMobile
 
-    const particleColor = theme === "dark" ? "#8B00FF" : "#8B00FF"
+    const particleColor = theme === "dark" ? "#032318" : "#032318"
 
     class Particle {
       x: number

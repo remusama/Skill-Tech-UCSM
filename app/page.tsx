@@ -26,7 +26,7 @@ import { API_BASE_URL } from "@/lib/config"
 // Importar AvatarDisplay lazy para usarlo en el grid ya definido arriba
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false) 
+  const [isLoggedIn, setIsLoggedIn] = useState(true) //CAMBIAR
   const [currentPage, setCurrentPage] = useState("skillmap")
   const [isLoaded, setIsLoaded] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -169,7 +169,10 @@ export default function Home() {
   }
 
   return (
+    
     <div className="min-h-screen bg-transparent text-white relative overflow-hidden app-grid">
+      //ver despues
+      <div className="fixed inset-0 bg-[#032318] opacity-60 z-[-5]" /> 
       <div className="zone-sidebar">
         <SidebarNavigation
           currentPage={currentPage}
