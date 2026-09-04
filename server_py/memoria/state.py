@@ -1,22 +1,36 @@
-# Definición del Estado del Agente
+"""Estado global heredado utilizado por los componentes de Eleonor.
 
+Este módulo conserva el estado en memoria utilizado por la implementación
+heredada. El adaptador de memoria puede leer y actualizar estos valores
+cuando la persistencia en base de datos está desactivada.
+"""
+
+# Estado emocional actual de Eleonor.
 eleonor_state = {
     "valence": "neutra",
     "tension": 0.5,
     "engagement": 0.5
 }
 
-# Memoria de Fricción y Límites
+
+# Memoria de fricción y límites de interacción.
 eleonor_friction = {
     "ignored_structure_count": 0,
     "contradiction_count": 0,
     "emotional_volatility": 0.0
 }
 
-eleonor_boundary = "none"  # none | warning | hold | close
-last_diagnosis = None  # Almacena el último JSON de diagnóstico de Gemini Flash
 
-# Señales de Gemini (Capa 1) para uso en Personalidad (Capa 2)
+# Límite actual de la interacción:
+# none, warning, hold o close.
+eleonor_boundary = "none"
+
+
+# Último diagnóstico recibido desde Gemini Flash.
+last_diagnosis = None
+
+
+# Señales de Gemini para el módulo de personalidad.
 gemini_signals = {
     "transcript": "",
     "intent": "none",
@@ -24,12 +38,14 @@ gemini_signals = {
     "clarity": 1.0
 }
 
-# Modelo de Uso (Estadístico y Frío)
+
+# Modelo estadístico de uso y preferencias del usuario.
 user_usage_model = {
     "avg_clarity_score": 0.5,
-    "response_density_pref": "medium",  # short | medium | detailed
+    "response_density_pref": "medium",
     "structure_adherence": 0.5
 }
 
-# Historial para Inercia y Promedios (últimos 10 mensajes)
+
+# Historial utilizado para calcular inercia y promedios.
 eleonor_history = []
