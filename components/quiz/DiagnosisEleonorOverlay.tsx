@@ -91,9 +91,13 @@ export const DiagnosisEleonorOverlay: React.FC<DiagnosisEleonorOverlayProps> = (
         lastTextRef.current = text
 
         try {
+            const ttsToken = localStorage.getItem("eleonor_token")
             const response = await fetch(`${API_BASE_URL}/api/tts`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
+                },
                 body: JSON.stringify({ text })
             })
             const data = await response.json()

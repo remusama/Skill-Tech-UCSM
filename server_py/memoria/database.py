@@ -34,7 +34,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     db_file = os.path.join(BASE_DIR, "skill_tech_v2.db")
     DATABASE_URL = f"sqlite:///{db_file}"
-    print(f"[DB] Modo desarrollo -> SQLite: {db_file}")
+    print(f"[DB] Modo desarrollo → SQLite: {db_file}")
 else:
     # SQLAlchemy requiere el prefijo postgresql://.
     if DATABASE_URL.startswith("postgres://"):
@@ -69,11 +69,10 @@ SessionLocal = sessionmaker(
 )
 Base = declarative_base()
 
-
 class User(Base):
     """Representa a un usuario de la plataforma."""
     __tablename__ = "users"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
@@ -90,7 +89,7 @@ class User(Base):
     phone = Column(String, nullable=True)
     website = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
-
+    
     # Perfil Cognitivo Global
     streak_count = Column(Integer, default=0)
     last_active_at = Column(DateTime, nullable=True)
@@ -118,11 +117,10 @@ class User(Base):
         },
     )
 
-
 class UserSkill(Base):
     """Representa el nivel y el diagnóstico de una habilidad del usuario."""
     __tablename__ = "user_skills"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     area = Column(String, index=True)
@@ -144,11 +142,10 @@ class UserSkill(Base):
         default=datetime.datetime.utcnow,
     )
 
-
 class ExamResult(Base):
     """Representa el resultado de una evaluación del usuario."""
     __tablename__ = "exam_results"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     area = Column(String, index=True)
@@ -169,7 +166,7 @@ class ExamResult(Base):
 class EleonorHistory(Base):
     """Representa un registro del historial cognitivo de Eleonor."""
     __tablename__ = "eleonor_history"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     timestamp = Column(
@@ -181,11 +178,10 @@ class EleonorHistory(Base):
     signals = Column(JSON)
     confidence = Column(Float)
 
-
 class ChatMessage(Base):
     """Representa un mensaje enviado o recibido durante una conversación."""
     __tablename__ = "chat_messages"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     role = Column(String)
@@ -197,11 +193,10 @@ class ChatMessage(Base):
     )
     session_id = Column(String, default="default", index=True)
 
-
 class EleonorSession(Base):
     """Representa el estado persistente de una sesión de Eleonor."""
     __tablename__ = "eleonor_sessions"
-
+    
     id = Column(String, primary_key=True, index=True)
     user_id = Column(
         Integer,
@@ -234,11 +229,10 @@ class EleonorSession(Base):
         default=datetime.datetime.utcnow,
     )
 
-
 class LearningJourney(Base):
     """Representa una ruta de aprendizaje personalizada."""
     __tablename__ = "learning_journeys"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     area = Column(String)
@@ -255,11 +249,10 @@ class LearningJourney(Base):
         default=datetime.datetime.utcnow,
     )
 
-
 class JourneySession(Base):
     """Representa una sesión individual dentro de una ruta de aprendizaje."""
     __tablename__ = "journey_sessions"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     journey_id = Column(
         Integer,
@@ -274,7 +267,6 @@ class JourneySession(Base):
     is_completed = Column(Integer, default=0)
     completed_at = Column(DateTime, nullable=True)
 
-
 def init_db():
     """Registra los modelos y crea las tablas que aún no existan."""
 
@@ -282,7 +274,6 @@ def init_db():
     from server_py.mentoria import models as _mentoria_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
-
 
 def get_db():
     """Proporciona una sesión de base de datos para una dependencia de FastAPI."""

@@ -384,13 +384,17 @@ async def websocket_chat(websocket: WebSocket):
             await websocket.send_json({"type": "expression", "content": map_expression(session)})
             await websocket.send_json({"type": "done", "content": ""})
 
+    # Fuga de errores el WebSocket para que no se filtre info, el detalle tecnico aun lo tenemos nosotros, al usuario se le da un mensaje generico
     except WebSocketDisconnect:
         print(f"WebSocket disconnected for user {user_id}")
     except Exception as e:
-        print(f"WS Error: {e}")
+        print(f"WS Error (user_id={user_id}): {e}")
         try:
-            await websocket.send_json({"type": "error", "content": str(e)})
-        except Exception:
+            await websocket.send_json({
+                "type": "error",
+                "content": "Ocurrió un error procesando tu mensaje. Intenta de nuevo."
+            })
+        except:
             pass
     finally:
         db.close()

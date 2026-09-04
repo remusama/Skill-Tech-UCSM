@@ -207,7 +207,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#ffffff] via-[#dce8a0] to-[#a3ca02] p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#012216] via-[#3c5a21_65%] to-[#85a02f] p-4 relative overflow-hidden">
       {/* Background Particles */}
       <Particles
         className="absolute inset-0 pointer-events-none"
@@ -218,21 +218,40 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
       />
 
       <div className="w-full max-w-md relative z-10">
-        {/* Logo and Title */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="relative w-16 h-16 mb-2">
-            <Image
-              src="/new-logo.png"
-              alt="SkillMeter Logo"
-              fill
-              className="object-contain drop-shadow-[0_0_20px_rgba(208,176,77,0.6)]"
-            />
-          </div>
-          <h1 className="text-5xl font-black bg-gradient-to-r from-[#0d971f] via-[#d0b04d] to-[#d0b04d] bg-clip-text text-transparent tracking-tighter">
-            SkillTech
-          </h1>
-          <p className="text-[#0d971f]/60 text-[10px] uppercase tracking-[0.4em] font-black mt-2">Learning Ecosystem</p>
-        </div>
+        {/* Logos and Title */}
+<div className="w-full max-w-md grid grid-cols-2 items-center justify-items-center mb-6 pt-8">
+
+  {/* LADO IZQUIERDO: SkillTech completo */}
+  <div className="flex flex-col items-center">
+    <div className="relative w-20 h-20 mb-1">
+      <Image
+        src="/new-logo.png"
+        alt="SkillTech Logo"
+        fill
+        className="object-contain drop-shadow-[0_0_20px_rgba(208,176,77,0.6)]"
+      />
+    </div>
+
+    <h1 className="text-4xl font-black bg-gradient-to-r from-[#0d971f] via-[#d0b04d] to-[#d0b04d] bg-clip-text text-transparent tracking-tighter leading-none text-center">
+      SkillTech
+    </h1>
+
+    <p className="text-[#cae13c]/60 text-[10px] uppercase tracking-[0.3em] font-black mt-1 text-center">
+      Learning Ecosystem
+    </p>
+  </div>
+
+  {/* LADO DERECHO: Logo Liderazgo */}
+  <div className="relative w-60 h-36 flex items-center justify-center -translate-x-6">
+    <Image
+      src="/Logo.png"
+      alt="Logo institucional"
+      fill
+      className="object-contain"
+    />
+  </div>
+
+</div>
 
         <Card className="border-[#d0b04d]/30 bg-[#063924]/90 shadow-[0_20px_50px_rgba(6,57,36,0.35)] rounded-2xl">
           <CardHeader>
@@ -316,38 +335,40 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Colegio</Label>
-                      <Select value={school} onValueChange={setSchool} required>
-                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#a3ca02]/50 focus:ring-[#a3ca02]/50 transition-all h-12 rounded-xl">
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#20144F] border-white/10 text-white z-[999]">
-                          <SelectItem value="Francisco Mostajo">Francisco Mostajo</SelectItem>
-                          <SelectItem value="Carlos José Echavarry Osacar">Carlos José Echavarry</SelectItem>
-                          <SelectItem value="Franklin Roosevelt">Franklin Roosevelt</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+            <div className="grid grid-cols-2 gap-4">
+              {/* COLEGIO */}
+              <div className="space-y-2">
+                <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Colegio</Label>
+                <Select value={school} onValueChange={setSchool} required>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#baef00]/60 focus:ring-[#baef00]/30 transition-all h-12 rounded-xl">
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0c1c11] border-[#3c5a21]/50 text-white z-[999] shadow-2xl">
+                    <SelectItem value="Francisco Mostajo" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Francisco Mostajo</SelectItem>
+                    <SelectItem value="Carlos José Echavarry Osacar" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Carlos José Echavarry</SelectItem>
+                    <SelectItem value="Franklin Roosevelt" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Franklin Roosevelt</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Grado/Sección</Label>
-                      <Select value={classroom} onValueChange={setClassroom} required>
-                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#a3ca02]/50 focus:ring-[#a3ca02]/50 transition-all h-12 rounded-xl">
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#20144F] border-white/10 text-white z-[999]">
-                          <SelectItem value="4A">4A</SelectItem>
-                          <SelectItem value="4B">4B</SelectItem>
-                          <SelectItem value="4C">4C</SelectItem>
-                          <SelectItem value="5A">5A</SelectItem>
-                          <SelectItem value="5B">5B</SelectItem>
-                          <SelectItem value="5C">5C</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+              {/* GRADO / SECCIÓN */}
+              <div className="space-y-2">
+                <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Grado/Sección</Label>
+                <Select value={classroom} onValueChange={setClassroom} required>
+                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#baef00]/60 focus:ring-[#baef00]/30 transition-all h-12 rounded-xl">
+                    <SelectValue placeholder="Seleccionar" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0c1c11] border-[#3c5a21]/50 text-white z-[999] shadow-2xl">
+                    <SelectItem value="4A" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4A</SelectItem>
+                    <SelectItem value="4B" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4B</SelectItem>
+                    <SelectItem value="4C" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4C</SelectItem>
+                    <SelectItem value="5A" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5A</SelectItem>
+                    <SelectItem value="5B" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5B</SelectItem>
+                    <SelectItem value="5C" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5C</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
                 </>
               )}
 
@@ -421,7 +442,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center w-full">
               {isRegister ? (
-                <p className="text-[#063924]">
+                <p className="text-[#f6f6ed]">
                   ¿Ya tienes una cuenta?{" "}
                   <button
                     onClick={() => setIsRegister(false)}
