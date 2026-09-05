@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -47,33 +47,33 @@ const MessageBubble = React.memo(({ message }: { message: Message }) => {
     <motion.div
       initial={{ opacity: 0, x: isUser ? 20 : -20, y: 10 }}
       animate={{ opacity: 1, x: 0, y: 0 }}
-      className={`flex ${isUser ? "justify-end" : "justify-start"} mb-8`}
+      className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 pointer-events-auto`}
     >
-      <div className={`flex gap-4 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-        <Avatar className={`w-10 h-10 border-2 ${isUser ? "border-[#d0b04d]/30" : "border-[#0d971f]/30"} shadow-2xl shrink-0`}>
+      <div className={`flex gap-3 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+        <Avatar className={`w-8 h-8 border ${isUser ? "border-[#d0b04d]/30" : "border-[#0d971f]/30"} shadow-lg shrink-0`}>
           <AvatarImage src={isUser ? "https://i.pravatar.cc/150?u=user" : "/eleonor_avatar.png"} />
-          <AvatarFallback className="bg-white/5 font-black text-[10px] italic">{isUser ? "YO" : "EL"}</AvatarFallback>
+          <AvatarFallback className="bg-transparent font-black text-[9px] text-white italic">{isUser ? "YO" : "EL"}</AvatarFallback>
         </Avatar>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           <div className={`
-            p-5 rounded-[2rem] 
+            p-4 rounded-2xl 
             ${isUser ?
-              "bg-cyan-500/10 border border-cyan-500/20 text-white rounded-tr-none" :
-              "bg-[#0d971f]/10 border border-[#0d971f]/20 text-white rounded-tl-none backdrop-blur-xl"}
-            shadow-2xl relative group
+              "bg-[#0d971f]/20 border border-[#0d971f]/30 text-white rounded-tr-none" :
+              "bg-black/60 border border-white/10 text-white rounded-tl-none backdrop-blur-md"}
+            shadow-xl relative group
           `}>
             {!isUser && (
-              <div className="absolute -top-3 left-6 px-2 py-0.5 bg-[#0d971f] rounded-full text-[8px] font-black uppercase tracking-widest text-white z-10 shadow-[0_0_10px_rgba(13,151,31,0.5)]">
-                Enlace Alpha
+              <div className="absolute -top-2.5 left-4 px-2 py-0.5 bg-[#0d971f] rounded-full text-[7px] font-black uppercase tracking-widest text-white z-10 shadow-[0_0_8px_rgba(13,151,31,0.5)]">
+                Alpha
               </div>
             )}
-            <p className="text-sm leading-relaxed font-medium uppercase tracking-wider">
+            <p className="text-xs leading-relaxed font-medium uppercase tracking-wider">
               {message.content}
-              {message.isStreaming && <span className="inline-block w-1.5 h-4 ml-1 bg-[#0d971f] animate-pulse align-middle" />}
+              {message.isStreaming && <span className="inline-block w-1.5 h-3 ml-1 bg-[#0d971f] animate-pulse align-middle" />}
             </p>
           </div>
-          <span className="text-[8px] font-black text-white/20 uppercase tracking-widest px-2">
+          <span className="text-[7px] font-black text-white/40 uppercase tracking-widest px-1">
             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
@@ -116,19 +116,18 @@ const ChatInput = React.memo(({ onSend, isListening, onToggleListening, isProces
     ? "text-red-500 font-black animate-pulse"
     : isNearLimit
       ? "text-yellow-500 font-bold"
-      : "text-white/20"
+      : "text-white/30"
 
   return (
-    <div className="max-w-xl mx-auto relative group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#0d971f]/10 via-[#d0b04d]/10 to-[#0d971f]/10 rounded-[2rem] blur-sm opacity-20" />
-      <div className="relative flex flex-col p-1.5 pl-4 pr-2 rounded-[2rem] bg-black/40 border border-white/5 backdrop-blur-xl focus-within:border-[#0d971f]/40 transition-all shadow-xl">
+    <div className="max-w-xl mx-auto relative group w-full pointer-events-auto">
+      <div className="relative flex flex-col p-1.5 pl-4 pr-2 rounded-[2rem] bg-black/80 border border-white/10 backdrop-blur-xl focus-within:border-[#0d971f]/50 transition-all shadow-2xl">
         <div className="flex items-end gap-2">
           <Textarea
             value={input}
             onChange={handleInputChange}
             placeholder={isProcessing ? "Eleonor analizando..." : "Inyectar comando..."}
             disabled={isProcessing}
-            className="flex-1 bg-transparent border-none focus-visible:ring-0 min-h-[44px] max-h-24 resize-none py-3 text-xs text-white placeholder:text-white/20 font-medium uppercase tracking-wider scrollbar-hide"
+            className="flex-1 bg-transparent border-none focus-visible:ring-0 min-h-[40px] max-h-20 resize-none py-2.5 text-xs text-white placeholder:text-white/30 font-medium uppercase tracking-wider scrollbar-hide"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
@@ -136,35 +135,35 @@ const ChatInput = React.memo(({ onSend, isListening, onToggleListening, isProces
               }
             }}
           />
-          <div className="flex items-center gap-1.5 mb-1.5">
+          <div className="flex items-center gap-1.5 mb-1">
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => onToggleListening(!isListening)}
-              className={`w-9 h-9 rounded-full transition-all ${isListening ? "bg-red-500/80 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]" : "bg-white/5 text-white/40 hover:bg-white/10"}`}
+              className={`w-8 h-8 rounded-full transition-all ${isListening ? "bg-red-500/80 text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
             >
               {isListening ? (
                 <div className="relative">
-                  <Mic size={16} />
+                  <Mic size={14} />
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-ping" />
                 </div>
-              ) : <MicOff size={16} />}
+              ) : <MicOff size={14} />}
             </Button>
 
+            {/* BOTÓN DE ENVIAR CON EL LOGO SEND */}
             <Button
               type="button"
               onClick={handleLocalSend}
               disabled={!input.trim() || isProcessing || charCount > MAX_CHARS}
-              className="w-9 h-9 rounded-full bg-[#0d971f] hover:bg-[#0d971f]/80 text-white shadow-xl disabled:opacity-30 transition-all"
+              className="w-8 h-8 rounded-full bg-[#0d971f] hover:bg-[#0d971f]/80 text-white shadow-lg disabled:opacity-30 transition-all flex items-center justify-center p-0"
             >
-              {isProcessing ? <Activity size={16} className="animate-spin" /> : <Send size={16} />}
+              {isProcessing ? <Activity size={14} className="animate-spin" /> : <Send size={14} />}
             </Button>
           </div>
         </div>
         
-        {/* Contador de caracteres */}
-        <div className="flex justify-end px-4 pb-1">
+        <div className="flex justify-end px-3 pb-0.5">
           <span className={`text-[8px] font-mono tracking-widest transition-colors ${counterColor}`}>
             {charCount}/{MAX_CHARS}
           </span>
@@ -201,7 +200,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
   const [token, setToken] = useState<string | null>(null)
   const [viewportHeight, setViewportHeight] = useState<string>("100%")
 
-  // Manejar el redimensionamiento del teclado en móviles usando VisualViewport
   useEffect(() => {
     const handleResize = () => {
       if (window.visualViewport) {
@@ -223,27 +221,23 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     }
   }, [])
 
-  // Recuperar token del localStorage
   useEffect(() => {
     const savedToken = localStorage.getItem("eleonor_token")
     if (savedToken) setToken(savedToken)
   }, [])
 
-  // Listen for external commands (e.g. from Graph)
   useEffect(() => {
     const handleExternalMessage = (e: CustomEvent) => {
       const { type, payload } = e.detail;
       if (type === 'analyze_node' && wsRef.current) {
-        console.log("📡 Relaying external command to WS:", payload);
         wsRef.current.send(JSON.stringify({ type: 'analyze_node', node: payload.node }));
         setIsProcessing(true);
       }
     }
     window.addEventListener('eleonor-send-message', handleExternalMessage as EventListener);
     return () => window.removeEventListener('eleonor-send-message', handleExternalMessage as EventListener);
-  }, [])
+  }, []); 
 
-  // Inicializar WebSocket
   useEffect(() => {
     if (!token) return
 
@@ -252,7 +246,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     wsRef.current = ws
 
     ws.onopen = () => {
-      console.log("WS Connected")
       ws.send(JSON.stringify({ token }))
     }
 
@@ -262,7 +255,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     }
 
     ws.onclose = () => {
-      console.log("WS Disconnected")
       wsRef.current = null
     }
 
@@ -303,7 +295,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       case "mode":
         break
       case "game":
-        console.log("🎮 Game event received:", data.content);
         setActiveGame(data.content);
         break
       case "done":
@@ -311,7 +302,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
         setIsProcessing(false)
         break
       case "error":
-        console.error("WS Error:", data.content)
         setIsProcessing(false)
         break
     }
@@ -331,7 +321,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     }
   }, [messages])
 
-  // --- LOGICA DE AUDIO (STT / MediaRecorder) ---
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -352,7 +341,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       recorder.start()
       setIsListening(true)
     } catch (err) {
-      console.error("No se pudo acceder al micrófono:", err)
       setIsListening(false)
     }
   }
@@ -389,7 +377,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     }
   }
 
-  // --- ANALIZADOR DE AUDIO PARA LIP SYNC ---
   const playAudioWithAnalysis = useCallback((base64: string) => {
     const audioContent = `data:audio/mp3;base64,${base64}`
     const audio = new Audio(audioContent)
@@ -437,7 +424,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     })
   }, [])
 
-  // --- LÓGICA DE ENVÍO ---
   const handleSend = React.useCallback(async (text: string) => {
     if (!text.trim() || isProcessing || !wsRef.current) return
 
@@ -512,50 +498,44 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
 
   return (
     <div
-      className="h-full flex flex-col bg-transparent relative overflow-hidden"
+      className="h-full flex flex-col bg-transparent relative overflow-hidden items-center justify-center pointer-events-none"
       style={{ height: viewportHeight }}
     >
-      {/* HUD Superior - Ultra-Top */}
-      <div className="z-[100] fixed top-2 left-0 right-0 pl-20 pr-4 lg:pl-24">
-        <BlurFade delay={0.1}>
-          <div className="flex flex-col gap-2 max-w-full mx-auto">
-            <div className="flex items-center justify-between gap-4 p-2 pl-4 rounded-xl bg-black/40 border border-white/10 backdrop-blur-3xl shadow-2xl">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
-                  <span className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.25em]">Eleonor v4.2</span>
-                </div>
-                <Separator orientation="vertical" className="h-4 bg-white/20" />
-                <EleonorHistory messages={messages} />
-              </div>
+      {/* HUD Superior */}
+      <div className="z-[100] fixed top-2 left-64 md:left-72 right-4 md:right-8 flex pointer-events-auto">
+        <BlurFade delay={0.1} className="w-full">
+          <div className="w-full flex items-center justify-between gap-8 px-8 py-3.5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-3xl shadow-2xl">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2"></div>
+              <EleonorHistory messages={messages} />
+            </div>
 
-              <div className="flex items-center gap-2">
-                <Button size="icon" variant="outline" className="w-8 h-8 rounded-lg bg-white/5 border-white/10 text-white/40 hover:text-white" onClick={() => setIsSpeaking(!isSpeaking)}>
-                  {isSpeaking ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="w-8 h-8 rounded-lg bg-[#0d971f]/20 border-[#0d971f]/40 text-[#0d971f] hover:bg-[#0d971f]/30 transition-all"
-                  onClick={triggerDebugGame}
-                  title="Debug Game"
-                >
-                  <Gamepad2 size={16} />
-                </Button>
-                <Button size="icon" variant="outline" className="w-8 h-8 rounded-lg bg-white/5 border-white/10 text-white/40 hover:text-white">
-                  <RotateCcw size={16} />
-                </Button>
-              </div>
+            <div className="flex items-center gap-4">
+              <Button size="icon" variant="outline" className="w-10 h-10 rounded-xl bg-white/5 border-white/10 text-white/40 hover:text-white" onClick={() => setIsSpeaking(!isSpeaking)}>
+                {isSpeaking ? <Volume2 size={18} /> : <VolumeX size={18} />}
+              </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                className="w-10 h-10 rounded-xl bg-[#0d971f]/20 border-[#0d971f]/40 text-[#0d971f] hover:bg-[#0d971f]/30 transition-all"
+                onClick={triggerDebugGame}
+                title="Debug Game"
+              >
+                <Gamepad2 size={18} />
+              </Button>
+              <Button size="icon" variant="outline" className="w-10 h-10 rounded-xl bg-white/5 border-white/10 text-white/40 hover:text-white">
+                <RotateCcw size={18} />
+              </Button>
             </div>
           </div>
         </BlurFade>
       </div>
 
-      {/* Area Central: Mensajes */}
-      <div className="flex-1 flex flex-col justify-end relative z-[10] px-4 md:px-8 pb-40 md:pb-36 min-h-0">
-        <div className="w-full max-w-xl mx-auto pointer-events-none flex flex-col justify-end h-full">
-          <ScrollArea className="flex-1 max-h-[30vh] md:max-h-[25vh] pr-4 pointer-events-auto" ref={scrollRef}>
-            <div className="flex flex-col justify-end min-h-full py-4">
+      {/* Area Central: Mensajes (CONTENEDOR 100% TRANSPARENTE, SIN RECUADRO NEGRO) */}
+      <div className="flex-1 flex flex-col justify-center items-center relative z-[10] px-4 w-full min-h-0 bg-transparent pointer-events-none">
+        <div className="w-full max-w-xl mx-auto flex flex-col justify-center h-full bg-transparent">
+          <ScrollArea className="flex-1 max-h-[30vh] md:max-h-[25vh] pr-4 pointer-events-auto bg-transparent [&>[data-radix-scroll-area-viewport]]:bg-transparent" ref={scrollRef}>
+            <div className="flex flex-col justify-end min-h-full py-4 bg-transparent">
               <AnimatePresence initial={false}>
                 {messages.map((message) => (
                   <MessageBubble key={message.id} message={message} />
@@ -566,8 +546,8 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
         </div>
       </div>
 
-      {/* Barra Inferior: ChatInput */}
-      <div className="z-[100] absolute bottom-12 left-0 right-0 p-4 md:p-8 flex flex-col gap-4 items-center bg-transparent">
+      {/* Barra Inferior: ChatInput y Botón de examen */}
+      <div className="z-[100] absolute bottom-12 left-0 right-0 p-4 md:p-8 flex flex-col gap-4 items-center bg-transparent pointer-events-auto">
         {!isProcessing && (
           <motion.button
             initial={{ opacity: 0, y: 10 }}
@@ -581,7 +561,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
             ¿Cuáles fueron mis errores del último examen?
           </motion.button>
         )}
-        <div className="w-full">
+        <div className="w-full max-w-xl">
           <ChatInput
             onSend={handleSend}
             isListening={isListening}

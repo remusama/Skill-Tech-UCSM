@@ -26,8 +26,8 @@ export function MagicTitle({
     className,
     children,
 }: MagicTitleProps) {
-    const defaultSparklesColors = { first: "#9E7AFF", second: "#FE8BBB" }
-    const defaultAuroraColors = ["#4c007d", "#7f00b2", "#9d4edd", "#c77dff"]
+    const defaultSparklesColors = { first: "#7aff90", second: "#8bfe98" }
+    const defaultAuroraColors = ["#007d15", "#00b20c", "#4edd50", "#7dff7f"]
 
     const renderContent = () => {
         const baseClasses = cn(

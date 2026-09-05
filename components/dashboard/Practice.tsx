@@ -430,73 +430,71 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         )}
 
         {activeCategory === 'mentoria' && (
-          <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-purple-400 to-blue-500" />
-              <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#d0b04d] to-[#baef00] drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
-              <h2 className="text-lg font-black uppercase tracking-widest text-white/80">Exámenes de Mentoría</h2>
-            </div>
-            {loadingMentorExams ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-              </div>
-            ) : mentorExams.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-600 border border-dashed border-white/10 rounded-3xl">
-                <FileText className="w-10 h-10 mb-3 opacity-40" />
-                <p className="font-medium">No tienes exámenes de mentoría asignados.</p>
-                <p className="text-sm mt-1 text-gray-700">Tu mentor te asignará evaluaciones cuando estén disponibles.</p>
-              </div>
-            ) : (
-              mentorExams.map((exam: any) => (
-                <motion.div
-                  key={exam.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="group relative h-full"
-                >
-                  {highlightedAreas.some(h => (currentArea?.id || '').includes(h) || exam.title.toLowerCase().includes(h)) && (
-                    <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
-                  )}
-                  <div className="h-full bg-[#063924]/60 backdrop-blur-xl border border-[#3c5a21] rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 hover:border-[#4ade80]/60 hover:bg-[#094d31]/80 hover:shadow-[0_0_25px_rgba(74,222,128,0.25)]">
-                    <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity", theme.via)} />
-                    <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3c5a21] to-transparent opacity-0 group-hover:opacity-100 transition-opacity")} />
-
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={cn(
-                            "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
-                            exam.status === 'completed' ? "bg-green-500/20 text-green-400" : "bg-purple-500/20 text-purple-400"
-                          )}>
-                            {exam.status === 'completed' ? 'Completado' : 'Pendiente'}
-                          </span>
-                          <span className="text-xs text-gray-400">Agente: {exam.agent_name}</span>
-                        </div>
-                        <h3 className="font-black text-lg text-white">{exam.title}</h3>
-                        {exam.description && <p className="text-sm text-gray-300 mt-1">{exam.description}</p>}
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {(exam.competencies || []).map((c: string) => (
-                            <span key={c} className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs">{c}</span>
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">{exam.questions?.length || 0} preguntas</p>
-                      </div>
-                      {exam.status !== 'completed' && (
-                        <button
-                          onClick={() => handleStartMentorExam(exam)}
-                          className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl text-white font-bold text-sm hover:from-purple-500 hover:to-blue-500 transition-all">
-                          <Play className="w-4 h-4" />
-                          Iniciar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            )}
+        <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#d0b04d] to-[#baef00] drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
+            <h2 className="text-lg font-black uppercase tracking-widest text-white/80">Exámenes de Mentoría</h2>
           </div>
-        )}
+          {loadingMentorExams ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0d971f]"></div>
+            </div>
+          ) : mentorExams.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400 border border-dashed border-white/10 rounded-3xl">
+              <FileText className="w-10 h-10 mb-3 opacity-40" />
+              <p className="font-medium">No tienes exámenes de mentoría asignados.</p>
+              <p className="text-sm mt-1 text-gray-500">Tu mentor te asignará evaluaciones cuando estén disponibles.</p>
+            </div>
+          ) : (
+            mentorExams.map((exam: any) => (
+              <motion.div
+                key={exam.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group relative h-full"
+              >
+                {highlightedAreas.some(h => (currentArea?.id || '').includes(h) || exam.title.toLowerCase().includes(h)) && (
+                  <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
+                )}
+                <div className="h-full bg-[#063924]/60 backdrop-blur-xl border border-[#3c5a21] rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 hover:border-[#4ade80]/60 hover:bg-[#094d31]/80 hover:shadow-[0_0_25px_rgba(74,222,128,0.25)]">
+                  <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity", theme.via)} />
+                  <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3c5a21] to-transparent opacity-0 group-hover:opacity-100 transition-opacity")} />
 
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={cn(
+                          "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
+                          exam.status === 'completed' ? "bg-green-500/20 text-green-400" : "bg-emerald-500/20 text-emerald-400"
+                        )}>
+                          {exam.status === 'completed' ? 'Completado' : 'Pendiente'}
+                        </span>
+                        <span className="text-xs text-gray-400">Agente: {exam.agent_name}</span>
+                      </div>
+                      <h3 className="font-black text-lg text-white">{exam.title}</h3>
+                      {exam.description && <p className="text-sm text-gray-300 mt-1">{exam.description}</p>}
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {(exam.competencies || []).map((c: string) => (
+                          <span key={c} className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full text-xs">{c}</span>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">{exam.questions?.length || 0} preguntas</p>
+                    </div>
+                    {exam.status !== 'completed' && (
+                      <button
+                        onClick={() => handleStartMentorExam(exam)}
+                        className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-[#0d971f] hover:bg-[#0d971f]/80 rounded-xl text-white font-bold text-sm shadow-[0_0_20px_rgba(13,151,31,0.3)] transition-all">
+                        <Play className="w-4 h-4" />
+                        Iniciar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      )}
         {activeCategory !== 'mentoria' && (
         <div ref={modulesRef} data-practice-container className="flex-1 overflow-y-auto pb-20 custom-scrollbar pr-2">
           {currentAreas.length === 0 ? (
