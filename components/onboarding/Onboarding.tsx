@@ -60,7 +60,7 @@ const AudioWaveform: React.FC = () => {
 const SCRIPT = [
     {
         id: 'presentacion',
-        eleonor: "Hola, me presento, soy Moya, su asistente felino que los acompañara en el programa de liderazgo. Ahora les mostraré la plataforma ",
+        eleonor: "¡Hola, futuro líder! Soy Moya... tu asistente felino. Y voy a acompañarte durante este programa. Aquí aprenderás, explorarás nuevas habilidades... y, quién sabe, quizá descubras algo nuevo sobre ti. ¿Listo? ¡Empecemos!",
         isQuestion: false
     }
 ]
@@ -68,7 +68,7 @@ const SCRIPT = [
 const GUIDE_SCRIPT = [
     {
         id: 'guia_inicio',
-        eleonor: "SkillTech es un ecosistema diseñado para analizar tus habilidades académicas y personales, también",
+        eleonor: "Estamos en Skill-Tech... un ecosistema de herramientas educativas. Aquí, mentores y estudiantes pueden aprender, compartir y crecer juntos.",
         highlight: 'sidebar',
         expression: 'Explicando',
         navigate: null,
@@ -77,7 +77,7 @@ const GUIDE_SCRIPT = [
     },
     {
         id: 'guia_credencial',
-        eleonor: "Aquí arriba está tu Credencial de Usuario. Al pulsarla podrás ver codigo para registrar tu asistencia",
+        eleonor: "Primero, toca tu nombre, aquí arriba. Ahí podrás abrir tu credencial... y luego, tu código QR para registrar tu llegada.",
         highlight: 'profile',
         expression: 'Atenta',
         navigate: 'profile',
@@ -86,7 +86,7 @@ const GUIDE_SCRIPT = [
     },
     {
         id: 'guia_skillmap',
-        eleonor: "En SkillMap verás un resumen general de las distintas clases que tendremos en el Programa.",
+        eleonor: "En tu SkillMap encontrarás una radiografía de las distintas clases que tendremos durante el programa. Échale un vistazo cuando puedas.",
         highlight: 'skillmap',
         expression: 'Explicando',
         navigate: 'skillmap',
@@ -95,7 +95,7 @@ const GUIDE_SCRIPT = [
     },
     {
         id: 'guia_examenes_intro',
-        eleonor: "Este es el módulo de Pruebas. Aquí encontrarás evaluaciones para saber que tipo de lider eres, ademas de otros tipos.",
+        eleonor: "¡Tu primera gran exploración de habilidades! Aquí descubrirás qué estilo de liderazgo tienes y cómo puedes marcar la diferencia.",
         highlight: 'practice',
         expression: 'Atenta',
         navigate: 'practice',
@@ -104,7 +104,7 @@ const GUIDE_SCRIPT = [
     },
     {
         id: 'guia_diagnostico',
-        eleonor: "Este es tu Diagnóstico: tu red neuronal de aqui podras ver los resultados de tus pruebas cada vez que quieras.",
+        eleonor: "Este es tu Liderómetro. Vuelve aquí cuando quieras para revisar tus métricas, ver cómo evolucionan tus fortalezas... y celebrar tu progreso, sábado a sábado.",
         highlight: 'diagnosis',
         expression: 'Atenta',
         navigate: 'diagnosis',
@@ -113,7 +113,7 @@ const GUIDE_SCRIPT = [
     },
     {
         id: 'guia_configuracion',
-        eleonor: "En Configuración podrás consultar tu información personal. Eso si no te olvides de cambiar tu contraseña.",
+        eleonor: "Y por ultimo pero no menos importante... En esta sección puedes consultar tu información de cuenta.. Y hazme caso y dale una renovada a tu contraseña",
         highlight: 'settings',
         expression: 'Explicando',
         navigate: 'settings',
@@ -122,7 +122,7 @@ const GUIDE_SCRIPT = [
     },
     {
         id: 'guia_asistente',
-        eleonor: "Puedes comenzar rellenando alguna de las pruebas, son un poco largos asi que ve con calma, yo descansare un momento... ¡Mucho éxito!",
+        eleonor: "¡Llegó la hora de medir tu potencial! Ve resolviendo con calma... que el camino es largo. Yo, mientras tanto, voy a ponerme cómoda. ¡Te deseo mucha suerte!",
         highlight: 'assistant',
         expression: 'Saludando',
         navigate: 'assistant',
@@ -130,6 +130,17 @@ const GUIDE_SCRIPT = [
         scrollBack: false
     }
 ]
+
+const AUDIO_FILE_MAP: Record<string, string> = {
+    'presentacion': 'Presentacion.mp3',
+    'guia_inicio': 'Inicio.mp3',
+    'guia_credencial': 'Credencial.mp3',
+    'guia_skillmap': 'Skillmap.mp3',
+    'guia_examenes_intro': 'Examenes.mp3',
+    'guia_diagnostico': 'Diagnostico.mp3',
+    'guia_configuracion': 'Configuraciones.mp3',
+    'guia_asistente': 'Asistente.mp3',
+}
 
 interface OnboardingProps {
     onComplete: () => void
@@ -157,7 +168,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
     const isLastStep = step === SCRIPT.length - 1
     const currentStep = isGuiding ? GUIDE_SCRIPT[guideStep] : SCRIPT[step]
 
-    // ... (TTS Logic con soporte para MP3s estáticos precargados de ElevenLabs) ...
+    // TTS & Static MP3 Logic (Predeterminado: MP3 locales -> Fallback: TTS es-MX-DaliaNeural -> Fallback: Browser es-MX)
     const playTTS = async (text: string, audioId?: string, onFinish?: () => void) => {
         if (!text || text === lastTextRef.current) return
         lastTextRef.current = text
@@ -165,37 +176,44 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
         try {
             let arrayBuffer: ArrayBuffer | null = null
 
-            // 1. Intentar cargar archivo MP3 estático previamente generado de ElevenLabs
-            if (audioId) {
+            // 1. PREDETERMINADO: Cargar archivo MP3 estático (Inicio.mp3, Skillmap.mp3, etc.)
+            const fileName = audioId ? (AUDIO_FILE_MAP[audioId] || `${audioId}.mp3`) : null
+            if (fileName) {
                 try {
-                    const staticRes = await fetch(`/audio/onboarding/${audioId}.mp3`)
+                    const staticRes = await fetch(`/audio/onboarding/${fileName}`)
                     if (staticRes.ok) {
                         arrayBuffer = await staticRes.arrayBuffer()
                     }
                 } catch (e) {
-                    console.warn(`Audio estático ${audioId}.mp3 no encontrado, usando API TTS:`, e)
+                    console.warn(`Audio MP3 estático ${fileName} no encontrado:`, e)
                 }
             }
 
-            // 2. Fallback a la API backend /api/tts si no existe el archivo estático
+            // 2. FALLBACK 1: API Backend /api/tts (Usa Edge-TTS con la voz antigua de México: es-MX-DaliaNeural)
             if (!arrayBuffer) {
-                const ttsToken = localStorage.getItem("eleonor_token")
-                const response = await fetch(`${API_BASE_URL}/api/tts`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
-                    },
-                    body: JSON.stringify({ text })
-                })
-                const data = await response.json()
-                if (data.audio) {
-                    const binaryString = atob(data.audio)
-                    const bytes = new Uint8Array(binaryString.length)
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i)
+                try {
+                    const ttsToken = localStorage.getItem("eleonor_token")
+                    const response = await fetch(`${API_BASE_URL}/api/tts`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
+                        },
+                        body: JSON.stringify({ text })
+                    })
+                    if (response.ok) {
+                        const data = await response.json()
+                        if (data.audio) {
+                            const binaryString = atob(data.audio)
+                            const bytes = new Uint8Array(binaryString.length)
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i)
+                            }
+                            arrayBuffer = bytes.buffer
+                        }
                     }
-                    arrayBuffer = bytes.buffer
+                } catch (e) {
+                    console.warn("Error consultando backend TTS es-MX:", e)
                 }
             }
 
@@ -207,7 +225,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                 }
                 if (bufferSourceRef.current) {
                     try {
-                        bufferSourceRef.current.onended = null // Limpiar handler para evitar carreras
+                        bufferSourceRef.current.onended = null
                         bufferSourceRef.current.stop();
                     } catch (e) { }
                 }
@@ -220,24 +238,61 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                 const ctx = audioContextRef.current
                 if (ctx.state === 'suspended') await ctx.resume()
 
-                // Si llegamos aquí y sigue cerrado (fallo crítico), abortar
                 if ((ctx.state as any) === 'closed') return;
 
                 // 3. Decodificar audio
                 const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
-
-                // 4. Configurar Nodos (Verificando estado del contexto)
                 if ((ctx.state as any) === 'closed') return;
+
+                // 4. NORMALIZACIÓN DE VOLUMEN RMS + DYNAMICS COMPRESSOR (Equilibra Inicio.mp3, Configuraciones.mp3 y los demás)
+                let sumSq = 0
+                let sampleCount = 0
+                let maxPeak = 0
+                for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
+                    const channelData = audioBuffer.getChannelData(c)
+                    for (let i = 0; i < channelData.length; i++) {
+                        const abs = Math.abs(channelData[i])
+                        if (abs > maxPeak) maxPeak = abs
+                        if (abs > 0.015) {
+                            sumSq += abs * abs
+                            sampleCount++
+                        }
+                    }
+                }
+
+                const rms = sampleCount > 0 ? Math.sqrt(sumSq / sampleCount) : 0.1
+                const targetRMS = 0.20
+                let gainValue = targetRMS / (rms || 0.1)
+
+                // Evitar distorsión/clipping
+                if (maxPeak * gainValue > 0.95) {
+                    gainValue = 0.95 / (maxPeak || 1)
+                }
+                gainValue = Math.min(Math.max(gainValue, 0.5), 4.5)
+
+                const compressor = ctx.createDynamicsCompressor()
+                compressor.threshold.value = -24
+                compressor.knee.value = 12
+                compressor.ratio.value = 4
+                compressor.attack.value = 0.003
+                compressor.release.value = 0.25
+
+                const gainNode = ctx.createGain()
+                gainNode.gain.value = gainValue
 
                 const analyser = ctx.createAnalyser()
                 analyser.fftSize = 512
                 const source = ctx.createBufferSource()
                 source.buffer = audioBuffer
-                source.connect(analyser)
+
+                // Conectar nodos: Source -> Compressor -> Gain -> Analyser -> Destination
+                source.connect(compressor)
+                compressor.connect(gainNode)
+                gainNode.connect(analyser)
                 analyser.connect(ctx.destination)
                 bufferSourceRef.current = source
 
-                // 5. Loop de Análisis (Lip-Sync)
+                // 5. Loop de Análisis (Lip-Sync de Moya)
                 const dataArray = new Uint8Array(analyser.frequencyBinCount)
                 let currentAnimFrame: number;
 
@@ -260,7 +315,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                     const mid = midSum / (midEnd - bassEnd || 1) / 255
                     const high = highSum / (highEnd - midEnd || 1) / 255
 
-                    const volume = Math.min(1.0, (bass * 0.6 + mid * 0.3 + high * 0.1) * 1.5)
+                    const volume = Math.min(0.5, (bass * 0.4 + mid * 0.4 + high * 0.2) * 0.8)
 
                     window.dispatchEvent(new CustomEvent('avatar-speaking', {
                         detail: { volume, bass, mid, high }
@@ -284,10 +339,52 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
 
                 source.start(0)
                 updateAnalysis()
+            } else if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                // FALLBACK 2: Síntesis nativa del navegador con la voz de México (es-MX)
+                window.speechSynthesis.cancel()
+                const utterance = new SpeechSynthesisUtterance(text)
+                utterance.lang = "es-MX"
+                const voices = window.speechSynthesis.getVoices()
+                const mxVoice = voices.find(v => v.lang === "es-MX" || v.lang === "es_MX")
+                    || voices.find(v => v.lang.startsWith("es") && (v.name.includes("Mexico") || v.name.includes("México") || v.name.includes("Dalia") || v.name.includes("Sabina") || v.name.includes("Jorge")))
+                    || voices.find(v => v.lang.startsWith("es"))
+                if (mxVoice) utterance.voice = mxVoice
+
+                let interval: any
+                utterance.onstart = () => {
+                    interval = setInterval(() => {
+                        const volume = 0.3 + Math.random() * 0.5
+                        window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume } }))
+                    }, 100)
+                }
+                utterance.onend = () => {
+                    clearInterval(interval)
+                    window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }))
+                    if (onFinish) setTimeout(onFinish, 300)
+                }
+                utterance.onerror = () => {
+                    clearInterval(interval)
+                    window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }))
+                    if (onFinish) onFinish()
+                }
+                window.speechSynthesis.speak(utterance)
             }
         } catch (e) {
             console.error("TTS Error:", e)
-            if (onFinish) onFinish()
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                try {
+                    window.speechSynthesis.cancel()
+                    const utterance = new SpeechSynthesisUtterance(text)
+                    utterance.lang = "es-MX"
+                    utterance.onend = () => { if (onFinish) onFinish() }
+                    utterance.onerror = () => { if (onFinish) onFinish() }
+                    window.speechSynthesis.speak(utterance)
+                } catch {
+                    if (onFinish) onFinish()
+                }
+            } else {
+                if (onFinish) onFinish()
+            }
         }
     }
 
@@ -326,7 +423,20 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                 if (guideStep < GUIDE_SCRIPT.length - 1) {
                     setGuideStep(prev => prev + 1)
                 } else {
-                    // No auto-completar en el último paso. Esperamos a que el usuario haga click en Eleonor AI en la barra lateral.
+                    // ÚLTIMO PASO DE LA GUÍA (7/7) -> Finalizar onboarding y poner a Moya en posición ASSISTANT
+                    if (bufferSourceRef.current) {
+                        try { bufferSourceRef.current.stop(); } catch (e) { }
+                    }
+                    if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+                    window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }));
+                    completeOnboarding()
+                    enterPresence('INTRO_DONE')
+                    enterPresence('INTERVENTION')
+                    if (onNavigate) onNavigate('assistant')
+                    onComplete()
+                    setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('toggle-eleonor-history', { detail: true }))
+                    }, 300)
                 }
             } else {
                 const scriptStep = currentStep as any
@@ -400,6 +510,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
             window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }));
             completeOnboarding()
+            enterPresence('INTRO_DONE')
+            enterPresence('INTERVENTION')
             if (onNavigate) onNavigate('assistant')
             onComplete()
             setTimeout(() => {
@@ -408,7 +520,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
         }
         window.addEventListener('onboarding-completed-manually', handleManualComplete)
         return () => window.removeEventListener('onboarding-completed-manually', handleManualComplete)
-    }, [onComplete, completeOnboarding])
+    }, [onComplete, completeOnboarding, enterPresence, onNavigate])
 
     const handleSend = () => {
         const scriptStep = currentStep as any
@@ -879,12 +991,12 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                         </div>
                                     </div>
                                 ) : (
-                                    // TARJETA INTRO: Texto + botón
+                                    // TARJETA INTRO: Texto compacto + botón
                                     <>
                                         <h2
-                                            className="text-2xl md:text-4xl font-bold tracking-tight text-white leading-relaxed"
+                                            className="text-sm md:text-base font-semibold tracking-tight text-white leading-relaxed max-w-lg mx-auto"
                                             style={{
-                                                textShadow: '0px 0px 20px rgba(6,182,212,0.3)',
+                                                textShadow: '0px 0px 15px rgba(6,182,212,0.3)',
                                                 fontFamily: 'var(--font-geist-mono)'
                                             }}
                                         >
@@ -896,7 +1008,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: 0.2 }}
                                                 onClick={unlockAudio}
-                                                className="px-10 py-4 bg-cyan-500 hover:bg-cyan-400 text-white rounded-full font-black text-base uppercase tracking-widest shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all hover:scale-105"
+                                                className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all hover:scale-105"
                                             >
                                                 Conectar con Moya
                                             </motion.button>

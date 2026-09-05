@@ -15,7 +15,7 @@ type CameraMode = 'INTRO' | 'GUIDE' | 'ASSISTANT' | 'HIDDEN' | 'DIAGNOSIS';
 
 const CAMERA_PRESETS: Record<CameraMode, { scale: number, xOffset: number, yOffset: number, opacity: number }> = {
     INTRO: {
-        scale: 1.8,
+        scale: 1.5,
         xOffset: 0,
         yOffset: 180, // "De muslos para arriba"
         opacity: 1,
@@ -502,7 +502,11 @@ const AvatarDisplay = () => {
     // Eventos (LipSync, Expresiones)
     useEffect(() => {
         const handleLipSync = (e: any) => {
-            currentVolume.current = e.detail?.volume || 0;
+            const vol = e.detail?.volume || 0;
+            currentVolume.current = vol;
+            if (vol === 0) {
+                vSmooth.current = 0;
+            }
             freqBands.current = {
                 bass: e.detail?.bass || 0,
                 mid: e.detail?.mid || 0,
@@ -587,9 +591,12 @@ const AvatarDisplay = () => {
                     }
                 }
 
-                // LipSync
-                vSmooth.current += (currentVolume.current - vSmooth.current) * 0.4;
-                const mouthOpen = Math.min(1.0, Math.pow(vSmooth.current, 1.2));
+                // LipSync Suave y Sutil (Apertura máxima acotada a 0.45 para evitar boca totalmente abierta)
+                vSmooth.current += (currentVolume.current - vSmooth.current) * 0.85;
+                if (currentVolume.current < 0.03) {
+                    vSmooth.current *= 0.5; // Cierre rápido de boca en silencios
+                }
+                const mouthOpen = Math.min(0.45, Math.pow(vSmooth.current, 1.4) * 0.6);
 
                 // LookAt Logic (Mouse Tracking / Gyro)
                 // 1. Suavizado (Lerp) de mirada ultra-rápida

@@ -23,35 +23,35 @@ if not api_key:
 ONBOARDING_SCRIPTS = [
     {
         "id": "presentacion",
-        "text": "Hola, me presento, soy Moya, su asistente felino que los acompañara en el programa de liderazgo. Ahora les mostraré la plataforma"
+        "text": "Hola futuro lider soy Moya, tu asistente felino en el programa. Empecemos este recorrido por la plataforma."
     },
     {
         "id": "guia_inicio",
-        "text": "SkillTech es un ecosistema diseñado para analizar tus habilidades académicas y personales, también"
+        "text": "SkillTech es un ecosistema diseñado para analizar tus habilidades académicas y personales."
     },
     {
         "id": "guia_credencial",
-        "text": "Aquí arriba está tu Credencial de Usuario. Al pulsarla podrás ver el código QR para registrar tu asistencia"
+        "text": "Un buen lider no deja huella sin el check-in respectivo. Toca tu credencial aqui arriba para abrir tu QR y registrar tu llegada a mover el territorio."
     },
     {
         "id": "guia_skillmap",
-        "text": "En SkillMap verás un resumen general de las distintas clases que tendremos en el Programa."
+        "text": "En tu SkillMap verás una radiografia de las distintas clases que tendremos en el programa. ¡Anticípate a la jugada y descubre hacia dónde vamos a mover el territorio!"
     },
     {
         "id": "guia_examenes_intro",
-        "text": "Este es el módulo de Pruebas. Aquí encontrarás evaluaciones para saber que tipo de lider eres, ademas de otros tipos."
+        "text": "¡Tu primer gran chequeo de habilidades! Aquí descubre el estilo de liderazgo con el que vas a marcar la diferencia, además de otros tipos de evaluaciones."
     },
     {
         "id": "guia_diagnostico",
-        "text": "Este es tu Diagnóstico: tu red neuronal de aqui podras ver los resultados de tus pruebas cada vez que quieras."
+        "text": "Este es tu Liderometro. Vuelve aquí cuando quieras para revisar tus métricas, ver cómo van tus fortalezas y celebrar tu evolución sábado a sábado."
     },
     {
         "id": "guia_configuracion",
-        "text": "En Configuración podrás consultar tu información personal. Eso si no te olvides de cambiar tu contraseña."
+        "text": "Tu espacio privado a salvo! En esta sección puedes consultar tu información personal. Hazme caso y dale una renovada a tu contraseña; un verdadero líder siempre cuida sus espaldas."
     },
     {
         "id": "guia_asistente",
-        "text": "Puedes comenzar rellenando alguna de las pruebas, son un poco largos asi que ve con calma, yo descansare un momento... ¡Mucho éxito!"
+        "text": "¡Llegó la hora de medir tu potencial! Ve resolviendo con calma que el camino es largo. Yo aprovecho para mi recarga de batería felina... ¡Todo el éxito, crack!"
     }
 ]
 

@@ -138,13 +138,15 @@ export const EleonorProvider: React.FC<{ children: React.ReactNode }> = ({ child
             case 'INTRO_ACTIVE':
                 setStatusState('onboarding')
                 setPositionState('center')
+                setIsGuideActive(false)
                 break
             case 'INTRO_DONE':
-                // No hace nada por sí mismo, es un puente
+                setIsGuideActive(false)
                 break
             case 'INTRO_HIDDEN':
                 setStatusState('idle')
                 setPositionState('side')
+                setIsGuideActive(false)
                 break
             case 'GUIDE_ACTIVE':
                 setStatusState('idle')
@@ -164,10 +166,12 @@ export const EleonorProvider: React.FC<{ children: React.ReactNode }> = ({ child
             case 'INTERVENTION':
                 setStatusState('speaking')
                 setPositionState('center')
+                setIsGuideActive(false)
                 break
             case 'DIAGNOSIS':
                 setStatusState('speaking')
                 setPositionState('center')
+                setIsGuideActive(false)
                 break
         }
     }, [presence])
@@ -188,7 +192,12 @@ export const EleonorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const setStatus = useCallback((s: 'idle' | 'speaking' | 'listening' | 'onboarding') => setStatusState(s), [])
     const preload = useCallback(() => setIsPreloading(true), [])
     const startGuide = useCallback(() => enterPresence('GUIDE_ACTIVE'), [enterPresence])
-    const stopGuide = useCallback(() => enterPresence('IDLE_HIDDEN'), [enterPresence])
+    const stopGuide = useCallback(() => {
+        setIsGuideActive(false)
+        setGuideHighlightState(null)
+        enterPresence('INTRO_DONE')
+        enterPresence('IDLE_HIDDEN')
+    }, [enterPresence])
     const setGuideHighlight = useCallback((id: string | null) => setGuideHighlightState(id), [])
 
     const isAuthorized = isPreloading || isGuideActive || status === 'onboarding' || currentPage === 'assistant' || presence !== 'IDLE_HIDDEN'
@@ -212,6 +221,8 @@ export const EleonorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setStatusState('idle')
         setPositionState('side')
         setIsPreloading(false)
+        setIsGuideActive(false)
+        setGuideHighlightState(null)
 
         // AL terminar onboarding, LIBERAR EL CANDADO primero
         enterPresence('INTRO_DONE')
