@@ -100,11 +100,6 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
                         <RefreshCw className="w-4 h-4 mr-2" />
                         Sincronizar
                     </Button>
-                    <Link href="/dashboard">
-                        <Button className="bg-primary text-primary-foreground">
-                            Ir al Dashboard
-                        </Button>
-                    </Link>
                 </div>
             </div>
         )
