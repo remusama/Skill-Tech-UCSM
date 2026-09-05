@@ -16,4 +16,5 @@ ELEVENLABS_API_KEY = settings.ELEVENLABS_API_KEY
 # Compatible con Azure Speech Services, OpenAI, y ElevenLabs respectivamente
 VOICE_EDGE = "es-MX-DaliaNeural"
 VOICE_OPENAI = "nova"
-VOICE_ELEVENLABS = "Mady"
+VOICE_ELEVENLABS = getattr(settings, "VOICE_ELEVENLABS", "Gaby")
+TTS_ENGINE = getattr(settings, "TTS_ENGINE", "edge")

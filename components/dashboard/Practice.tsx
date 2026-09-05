@@ -363,7 +363,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
       <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
 
         <div className="flex gap-2 p-1 bg-white/[0.04] border border-white/10 rounded-2xl w-fit">
-          {(["mentoria", "personal", "academica"] as const).map((cat) => (
+          {(["mentoria", "personal"] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
@@ -372,7 +372,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 activeCategory === cat ? "bg-white text-black shadow" : "text-white/50 hover:text-white"
               )}
             >
-              {cat === "mentoria" ? "Mentoría" : cat === "personal" ? "Personal" : "Académica"}
+              {cat === "mentoria" ? "Mentoría" : "Personal"}
             </button>
           ))}
         </div>

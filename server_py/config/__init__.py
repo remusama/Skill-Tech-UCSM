@@ -14,10 +14,12 @@ if os.path.exists(env_path):
 
 class Settings(BaseModel):
     """Configuración de la aplicación desde variables de entorno."""
-    # Claves API
+    # Claves API y Voz
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
     ELEVENLABS_API_KEY: Optional[str] = os.getenv("ELEVENLABS_API_KEY")
+    TTS_ENGINE: str = os.getenv("TTS_ENGINE", "edge")
+    VOICE_ELEVENLABS: str = os.getenv("VOICE_ELEVENLABS", "Gaby")
 
     # Configuración del servidor
     PORT: int = int(os.getenv("PORT", 8000))

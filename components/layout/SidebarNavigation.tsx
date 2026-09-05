@@ -32,8 +32,8 @@ import { Meteors } from "@/components/ui/meteors"
 
 const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
-  { icon: Clock, label: "Examenes", page: "practice" },
-  { icon: Brain, label: "Diagnostico", page: "diagnosis" },
+  { icon: Clock, label: "Level up", page: "practice" },
+  { icon: Brain, label: "Liderómetro", page: "diagnosis" },
   { icon: MessageSquare, label: "Moya", page: "assistant" },
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
@@ -90,29 +90,20 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
 
   // Sidebar fluid border based on guideHighlight
   const isSidebarHighlighted = guideHighlight === 'sidebar'
-  // Si el guideHighlight es un page de nav, también abrimos el sidebar para mostrarlo
-  const isNavItemHighlighted = currentItems.some(item => item.page === guideHighlight)
+  const isProfileHighlighted = guideHighlight === 'profile'
 
-  // Forzar apertura si la guía está activa Y destaca el sidebar o un item de nav
+  // Manejo dinámico de apertura temporizada (1.4s) en móviles durante la guía
   useEffect(() => {
-    if (isGuideActive) {
-      if (guideHighlight === 'sidebar' || isNavItemHighlighted) {
+    if (isGuideActive && guideHighlight) {
+      if (isMobile) {
         setIsOpen(true)
-      } else {
-        // Cuando el guía pasa a otro paso, cerrar el sidebar en móvil
-        if (isMobile) {
+        const timer = setTimeout(() => {
           setIsOpen(false)
-        }
+        }, 1400)
+        return () => clearTimeout(timer)
       }
     }
-  }, [isGuideActive, guideHighlight, isMobile, isNavItemHighlighted])
-
-  // Cerrar sidebar al cambiar de página en móvil (por navegación de guía o manual)
-  useEffect(() => {
-    if (isMobile && currentPage && guideHighlight !== 'sidebar' && !isNavItemHighlighted) {
-      setIsOpen(false)
-    }
-  }, [currentPage, isMobile, guideHighlight, isNavItemHighlighted])
+  }, [isGuideActive, guideHighlight, isMobile])
 
   // Detectar si es dispositivo móvil
   useEffect(() => {
@@ -210,7 +201,11 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     if (isMobile) setIsOpen(false)
                   }
                 }}
-                className={`p-4 mb-10 bg-white/5 border border-white/5 rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 ${role === "student" ? "cursor-pointer hover:border-white/20 transition-all duration-300 animate-pulse-subtle" : ""}`}
+                className={`p-4 mb-10 bg-white/5 border rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 transition-all duration-500 ${
+                  isProfileHighlighted
+                    ? "border-[#B500D1] bg-[#B500D1]/20 shadow-[0_0_35px_rgba(181,0,209,0.5)] scale-105"
+                    : "border-white/5"
+                } ${role === "student" ? "cursor-pointer hover:border-white/20 animate-pulse-subtle" : ""}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#B500D1]/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 <div className="flex items-center gap-3 relative z-10">

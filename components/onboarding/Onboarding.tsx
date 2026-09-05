@@ -10,18 +10,18 @@ import { createPortal } from 'react-dom'
 // Componente de ondas de audio auto-contenido, reactivo al evento avatar-speaking
 const AudioWaveform: React.FC = () => {
     const [bars, setBars] = React.useState([0.3, 0.5, 0.8, 1.0, 0.8, 0.5, 0.3])
-    
+
     React.useEffect(() => {
         let animFrame: number
         let currentVol = 0
         let idlePhase = 0
-        
+
         const handleSpeaking = (e: Event) => {
             const vol = (e as CustomEvent).detail?.volume || 0
             currentVol = vol
         }
         window.addEventListener('avatar-speaking', handleSpeaking)
-        
+
         const animate = () => {
             idlePhase += 0.05
             const baseAmp = currentVol > 0.02 ? currentVol : 0.15 + Math.sin(idlePhase) * 0.1
@@ -37,13 +37,13 @@ const AudioWaveform: React.FC = () => {
             animFrame = requestAnimationFrame(animate)
         }
         animFrame = requestAnimationFrame(animate)
-        
+
         return () => {
             cancelAnimationFrame(animFrame)
             window.removeEventListener('avatar-speaking', handleSpeaking)
         }
     }, [])
-    
+
     return (
         <div className="relative z-10 flex items-end justify-center gap-[3px]">
             {bars.map((amp, i) => (
@@ -60,30 +60,7 @@ const AudioWaveform: React.FC = () => {
 const SCRIPT = [
     {
         id: 'presentacion',
-        eleonor: "Hola me presento soy Eleonor. Antes de dejarte entrar, necesito entender un poco cómo piensas.",
-        isQuestion: false
-    },
-    {
-        id: 'motivacion',
-        eleonor: "Dime ¿Qué fue lo que te hizo llegar hasta aquí hoy?",
-        isQuestion: true,
-        index: 0
-    },
-    {
-        id: 'objetivo',
-        eleonor: "Si esto funcionara como debería… ¿Qué te gustaría mejorar o conseguir con tu aprendizaje?",
-        isQuestion: true,
-        index: 1
-    },
-    {
-        id: 'experiencia',
-        eleonor: "Sé honesto conmigo. ¿Cómo ha sido tu experiencia estudiando hasta ahora?",
-        isQuestion: true,
-        index: 2
-    },
-    {
-        id: 'cierre',
-        eleonor: "Con esto basta. Ya tengo una primera idea de ti. Vamos.",
+        eleonor: "Hola, me presento, soy Moya, su asistente felino que los acompañara en el programa de liderazgo. Ahora les mostraré la plataforma ",
         isQuestion: false
     }
 ]
@@ -91,7 +68,7 @@ const SCRIPT = [
 const GUIDE_SCRIPT = [
     {
         id: 'guia_inicio',
-        eleonor: "Soy Eleonor. Te voy a mostrar cómo funciona SkillTech: un sistema diseñado para analizar tus habilidades académicas y personales, especialmente para estudiantes de cuarto y quinto de secundaria.",
+        eleonor: "SkillTech es un ecosistema diseñado para analizar tus habilidades académicas y personales, también",
         highlight: 'sidebar',
         expression: 'Explicando',
         navigate: null,
@@ -99,8 +76,26 @@ const GUIDE_SCRIPT = [
         scrollBack: false
     },
     {
+        id: 'guia_credencial',
+        eleonor: "Aquí arriba está tu Credencial de Usuario. Al pulsarla podrás ver codigo para registrar tu asistencia",
+        highlight: 'profile',
+        expression: 'Atenta',
+        navigate: 'profile',
+        action: null,
+        scrollBack: false
+    },
+    {
+        id: 'guia_skillmap',
+        eleonor: "En SkillMap verás un resumen general de las distintas clases que tendremos en el Programa.",
+        highlight: 'skillmap',
+        expression: 'Explicando',
+        navigate: 'skillmap',
+        action: null,
+        scrollBack: false
+    },
+    {
         id: 'guia_examenes_intro',
-        eleonor: "Este es el módulo de Exámenes. Aquí encontrarás evaluaciones académicas y de habilidades personales. Te mostraré los módulos disponibles.",
+        eleonor: "Este es el módulo de Pruebas. Aquí encontrarás evaluaciones para saber que tipo de lider eres, ademas de otros tipos.",
         highlight: 'practice',
         expression: 'Atenta',
         navigate: 'practice',
@@ -108,76 +103,29 @@ const GUIDE_SCRIPT = [
         scrollBack: false
     },
     {
-        id: 'guia_examenes_academicos',
-        eleonor: "Aquí tienes los módulos académicos: Física, Química, Matemáticas, Humanidades. Cada uno mide tus competencias en distintas áreas del conocimiento.",
-        highlight: 'modules-area',
-        expression: 'Explicando',
-        navigate: null,
-        action: 'onboarding-show-academic',
-        highlightCourses: ['fisica', 'quimica'],
-        scrollBack: false
-    },
-    {
-        id: 'guia_examenes_personales',
-        eleonor: "Y aquí los exámenes de habilidades personales: Razonamiento, Criterio, Autonomía… estas evalúan cómo piensas y te desenvuelves más allá de lo académico.",
-        highlight: 'modules-area',
-        expression: 'Pensativa',
-        navigate: null,
-        action: 'onboarding-show-personal',
-        highlightCourses: ['razonamiento', 'criterio'],
-        scrollBack: false
-    },
-    {
-        id: 'guia_examen_boton_ayuda',
-        eleonor: "Cuando estés dentro de un examen, verás este botón de signo de interrogación en cada pregunta. Si tienes dudas, pulsa ahí y yo te daré una pista personalizada.",
-        highlight: 'quiz-help-button',
-        expression: 'Atenta',
-        navigate: null,
-        action: 'onboarding-highlight-help',
-        scrollBack: true
-    },
-    {
-        id: 'guia_examen_recomendacion',
-        eleonor: "Te recomiendo estar en un lugar tranquilo y usar el micrófono. Así podré conocerte mejor y darte un análisis más preciso. Yo estaré evaluando y analizando mientras respondes.",
-        highlight: 'none',
-        expression: 'Explicando',
-        navigate: null,
-        action: null,
-        scrollBack: false
-    },
-    {
-        id: 'guia_resultados_derecha',
-        eleonor: "Al terminar el examen verás tu diagnóstico. En el lado izquierdo te diré exactamente cómo puedes mejorar: recomendaciones específicas, recursos y próximos pasos para potenciar tus habilidades.",
-        highlight: 'results-left',
-        expression: 'Atenta',
-        navigate: null,
-        action: null,
-        scrollBack: false
-    },
-    {
-        id: 'guia_resultados_izquierda',
-        eleonor: "Y en el lado derecho encontrarás cómo rendiste en general: tu puntuación, áreas fuertes y el análisis global del test.",
-        highlight: 'results-right',
-        expression: 'Pensativa',
-        navigate: null,
-        action: null,
-        scrollBack: false
-    },
-    {
         id: 'guia_diagnostico',
-        eleonor: "Este es tu Diagnóstico: tu red neuronal de habilidades. Mientras más tests completes, más nodos se desbloquean.",
-        highlight: 'Diagnosis',
+        eleonor: "Este es tu Diagnóstico: tu red neuronal de aqui podras ver los resultados de tus pruebas cada vez que quieras.",
+        highlight: 'diagnosis',
         expression: 'Atenta',
         navigate: 'diagnosis',
         action: null,
         scrollBack: false
     },
     {
+        id: 'guia_configuracion',
+        eleonor: "En Configuración podrás consultar tu información personal. Eso si no te olvides de cambiar tu contraseña.",
+        highlight: 'settings',
+        expression: 'Explicando',
+        navigate: 'settings',
+        action: null,
+        scrollBack: false
+    },
+    {
         id: 'guia_asistente',
-        eleonor: "Puedes iniciar realizando cualquier test de tu elección. Cuando necesites ayuda o quieras hablar conmigo, pulsa aquí en Eleonor AI en el menú lateral. ¡Mucho ánimo, ya puedes comenzar!",
+        eleonor: "Puedes comenzar rellenando alguna de las pruebas, son un poco largos asi que ve con calma, yo descansare un momento... ¡Mucho éxito!",
         highlight: 'assistant',
         expression: 'Saludando',
-        navigate: null,
+        navigate: 'assistant',
         action: null,
         scrollBack: false
     }
@@ -209,23 +157,49 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
     const isLastStep = step === SCRIPT.length - 1
     const currentStep = isGuiding ? GUIDE_SCRIPT[guideStep] : SCRIPT[step]
 
-    // ... (TTS Logic remains unchanged) ...
-    const playTTS = async (text: string, onFinish?: () => void) => {
+    // ... (TTS Logic con soporte para MP3s estáticos precargados de ElevenLabs) ...
+    const playTTS = async (text: string, audioId?: string, onFinish?: () => void) => {
         if (!text || text === lastTextRef.current) return
         lastTextRef.current = text
 
         try {
-            const ttsToken = localStorage.getItem("eleonor_token")
-            const response = await fetch(`${API_BASE_URL}/api/tts`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
-                },
-                body: JSON.stringify({ text })
-            })
-            const data = await response.json()
-            if (data.audio) {
+            let arrayBuffer: ArrayBuffer | null = null
+
+            // 1. Intentar cargar archivo MP3 estático previamente generado de ElevenLabs
+            if (audioId) {
+                try {
+                    const staticRes = await fetch(`/audio/onboarding/${audioId}.mp3`)
+                    if (staticRes.ok) {
+                        arrayBuffer = await staticRes.arrayBuffer()
+                    }
+                } catch (e) {
+                    console.warn(`Audio estático ${audioId}.mp3 no encontrado, usando API TTS:`, e)
+                }
+            }
+
+            // 2. Fallback a la API backend /api/tts si no existe el archivo estático
+            if (!arrayBuffer) {
+                const ttsToken = localStorage.getItem("eleonor_token")
+                const response = await fetch(`${API_BASE_URL}/api/tts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
+                    },
+                    body: JSON.stringify({ text })
+                })
+                const data = await response.json()
+                if (data.audio) {
+                    const binaryString = atob(data.audio)
+                    const bytes = new Uint8Array(binaryString.length)
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i)
+                    }
+                    arrayBuffer = bytes.buffer
+                }
+            }
+
+            if (arrayBuffer) {
                 // 1. Limpiar reproducción anterior
                 if (animationFrameRef.current) {
                     cancelAnimationFrame(animationFrameRef.current)
@@ -250,12 +224,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                 if ((ctx.state as any) === 'closed') return;
 
                 // 3. Decodificar audio
-                const binaryString = atob(data.audio)
-                const bytes = new Uint8Array(binaryString.length)
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i)
-                }
-                const audioBuffer = await ctx.decodeAudioData(bytes.buffer)
+                const audioBuffer = await ctx.decodeAudioData(arrayBuffer)
 
                 // 4. Configurar Nodos (Verificando estado del contexto)
                 if ((ctx.state as any) === 'closed') return;
@@ -302,14 +271,12 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                 }
 
                 source.onended = () => {
-                    // Solo cancelar si es el frame que nosotros iniciamos
                     if (animationFrameRef.current === currentAnimFrame) {
                         cancelAnimationFrame(currentAnimFrame)
                         animationFrameRef.current = null
                     }
                     window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }))
 
-                    // Disparar callback de finalización después de un breve delay
                     if (onFinish) {
                         setTimeout(onFinish, 300)
                     }
@@ -320,7 +287,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
             }
         } catch (e) {
             console.error("TTS Error:", e)
-            if (onFinish) onFinish() // Fallback
+            if (onFinish) onFinish()
         }
     }
 
@@ -379,7 +346,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
         const scriptStep = currentStep as any
         if (scriptStep.isQuestion && !hasInteracted) return; // Esperar interacción para preguntas
 
-        playTTS(currentStep.eleonor, handleNextStep)
+        playTTS(currentStep.eleonor, currentStep.id, handleNextStep)
 
         if (isGuiding) {
             const guideStepData = currentStep as any
@@ -433,6 +400,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
             window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }));
             completeOnboarding()
+            if (onNavigate) onNavigate('assistant')
             onComplete()
             setTimeout(() => {
                 window.dispatchEvent(new CustomEvent('toggle-eleonor-history', { detail: true }))
@@ -480,7 +448,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
 
     return createPortal(
         <>
-            {/* CAPA 1: Atmósfera de Eleonor (FOCUS MODE) */}
+            {/* CAPA 1: Atmósfera de Moya (FOCUS MODE) */}
             <AnimatePresence>
                 {!isGuiding && (
                     <motion.div
@@ -548,10 +516,10 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                             <div className="absolute w-20 h-20 rounded-full border border-purple-400/30 animate-pulse" />
                             {/* Mock botón ? */}
                             <div className="w-14 h-14 rounded-2xl bg-purple-500/20 border-2 border-purple-400/80 shadow-[0_0_30px_rgba(191,0,255,0.5)] flex items-center justify-center backdrop-blur-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(167,139,250)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgb(167,139,250)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
                             </div>
                             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-black/80 border border-purple-500/30 rounded-xl px-4 py-2 text-xs font-bold text-purple-300 tracking-wider whitespace-nowrap backdrop-blur-md">
-                                Pide una pista a Eleonor
+                                Pide una pista a Moya
                             </div>
                         </div>
                     </motion.div>
@@ -631,7 +599,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 <div className="flex flex-col items-end">
                                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Tiempo Restante</span>
                                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bf00ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bf00ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                                         <span className="font-mono text-sm font-bold text-white">9:57</span>
                                     </div>
                                 </div>
@@ -662,7 +630,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
 
                                     {/* Botón de Ayuda ? */}
                                     <div className="relative shrink-0">
-                                        <div 
+                                        <div
                                             onClick={() => {
                                                 if (currentStep.id === 'guia_examen_boton_ayuda') {
                                                     completeOnboarding();
@@ -674,7 +642,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                             }}
                                             className={`w-12 h-12 rounded-2xl border flex items-center justify-center transition-all ${currentStep.id === 'guia_examen_boton_ayuda' ? 'border-[#bf00ff] bg-[#bf00ff]/20 text-white shadow-[0_0_15px_rgba(191,0,255,0.4)] cursor-pointer hover:bg-[#bf00ff]/30 hover:scale-105' : 'border-purple-500/20 bg-purple-500/5 text-purple-400'}`}
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
                                         </div>
                                         {currentStep.id === 'guia_examen_boton_ayuda' && (
                                             <div className="absolute w-16 h-16 rounded-full border-2 border-purple-400/60 animate-ping -top-2 -left-2" />
@@ -686,18 +654,18 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 <div className="flex flex-col gap-4">
                                     <div className="flex bg-black/40 p-1 rounded-2xl border border-white/5 w-fit self-center md:self-end">
                                         <div className="px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase bg-[#bf00ff] text-white flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
                                             Voz / Dictado
                                         </div>
                                         <div className="px-4 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase text-white/40 flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01"/><path d="M10 8h.01"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M6 12h.01"/><path d="M18 12h.01"/><path d="M7 16h10"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M6 8h.01" /><path d="M10 8h.01" /><path d="M14 8h.01" /><path d="M18 8h.01" /><path d="M6 12h.01" /><path d="M18 12h.01" /><path d="M7 16h10" /></svg>
                                             Teclado / Escrito
                                         </div>
                                     </div>
 
                                     <div className="flex flex-col items-center justify-center p-6 bg-white/[0.02] border border-white/5 rounded-3xl min-h-[160px]">
                                         <div className="w-20 h-20 rounded-full flex items-center justify-center bg-[#bf00ff]/15 border border-[#bf00ff]/30 text-[#bf00ff] shadow-lg">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
                                         </div>
                                         <span className="text-xs font-black uppercase tracking-widest mt-4 text-gray-400">
                                             Toca para dictar respuesta
@@ -723,14 +691,14 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                         <div className="w-full max-w-5xl mx-auto flex flex-col items-center gap-8">
                             {/* Title Chip */}
                             <div className="flex items-center gap-3 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full">
-                                <svg className="w-4 h-4 text-purple-400 animate-pulse" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                <svg className="w-4 h-4 text-purple-400 animate-pulse" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                                 <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.4em]">Perfil Orientativo de Tendencias</span>
                             </div>
 
                             {/* Main Diagnostic Title */}
                             <div className="text-center">
                                 <div className="inline-flex items-center gap-2 mb-6 px-6 py-2 bg-white/10 border border-white/20 rounded-full backdrop-blur-md">
-                                    <svg className="w-4 h-4 text-cyan-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                    <svg className="w-4 h-4 text-cyan-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                                     <span className="text-xs font-black uppercase tracking-widest text-white">
                                         Perfil Orientativo · <span className="text-cyan-400">Usuario Demo</span>
                                     </span>
@@ -758,8 +726,8 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                     <div className={`bg-white/5 border p-6 rounded-[2rem] relative overflow-hidden h-full flex flex-col ${currentStep.id === 'guia_resultados_izquierda' ? 'border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.35)]' : 'border-white/10'}`}>
                                         <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
                                         <h3 className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z"/></svg>
-                                            Eleonor Sugiere
+                                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1 0-3.12 3 3 0 0 1 0-3.88 2.5 2.5 0 0 1 0-3.12A2.5 2.5 0 0 1 9.5 2Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 0-3.12 3 3 0 0 0 0-3.88 2.5 2.5 0 0 0 0-3.12A2.5 2.5 0 0 0 14.5 2Z" /></svg>
+                                            Moya Sugiere
                                         </h3>
                                         <p className="text-white/90 text-sm font-medium italic leading-relaxed">
                                             "Tu perfil tiende hacia una falta de interacción con el material de estudio, lo que puede ser un área clave a mejorar para avanzar en tu comprensión de la física."
@@ -799,7 +767,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 >
                                     <div className={`bg-white/5 border p-6 rounded-[2rem] flex flex-col h-full ${currentStep.id === 'guia_resultados_derecha' ? 'border-cyan-500 shadow-[0_0_40px_rgba(6,182,212,0.35)]' : 'border-white/10'}`}>
                                         <h3 className="text-[10px] font-black text-cyan-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.886L4.2 9.272l4.912 4.786L7.912 20 13 16.772l5.088 3.228-1.2-5.942 4.912-4.786-5.888-.386Z"/></svg>
+                                            <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.886L4.2 9.272l4.912 4.786L7.912 20 13 16.772l5.088 3.228-1.2-5.942 4.912-4.786-5.888-.386Z" /></svg>
                                             Rutas de Exploración Sugeridas
                                         </h3>
                                         <div className="space-y-3 flex-1">
@@ -827,7 +795,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 {/* Eleonor Sugiere */}
                                 <div className={`transition-all duration-500 bg-white/5 border p-5 rounded-[1.5rem] relative overflow-hidden ${currentStep.id === 'guia_resultados_izquierda' ? 'border-purple-500/80 shadow-[0_0_25px_rgba(168,85,247,0.4)]' : 'border-white/10 opacity-60'}`}>
                                     <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
-                                    <h3 className="text-[9px] font-black text-purple-400 uppercase tracking-widest mb-2">Eleonor Sugiere</h3>
+                                    <h3 className="text-[9px] font-black text-purple-400 uppercase tracking-widest mb-2">Moya Sugiere</h3>
                                     <p className="text-white/90 text-xs font-medium italic leading-relaxed">
                                         "Tu perfil tiende hacia una falta de interacción con el material de estudio."
                                     </p>
@@ -873,17 +841,16 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 exit={{ opacity: 0, scale: 1.1, y: -20, filter: 'blur(10px)' }}
                                 transition={{ duration: 0.5, ease: "circOut" }}
                                 style={{ willChange: "transform, opacity" }}
-                                className={`pointer-events-auto w-full ${
-                                    isGuiding
-                                        ? 'bg-black/85 backdrop-blur-xl rounded-[1.5rem] border border-cyan-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden'
-                                        : 'text-center bg-black/85 backdrop-blur-xl p-8 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col items-center gap-6'
-                                }`}
+                                className={`pointer-events-auto w-full ${isGuiding
+                                    ? 'bg-black/85 backdrop-blur-xl rounded-[1.5rem] border border-cyan-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden'
+                                    : 'text-center bg-black/85 backdrop-blur-xl p-8 rounded-[2rem] border border-white/10 shadow-2xl flex flex-col items-center gap-6'
+                                    }`}
                             >
                                 {isGuiding ? (
                                     // TARJETA GUÍA: Videollamada self-contained con ondas de audio reactivas
                                     <div className="flex flex-row items-stretch">
                                         {/* Panel de videollamada - Solo en móvil. En PC Eleonor aparece de fondo via AvatarDisplay GUIDE */}
-                                        <div className="w-[100px] shrink-0 relative overflow-hidden bg-[#050110] border-r border-cyan-500/20 flex md:hidden flex-col">
+                                        <div id="eleonor-avatar-box" className="w-[100px] shrink-0 relative overflow-hidden bg-[#050110] border-r border-cyan-500/20 flex md:hidden flex-col">
                                             {/* Indicador de Live */}
                                             <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-600/80 backdrop-blur-sm">
                                                 <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
@@ -903,7 +870,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                         <div className="flex-1 p-4 md:p-5 flex flex-col justify-between">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                                                <span className="text-[9px] font-black uppercase tracking-[0.25em] text-cyan-400">Eleonor</span>
+                                                <span className="text-[9px] font-black uppercase tracking-[0.25em] text-cyan-400">Moya</span>
                                                 <span className="text-[9px] text-white/20 ml-auto">{guideStep + 1} / {GUIDE_SCRIPT.length}</span>
                                             </div>
                                             <p className="text-sm md:text-base font-medium text-white leading-relaxed">
@@ -931,7 +898,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                                 onClick={unlockAudio}
                                                 className="px-10 py-4 bg-cyan-500 hover:bg-cyan-400 text-white rounded-full font-black text-base uppercase tracking-widest shadow-[0_0_30px_rgba(6,182,212,0.5)] transition-all hover:scale-105"
                                             >
-                                                Conectar con Eleonor
+                                                Conectar con Moya
                                             </motion.button>
                                         )}
                                     </>
@@ -947,25 +914,25 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                                 className="w-full max-w-lg relative group pointer-events-auto flex flex-col items-center gap-6"
                             >
                                 <div className="relative w-full">
-                                <Input
-                                    autoFocus
-                                    value={inputValue}
-                                    onChange={(e) => setInputValue(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="Escribe aquí..."
-                                    className="bg-[#063924]/60 backdrop-blur-md border-[#d0b04d]/20 rounded-2xl text-center text-xl h-20 focus-visible:ring-2 focus-visible:ring-[#d0b04d]/50 focus-visible:border-[#d0b04d]/50 transition-all placeholder:text-[#f6f6ed]/40 text-[#f6f6ed] font-medium pr-16 outline-none"
-                                />
-                                <button
-                                    onClick={handleSend}
-                                    disabled={!inputValue.trim()}
-                                    className="absolute right-3 top-3 bottom-3 aspect-square bg-[#d0b04d] hover:bg-[#e0c05d] disabled:opacity-30 disabled:hover:bg-[#d0b04d] text-[#063924] rounded-xl flex items-center justify-center transition-all shadow-md"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                </button>
-                            </div>
-                            <div className="text-center animate-pulse hidden md:block mt-2">
-                                <span className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#d0b04d]">Presiona Enter para enviar</span>
-                            </div>
+                                    <Input
+                                        autoFocus
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        placeholder="Escribe aquí..."
+                                        className="bg-[#063924]/60 backdrop-blur-md border-[#d0b04d]/20 rounded-2xl text-center text-xl h-20 focus-visible:ring-2 focus-visible:ring-[#d0b04d]/50 focus-visible:border-[#d0b04d]/50 transition-all placeholder:text-[#f6f6ed]/40 text-[#f6f6ed] font-medium pr-16 outline-none"
+                                    />
+                                    <button
+                                        onClick={handleSend}
+                                        disabled={!inputValue.trim()}
+                                        className="absolute right-3 top-3 bottom-3 aspect-square bg-[#d0b04d] hover:bg-[#e0c05d] disabled:opacity-30 disabled:hover:bg-[#d0b04d] text-[#063924] rounded-xl flex items-center justify-center transition-all shadow-md"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                    </button>
+                                </div>
+                                <div className="text-center animate-pulse hidden md:block mt-2">
+                                    <span className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#d0b04d]">Presiona Enter para enviar</span>
+                                </div>
                             </motion.div>
                         )}
                     </div>
@@ -981,6 +948,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onNavigate }
                             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
                             window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0 } }));
                             completeOnboarding();
+                            if (onNavigate) onNavigate('assistant');
                             onComplete();
                             setTimeout(() => {
                                 window.dispatchEvent(new CustomEvent('toggle-eleonor-history', { detail: true }))

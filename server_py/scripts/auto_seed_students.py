@@ -10,6 +10,7 @@ import logging
 import os
 import glob
 import unicodedata
+import uuid
 import bcrypt
 from sqlalchemy.orm import Session
 from server_py.memoria.database import SessionLocal, User, EleonorSession
@@ -243,6 +244,10 @@ def auto_seed_students():
 
             existing = db.query(User).filter((User.username == username) | (User.email == email)).first()
             if existing:
+                if not existing.secure_token:
+                    existing.secure_token = f"SKILL-{uuid.uuid4().hex[:12].upper()}"
+                    db.commit()
+                    logger.info(f"[AutoSeedStudents] 🔑 Generado secure_token para usuario existente: {existing.username}")
                 skipped += 1
                 continue
 
@@ -253,7 +258,8 @@ def auto_seed_students():
                 role="student",
                 school=s.get("school", "UCSM"),
                 classroom=s.get("classroom", "5º A"),
-                has_onboarded=0
+                has_onboarded=0,
+                secure_token=f"SKILL-{uuid.uuid4().hex[:12].upper()}"
             )
             db.add(new_user)
             db.commit()
@@ -264,6 +270,17 @@ def auto_seed_students():
             db.commit()
 
             created += 1
+
+        # Barrido final: Asegurar que NINGÚN usuario en la base de datos se quede sin secure_token
+        users_without_token = db.query(User).filter((User.secure_token == None) | (User.secure_token == "")).all()
+        if users_without_token:
+            tokens_generated = 0
+            for u in users_without_token:
+                u.secure_token = f"SKILL-{uuid.uuid4().hex[:12].upper()}"
+                tokens_generated += 1
+            db.commit()
+            logger.info(f"[AutoSeedStudents] 🔑 Generados {tokens_generated} tokens QR de seguridad para usuarios sin token.")
+            print(f"[AutoSeedStudents] 🔑 Generados {tokens_generated} tokens QR de seguridad para usuarios sin token.")
 
         logger.info(f"[AutoSeedStudents] ✅ Proceso completado — {created} estudiantes registrados nuevos, {skipped} ya existían.")
         print(f"[AutoSeedStudents] ✅ Proceso completado — {created} estudiantes registrados nuevos, {skipped} ya existían.")

@@ -12,14 +12,15 @@ import edge_tts
 from server_py.config.app_config import (
     VOICE_EDGE,
     VOICE_OPENAI,
+    TTS_ENGINE as TTS_ENGINE_CONFIG,
     client as client_openai,
 )
 
 from .eleven_labs import generate_eleven_audio_base64
 
 
-# Motor de voz activo: edge, openai o eleven.
-TTS_ENGINE = "edge"
+# Motor de voz activo: edge, openai o eleven (configurado desde .env).
+TTS_ENGINE = TTS_ENGINE_CONFIG
 
 
 # Configuración de los modos de voz para Edge-TTS.

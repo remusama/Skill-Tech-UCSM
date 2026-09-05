@@ -134,7 +134,7 @@ export default function Home() {
 
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false)
-    setCurrentPage("skillmap")
+    setCurrentPage("assistant")
 
     // Persistir estado en backend y localStorage
     const token = localStorage.getItem("eleonor_token")

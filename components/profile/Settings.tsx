@@ -15,7 +15,7 @@ import { API_BASE_URL } from "@/lib/config"
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState("account")
-  
+
   // Datos del Usuario
   const [userData, setUserData] = useState<{
     id?: number
@@ -189,7 +189,7 @@ export function Settings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Institución Educativa</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Universidad</Label>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
                           <School size={16} className="text-purple-400" />
                           <span>{userData.school || "UCSM"}</span>
@@ -197,7 +197,7 @@ export function Settings() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Aula / Sección</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Grupo</Label>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
                           <BookOpen size={16} className="text-emerald-400" />
                           <span>{userData.classroom || "No asignada"}</span>
@@ -222,9 +222,8 @@ export function Settings() {
 
                     <form onSubmit={handleChangePassword} className="space-y-6 max-w-md">
                       {passMessage && (
-                        <div className={`p-4 rounded-2xl text-xs font-bold uppercase tracking-wider ${
-                          passMessage.type === "success" ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" : "bg-red-500/20 border border-red-500/40 text-red-400"
-                        }`}>
+                        <div className={`p-4 rounded-2xl text-xs font-bold uppercase tracking-wider ${passMessage.type === "success" ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" : "bg-red-500/20 border border-red-500/40 text-red-400"
+                          }`}>
                           {passMessage.text}
                         </div>
                       )}

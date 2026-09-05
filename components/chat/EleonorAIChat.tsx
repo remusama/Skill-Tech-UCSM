@@ -581,19 +581,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       {/* Barra Inferior: ChatInput (Componente memoizado para evitar re-renders del chat al escribir) */}
       {/* Barra Inferior: ChatInput */}
       <div className="z-[100] absolute bottom-12 left-0 right-0 p-4 md:p-8 flex flex-col gap-4 items-center">
-        {!isProcessing && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(181,0,209,0.4)" }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleExplainErrors}
-            className="px-4 py-2 rounded-full bg-black/60 border border-[#B500D1]/40 text-[#B500D1] hover:text-white hover:bg-[#B500D1]/20 backdrop-blur-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 cursor-pointer"
-          >
-            <Activity size={12} className="animate-pulse text-cyan-400" />
-            ¿Cuáles fueron mis errores del último examen?
-          </motion.button>
-        )}
         <div className="w-full">
           <ChatInput
             onSend={handleSend}
