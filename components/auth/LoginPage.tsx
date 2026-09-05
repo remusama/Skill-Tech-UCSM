@@ -1,11 +1,11 @@
 "use client"
+
 import { useState, useEffect } from "react"
 import { API_BASE_URL } from "@/lib/config"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Particles } from "@/components/ui/particles"
 import Image from "next/image"
 
@@ -16,8 +16,6 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState("")
   const [email, setEmail] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [school, setSchool] = useState("")
-  const [classroom, setClassroom] = useState("")
   const [error, setError] = useState("")
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
   const [isTeacher, setIsTeacher] = useState(false)
@@ -156,7 +154,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
 
     const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login"
     const body = isRegister
-      ? { username: cleanUsername, password, email: cleanEmail, school, classroom, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
+      ? { username: cleanUsername, password, email: cleanEmail, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
       : { username: cleanUsername, password, role: isTeacher ? "teacher" : "student", teacher_key: isTeacher ? teacherKey : undefined }
 
     const baseUrl = API_BASE_URL
@@ -179,8 +177,6 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
         setPassword("")
         setConfirmPassword("")
         setEmail("")
-        setSchool("")
-        setClassroom("")
         setIsTeacher(false)
         setTeacherKey("")
         setError("Registro exitoso. Por favor inicia sesión.")
@@ -304,53 +300,18 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
               </div>
 
               {isRegister && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-white/70 text-xs font-bold uppercase tracking-widest">Confirmar contraseña</Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ""))}
-                      placeholder="••••••••"
-                      className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-all h-12 rounded-xl"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Colegio</Label>
-                      <Select value={school} onValueChange={setSchool} required>
-                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#baef00]/60 focus:ring-[#baef00]/30 transition-all h-12 rounded-xl">
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0c1c11] border-[#3c5a21]/50 text-white z-[999] shadow-2xl">
-                          <SelectItem value="Francisco Mostajo" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Francisco Mostajo</SelectItem>
-                          <SelectItem value="Carlos José Echavarry Osacar" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Carlos José Echavarry</SelectItem>
-                          <SelectItem value="Franklin Roosevelt" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Franklin Roosevelt</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Grado/Sección</Label>
-                      <Select value={classroom} onValueChange={setClassroom} required>
-                        <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#baef00]/60 focus:ring-[#baef00]/30 transition-all h-12 rounded-xl">
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#0c1c11] border-[#3c5a21]/50 text-white z-[999] shadow-2xl">
-                          <SelectItem value="4A" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4A</SelectItem>
-                          <SelectItem value="4B" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4B</SelectItem>
-                          <SelectItem value="4C" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4C</SelectItem>
-                          <SelectItem value="5A" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5A</SelectItem>
-                          <SelectItem value="5B" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5B</SelectItem>
-                          <SelectItem value="5C" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5C</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-white/70 text-xs font-bold uppercase tracking-widest">Confirmar contraseña</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ""))}
+                    placeholder="••••••••"
+                    className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-all h-12 rounded-xl"
+                    required
+                  />
+                </div>
               )}
 
               {/* Toggle Docente */}
