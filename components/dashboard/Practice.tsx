@@ -95,7 +95,7 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
     tab: "bg-rose-500",
     via: "via-rose-400"
   },
-psicometria: {
+  psicometria: {
     color: "from-[#d0b04d] to-[#997a23]",
     textColor: "text-[#d0b04d]",
     badge: "text-[#d0b04d] bg-[#d0b04d]/10 border-[#d0b04d]/20",
@@ -127,12 +127,10 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
   const practiceContainerRef = useRef<HTMLDivElement>(null)
   const topAnchorRef = useRef<HTMLDivElement>(null)
 
-  // Escuchar eventos del onboarding para controlar UI
   useEffect(() => {
     const handleScrollModules = () => {
       setTimeout(() => {
         modulesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        // Intentar scroll en elementos contenedores principales de la página
         const scrollContainers = [
           document.documentElement,
           document.body,
@@ -155,8 +153,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     }
     const handleScrollTop = () => {
       setTimeout(() => {
-        // Usar scrollIntoView en un ancla superior — funciona incluso con body overflow:hidden
-        // (scrollTo no funciona con overflow:hidden, pero scrollIntoView sí — quirk del spec)
         if (topAnchorRef.current) {
           topAnchorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
@@ -184,7 +180,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     }
   }, [])
 
-  // Auto-load mentor exams on mount
   useEffect(() => {
     const token = localStorage.getItem('eleonor_token')
     if (!token) return
@@ -229,8 +224,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
   const handleCompleteExam = (results: any) => {
     setExamResults(results)
-    // No cerramos inmediatamente para dejar que DiagnosisEleonorOverlay se muestre si es necesario
-    // Pero el QuizInterface manejará su propio flujo de resultados internos ahora.
   }
 
   const handleFinishQuiz = () => {
@@ -256,10 +249,9 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
       skill: exam.agent_name || 'Habilidades'
     }))
 
-    // Try to load saved progress from localStorage
     let initialAnswers = {}
     let initialIndex = 0
-    let initialTime = 600 // 10 mins standard
+    let initialTime = 600
 
     const saved = localStorage.getItem(`mentor_exam_progress_${exam.id}`)
     if (saved) {
@@ -295,22 +287,22 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
     if ((activeExam as any).isCepv) {
       return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
-          <CepvSurvey onExit={finishAndDiagnose} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0a6b17] overflow-auto">
+          <CepvSurvey onExit={handleCancelExam} />
         </motion.div>
       )
     }
     if ((activeExam as any).isLewin) {
       return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
-          <LewinLeadershipTest onExit={finishAndDiagnose} onComplete={handleSkillRefreshOnly} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0a6b17] overflow-auto">
+          <LewinLeadershipTest onExit={handleCancelExam} onComplete={() => {}} />
         </motion.div>
       )
     }
     if ((activeExam as any).isNeo) {
       return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0B0121] overflow-auto">
-          <NeoPiRTest onExit={finishAndDiagnose} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-[#0a6b17] overflow-auto">
+          <NeoPiRTest onExit={handleCancelExam} />
         </motion.div>
       )
     }
@@ -330,7 +322,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           initialIndex={activeExam.initialIndex}
           examId={activeExam.id}
           onComplete={(score, answers) => {
-            // Remove saved progress on completion
             localStorage.removeItem(`mentor_exam_progress_${activeExam.id}`)
             handleCompleteExam({ score, answers })
           }}
@@ -343,14 +334,12 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
   return (
     <div ref={practiceContainerRef} id="practice-scroll-container" className="relative min-h-screen text-white overflow-y-auto overflow-x-hidden font-sans flex flex-col pt-6">
-      {/* Ancla invisible para scroll-back — scrollIntoView funciona con body overflow:hidden */}
       <div ref={topAnchorRef} className="absolute top-0 left-0 w-0 h-0" aria-hidden />
-      
 
       {/* TOP HEADER */}
       <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">
         <div className="flex items-center gap-3">
-         <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#d0b04d] to-[#baef00] drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
+          <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#d0b04d] to-[#baef00] drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
           <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-xl uppercase leading-none">
             Mentoría
           </h1>
@@ -361,7 +350,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
       </div>
 
       <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
-
         <div className="flex gap-2 p-1 bg-white/[0.04] border border-white/10 rounded-2xl w-fit">
           {(["mentoria", "personal"] as const).map((cat) => (
             <button
@@ -377,7 +365,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           ))}
         </div>
 
-        {/* Area Selector — solo visible en modo académico/personal */}
         {activeCategory !== 'mentoria' && (
           <div className="flex gap-4 overflow-x-auto px-4 w-full custom-scrollbar pb-2 flex-nowrap scroll-smooth bg-white/[0.03] rounded-2xl border border-white/5 p-3">
             {currentAreas.map(area => {
@@ -418,7 +405,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           </div>
         )}
 
-        {/* Action Tabs Selector - only shown when not in mentoria mode */}
         {activeCategory !== 'mentoria' && (
           <div className="flex gap-2 overflow-x-auto w-full px-1 py-1 custom-scrollbar md:justify-start md:gap-4 mb-4 flex-nowrap shrink-0 scroll-smooth">
             {[
@@ -443,10 +429,10 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           </div>
         )}
 
-        {/* Mentoría Panel */}
         {activeCategory === 'mentoria' && (
           <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
             <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-purple-400 to-blue-500" />
               <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#d0b04d] to-[#baef00] drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
               <h2 className="text-lg font-black uppercase tracking-widest text-white/80">Exámenes de Mentoría</h2>
             </div>
@@ -466,41 +452,44 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                   key={exam.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={cn(
-                    "p-6 rounded-2xl border transition-all",
-                    exam.status === 'completed'
-                      ? "bg-green-500/5 border-green-500/20"
-                      : "bg-purple-500/5 border-purple-500/20 hover:border-purple-500/40"
-                  )}
+                  className="group relative h-full"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={cn(
-                          "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
-                          exam.status === 'completed' ? "bg-green-500/20 text-green-400" : "bg-purple-500/20 text-purple-400"
-                        )}>
-                          {exam.status === 'completed' ? 'Completado' : 'Pendiente'}
-                        </span>
-                        <span className="text-xs text-gray-600">Agente: {exam.agent_name}</span>
+                  {highlightedAreas.some(h => (currentArea?.id || '').includes(h) || exam.title.toLowerCase().includes(h)) && (
+                    <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
+                  )}
+                  <div className="h-full bg-[#063924]/60 backdrop-blur-xl border border-[#3c5a21] rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 hover:border-[#4ade80]/60 hover:bg-[#094d31]/80 hover:shadow-[0_0_25px_rgba(74,222,128,0.25)]">
+                    <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity", theme.via)} />
+                    <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3c5a21] to-transparent opacity-0 group-hover:opacity-100 transition-opacity")} />
+
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={cn(
+                            "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase",
+                            exam.status === 'completed' ? "bg-green-500/20 text-green-400" : "bg-purple-500/20 text-purple-400"
+                          )}>
+                            {exam.status === 'completed' ? 'Completado' : 'Pendiente'}
+                          </span>
+                          <span className="text-xs text-gray-400">Agente: {exam.agent_name}</span>
+                        </div>
+                        <h3 className="font-black text-lg text-white">{exam.title}</h3>
+                        {exam.description && <p className="text-sm text-gray-300 mt-1">{exam.description}</p>}
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {(exam.competencies || []).map((c: string) => (
+                            <span key={c} className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs">{c}</span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">{exam.questions?.length || 0} preguntas</p>
                       </div>
-                      <h3 className="font-black text-lg">{exam.title}</h3>
-                      {exam.description && <p className="text-sm text-gray-400 mt-1">{exam.description}</p>}
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {(exam.competencies || []).map((c: string) => (
-                          <span key={c} className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-full text-xs">{c}</span>
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-600 mt-2">{exam.questions?.length || 0} preguntas</p>
+                      {exam.status !== 'completed' && (
+                        <button
+                          onClick={() => handleStartMentorExam(exam)}
+                          className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl text-white font-bold text-sm hover:from-purple-500 hover:to-blue-500 transition-all">
+                          <Play className="w-4 h-4" />
+                          Iniciar
+                        </button>
+                      )}
                     </div>
-                    {exam.status !== 'completed' && (
-                      <button
-                        onClick={() => handleStartMentorExam(exam)}
-                        className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl text-white font-bold text-sm hover:from-purple-500 hover:to-blue-500 transition-all">
-                        <Play className="w-4 h-4" />
-                        Iniciar
-                      </button>
-                    )}
                   </div>
                 </motion.div>
               ))
@@ -508,7 +497,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
           </div>
         )}
 
-        {/* Scrollable Cards Grid - only shown when not in mentoria mode */}
         {activeCategory !== 'mentoria' && (
         <div ref={modulesRef} data-practice-container className="flex-1 overflow-y-auto pb-20 custom-scrollbar pr-2">
           {currentAreas.length === 0 ? (
@@ -534,14 +522,11 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                     transition={{ delay: i * 0.05 }}
                     className="group relative h-full"
                   >
-                    {/* Glow ring when highlighted by onboarding guide */}
                       {highlightedAreas.some(h => currentArea.id.includes(h) || exam.title.toLowerCase().includes(h)) && (
                         <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
                       )}
 
                       <div className="h-full bg-[#063924]/60 backdrop-blur-xl border border-[#3c5a21] rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 hover:border-[#4ade80]/60 hover:bg-[#094d31]/80 hover:shadow-[0_0_25px_rgba(74,222,128,0.25)]">
-
-
                       <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#3c5a21] to-transparent opacity-0 group-hover:opacity-100 transition-opacity")} />
 
                       <div className="flex justify-between items-start mb-6">

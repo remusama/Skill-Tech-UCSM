@@ -29,6 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Image from "next/image"
 import { MagicTitle } from "@/components/ui/magic-title"
 import { Meteors } from "@/components/ui/meteors"
+import { useEleonor } from "@/contexts/eleonor-context"
 
 const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
@@ -48,8 +49,6 @@ const teacherNavItems = [
   { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
 
-import { useEleonor } from "@/contexts/eleonor-context"
-
 interface SidebarNavigationProps {
   currentPage: string
   setCurrentPage: (page: string) => void
@@ -58,7 +57,7 @@ interface SidebarNavigationProps {
 }
 
 export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role = "student" }: SidebarNavigationProps) {
-  const currentItems = role === "teacher" ? teacherNavItems : navItems;
+  const currentItems = role === "teacher" ? teacherNavItems : navItems
   const { isGuideActive, guideHighlight, completeOnboarding } = useEleonor()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -86,22 +85,27 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
     }
   }, [])
 
-  // Sidebar fluid border based on guideHighlight
   const isSidebarHighlighted = guideHighlight === 'sidebar'
   const isProfileHighlighted = guideHighlight === 'profile'
+  const isNavItemHighlighted = currentItems.some(item => item.page === guideHighlight)
 
-  // Manejo dinámico de apertura temporizada (1.4s) en móviles durante la guía
   useEffect(() => {
-    if (isGuideActive && guideHighlight) {
-      if (isMobile) {
+    if (isGuideActive) {
+      if (guideHighlight === 'sidebar' || isNavItemHighlighted) {
         setIsOpen(true)
-        const timer = setTimeout(() => {
+      } else {
+        if (isMobile) {
           setIsOpen(false)
-        }, 1400)
-        return () => clearTimeout(timer)
+        }
       }
     }
-  }, [isGuideActive, guideHighlight, isMobile])
+  }, [isGuideActive, guideHighlight, isMobile, isNavItemHighlighted])
+
+  useEffect(() => {
+    if (isMobile && currentPage && guideHighlight !== 'sidebar' && !isNavItemHighlighted) {
+      setIsOpen(false)
+    }
+  }, [currentPage, isMobile, guideHighlight, isNavItemHighlighted])
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -164,9 +168,9 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             exit={{ x: -320, opacity: 0 }}
             transition={{ type: "spring", stiffness: 450, damping: 30 }}
             className={`
-            fixed md:sticky top-0 left-0 h-screen md:translate-x-0 md:opacity-100
-            bg-white/5 backdrop-blur-[60px] border-r border-white/5 z-40 w-72 md:w-72 flex-shrink-0
-            overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#d0b04d]/50' : ''}
+              fixed md:sticky top-0 left-0 h-screen md:translate-x-0 md:opacity-100
+              bg-white/5 backdrop-blur-[60px] border-r border-white/5 z-40 w-72 md:w-72 flex-shrink-0
+              overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#d0b04d]/50' : ''}
             `}
           >
             <Meteors number={15} className="opacity-20" />
@@ -225,13 +229,13 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                 <div className="flex items-center gap-3 relative z-10">
                   <Avatar className="h-12 w-12 border-2 border-[#d0b04d]/40">
                     <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                    <AvatarFallback className="bg-gradient-to-br from-[#B500D1] to-[#D100B5] text-white font-black text-sm">
+                    <AvatarFallback className="bg-gradient-to-br from-[#0d971f] to-[#063924] text-[#d0b04d] font-black text-sm">
                       {userName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "ST"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-black text-white truncate uppercase tracking-tighter">{userName}</p>
-                    <p className="text-[9px] text-white/40 truncate tracking-widest font-bold uppercase mt-0.5">{userSubtitle}</p>
+                    <p className="text-[9px] text-[#d0b04d]/70 truncate tracking-widest font-bold uppercase mt-0.5">{userSubtitle}</p>
                   </div>
                 </div>
               </div>
@@ -243,7 +247,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     {role === "teacher" ? "Módulos Docente" : "Módulos Core"}
                   </span>
                 </div>
-                {currentItems.map((item, index) => {
+                {currentItems.map((item) => {
                   const isHighlighted = guideHighlight === item.page;
                   const isActive = currentPage === item.page;
                   return (
@@ -252,14 +256,14 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                       whileHover={{ x: 5 }}
                       whileTap={{ scale: 0.98 }}
                       animate={isHighlighted ? {
-                      scale: 1.02,
-                      backgroundColor: "rgba(13, 151, 31, 0.3)",
-                      boxShadow: "0 0 20px rgba(13, 151, 31, 0.4)",
-                      borderColor: "#0d971f"
+                        scale: 1.02,
+                        backgroundColor: "rgba(13, 151, 31, 0.3)",
+                        boxShadow: "0 0 20px rgba(13, 151, 31, 0.4)",
+                        borderColor: "#0d971f"
                       } : {
-                      scale: 1,
-                      backgroundColor: isActive ? "rgba(13, 151, 31, 0.25)" : "rgba(255, 255, 255, 0.02)",
-                      borderColor: isActive ? "#0d971f" : "rgba(255, 255, 255, 0.05)"
+                        scale: 1,
+                        backgroundColor: isActive ? "rgba(13, 151, 31, 0.25)" : "rgba(255, 255, 255, 0.02)",
+                        borderColor: isActive ? "#0d971f" : "rgba(255, 255, 255, 0.05)"
                       }}
                       onClick={() => {
                         if (isGuideActive && guideHighlight === 'assistant' && item.page === 'assistant') {
@@ -269,8 +273,9 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                         setCurrentPage(item.page)
                         if (isMobile) setIsOpen(false)
                       }}
-                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-500 group relative border backdrop-blur-sm ${isActive ? "text-white" : "text-white/40 hover:text-white"
-                        }`}
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-500 group relative border backdrop-blur-sm ${
+                        isActive ? "text-white" : "text-white/40 hover:text-white"
+                      }`}
                     >
                       {isActive && (
                         <motion.div

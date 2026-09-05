@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,22 @@ export function NeoPiRTest({ onExit }: { onExit?: () => void }) {
     const payload = { answers, gender, raw: { facetRaw, domainRaw }, domains: domainsT, facets: facetsT };
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/diagnosis/neo-pi-r/submit`, { method: "POST", headers: getAuthHeaders(), body: JSON.stringify({ answers: Object.entries(answers).map(([k, v]) => ({ itemId: Number(k), value: v })), gender }) });
-      if (res.ok) { const data = await res.json(); setResult({ ...payload, ...data, gender }); } else setResult({ ...payload, gender });
-    } catch { setResult({ ...payload, gender, offline: true }); } finally { setSubmitting(false); }
+      const res = await fetch(`${API_URL}/diagnosis/neo-pi-r/submit`, { 
+        method: "POST", 
+        headers: getAuthHeaders(), 
+        body: JSON.stringify({ answers: Object.entries(answers).map(([k, v]) => ({ itemId: Number(k), value: v })), gender }) 
+      });
+      if (res.ok) { 
+        const data = await res.json(); 
+        setResult({ ...payload, ...data, gender }); 
+      } else { 
+        setResult({ ...payload, gender }); 
+      }
+    } catch { 
+      setResult({ ...payload, gender, offline: true }); 
+    } finally { 
+      setSubmitting(false); 
+    }
   }
 
   if (result) return <NeoPiRResults result={result} onExit={onExit} />;

@@ -73,7 +73,7 @@ interface SparklesTextProps {
     sparklesCount?: number
 
     /**
-     * @default "{first: '#9E7AFF', second: '#FE8BBB'}"
+     * @default "{first: '#85a02f', second: '#cae13c'}"
      * @type string
      * @description
      * The colors of the sparkles

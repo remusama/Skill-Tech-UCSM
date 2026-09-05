@@ -46,52 +46,30 @@ body {
     --radius: 0.75rem;
 
     /* --- LAYOUT VARIABLES (Responsive Clamps) --- */
-    /* Sidebar: flexible pero no enorme. Colapsable en mobile (manejado por JS/clase) */
     --sidebar-width: clamp(240px, 20vw, 280px);
-
-    /* Eleonor: nunca muy chica, nunca gigante. */
     --eleonor-width: clamp(280px, 25vw, 360px);
   }
 
   .light-theme {
     --background: 0 0% 90%;
-    /* #E5E5E5 - Very light gray */
     --foreground: 0 0% 24%;
-    /* #3E3434 - Dark brown almost black */
     --card: 220 20% 86%;
-    /* #D5D9E3 - Soft grayish blue */
     --card-foreground: 0 0% 24%;
-    /* #3E3434 - Dark brown */
     --popover: 220 20% 86%;
-    /* #D5D9E3 - Soft grayish blue */
     --popover-foreground: 0 0% 24%;
-    /* #3E3434 - Dark brown */
     --primary: 270 29% 50%;
-    /* #7D5AA4 - Medium purple */
     --primary-foreground: 0 0% 90%;
-    /* #E5E5E5 - Very light gray */
     --secondary: 280 29% 74%;
-    /* #C1A9D2 - Pastel lavender */
     --secondary-foreground: 0 0% 24%;
-    /* #3E3434 - Dark brown */
     --muted: 300 4% 65%;
-    /* #AAA3A7 - Gray with lavender tint */
     --muted-foreground: 0 0% 24%;
-    /* #3E3434 - Dark brown */
     --accent: 280 29% 74%;
-    /* #C1A9D2 - Pastel lavender */
     --accent-foreground: 0 0% 24%;
-    /* #3E3434 - Dark brown */
     --destructive: 0 84.2% 60.2%;
-    /* Keeping original destructive color */
     --destructive-foreground: 0 0% 98%;
-    /* Keeping original destructive foreground */
     --border: 280 29% 74%;
-    /* #C1A9D2 - Pastel lavender */
     --input: 280 29% 74%;
-    /* #C1A9D2 - Pastel lavender */
     --ring: 270 29% 50%;
-    /* #7D5AA4 - Medium purple */
   }
 
   * {
@@ -99,20 +77,11 @@ body {
   }
 }
 
-/* Added for the new design */
 @layer utilities {
   @keyframes gradient-motion {
-    0% {
-      background-position: 0% 50%;
-    }
-
-    50% {
-      background-position: 100% 50%;
-    }
-
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   .gradient-motion {
@@ -120,13 +89,8 @@ body {
   }
 
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   .fade-in {
@@ -138,7 +102,6 @@ body {
       opacity: 0;
       transform: translateY(20px);
     }
-
     to {
       opacity: 1;
       transform: translateY(0);
@@ -154,11 +117,7 @@ body {
       transform: rotate(var(--angle)) translateX(0);
       opacity: 1;
     }
-
-    70% {
-      opacity: 1;
-    }
-
+    70% { opacity: 1; }
     100% {
       transform: rotate(var(--angle)) translateX(-500px);
       opacity: 0;
@@ -170,30 +129,11 @@ body {
   }
 
   @keyframes aurora {
-    0% {
-      background-position: 0% 50%;
-      transform: rotate(-5deg) scale(0.9);
-    }
-
-    25% {
-      background-position: 50% 100%;
-      transform: rotate(5deg) scale(1.1);
-    }
-
-    50% {
-      background-position: 100% 50%;
-      transform: rotate(-3deg) scale(0.95);
-    }
-
-    75% {
-      background-position: 50% 0%;
-      transform: rotate(3deg) scale(1.05);
-    }
-
-    100% {
-      background-position: 0% 50%;
-      transform: rotate(-5deg) scale(0.9);
-    }
+    0% { background-position: 0% 50%; transform: rotate(-5deg) scale(0.9); }
+    25% { background-position: 50% 100%; transform: rotate(5deg) scale(1.1); }
+    50% { background-position: 100% 50%; transform: rotate(-3deg) scale(0.95); }
+    75% { background-position: 50% 0%; transform: rotate(3deg) scale(1.05); }
+    100% { background-position: 0% 50%; transform: rotate(-5deg) scale(0.9); }
   }
 
   .animate-aurora {
@@ -205,17 +145,12 @@ body {
 .app-grid {
   display: grid;
   min-height: 100vh;
-  /* MOBILE & TABLET DEFAULT (< 1280px): 1 columna */
-  /* Fuente de verdad unificada: Por debajo de 1280px, el layout es vertical */
   grid-template-columns: 1fr;
-  grid-template-areas:
-    "content";
+  grid-template-areas: "content";
   position: relative;
 }
 
-/* Zonas Generales */
 .zone-sidebar {
-  /* En mobile: fixed/overlay (no ocupa espacio en grid flow) */
   position: fixed;
   z-index: 50;
   top: 0;
@@ -226,32 +161,24 @@ body {
 .zone-content {
   grid-area: content;
   min-width: 0;
-  /* Prevenir grid blowout */
   position: relative;
   z-index: 10;
 }
 
 .zone-eleonor {
-  /* En mobile/tablet-portrait: overlay fixed (no ocupa espacio en grid flow) */
   position: fixed;
   z-index: 40;
   pointer-events: none;
-  /* Dejar pasar clicks salvo que haya interacción explicita */
   inset: 0;
 }
 
-/* --- DESKTOP (>= 1280px) --- */
-/* Subimos el breakpoint de 1024px a 1280px para que tablets landscape y laptops pequeñas
-   usen el layout vertical (más espacio) */
 @media (min-width: 1280px) {
   .app-grid {
-    /* 3 Columnas: Sidebar | Content | Eleonor */
     grid-template-columns: var(--sidebar-width) 1fr var(--eleonor-width);
     grid-template-areas: "sidebar content eleonor";
   }
 
   .app-grid.without-eleonor {
-    /* 2 Columnas: Sidebar | Content (aprovecha todo el ancho disponible) */
     grid-template-columns: var(--sidebar-width) 1fr;
     grid-template-areas: "sidebar content";
   }
@@ -263,13 +190,11 @@ body {
     height: 100vh;
     z-index: 30;
     width: 100%;
-    /* Ocupa todo el ancho de su celda */
   }
 
   .zone-eleonor {
     grid-area: eleonor;
     position: relative;
-    /* Ya no fixed! */
     inset: auto;
     z-index: 20;
     height: 100vh;
@@ -277,12 +202,7 @@ body {
   }
 }
 
-/* --- TABLET LANDSCAPE / SMALL LAPTOP (768px - 1279px) --- */
-/* Decision Arquitectónica: Este rango usa el layout de 1 columna (Vertical) 
-   para evitar overcrowding. La sidebar es off-canvas o compacta (manejada por componente).
-   Eleonor se comporta como overlay o se oculta según preferencia. */
-
-/* Estilos para el calendario */
+/* Estilos de Calendario y Utilidades UI */
 .calendar-event {
   transition: all 0.2s ease-in-out;
 }
@@ -327,12 +247,7 @@ body {
   color: hsl(var(--primary-foreground));
 }
 
-.calendar-header {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.calendar-sidebar {
+.calendar-header, .calendar-sidebar {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -347,9 +262,8 @@ body {
   cursor: grabbing !important;
 }
 
-/* --- PERFORMANCE OPTIMIZATIONS (Tablet/Low Spec) --- */
+/* --- PERFORMANCE OPTIMIZATIONS --- */
 .performance-low * {
-  /* Desactivar transiciones lentas */
   transition-duration: 0.05s !important;
   animation-duration: 0.05s !important;
 }
@@ -357,27 +271,16 @@ body {
 .performance-low .animate-pulse,
 .performance-low .animate-bounce,
 .performance-low .animate-spin {
-  /* Detener animaciones infinitas */
   animation: none !important;
 }
 
-.performance-low .backdrop-blur-xl,
-.performance-low .backdrop-blur-3xl,
-.performance-low .backdrop-blur-2xl,
-.performance-low .backdrop-blur-lg,
-.performance-low .backdrop-blur-md,
 .performance-low [class*="backdrop-blur-"] {
-  /* Reemplazar blur costoso por opacidad solida */
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  background-color: rgba(0, 0, 0, 0.95) !important;
+  background-color: rgba(11, 1, 33, 0.95) !important;
 }
 
-.performance-low .shadow-2xl,
-.performance-low .shadow-xl,
-.performance-low .shadow-lg,
 .performance-low [class*="shadow-"] {
-  /* Eliminar sombras complejas */
   box-shadow: none !important;
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -389,23 +292,23 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0c1c11; /* Fondo verde muy oscuro */
+  background: rgba(11, 1, 33, 0.4);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3c5a21 0%, #cae13c 50%, #baef00 100%); /* Degradado verde oliva a lima */
+  background: linear-gradient(180deg, #7a00cc 0%, #bf00ff 50%, #ff00ea 100%);
   border-radius: 10px;
-  border: 2px solid #0c1c11;
+  border: 2px solid rgba(11, 1, 33, 0.8);
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #cae13c 0%, #baef00 100%);
+  background: linear-gradient(180deg, #bf00ff 0%, #ff00ea 100%);
 }
 
 /* For Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cae13c #0c1c11;
+  scrollbar-color: #bf00ff rgba(11, 1, 33, 0.4);
 }

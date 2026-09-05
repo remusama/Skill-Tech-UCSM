@@ -50,7 +50,7 @@ const MessageBubble = React.memo(({ message }: { message: Message }) => {
       className={`flex ${isUser ? "justify-end" : "justify-start"} mb-8`}
     >
       <div className={`flex gap-4 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-        <Avatar className={`w-10 h-10 border-2 ${isUser ? "border-cyan-500/30" : "border-[#B500D1]/30"} shadow-2xl shrink-0`}>
+        <Avatar className={`w-10 h-10 border-2 ${isUser ? "border-[#d0b04d]/30" : "border-[#0d971f]/30"} shadow-2xl shrink-0`}>
           <AvatarImage src={isUser ? "https://i.pravatar.cc/150?u=user" : "/eleonor_avatar.png"} />
           <AvatarFallback className="bg-white/5 font-black text-[10px] italic">{isUser ? "YO" : "EL"}</AvatarFallback>
         </Avatar>
@@ -60,17 +60,17 @@ const MessageBubble = React.memo(({ message }: { message: Message }) => {
             p-5 rounded-[2rem] 
             ${isUser ?
               "bg-cyan-500/10 border border-cyan-500/20 text-white rounded-tr-none" :
-              "bg-white/[0.03] border border-white/10 text-white rounded-tl-none backdrop-blur-xl"}
+              "bg-[#0d971f]/10 border border-[#0d971f]/20 text-white rounded-tl-none backdrop-blur-xl"}
             shadow-2xl relative group
           `}>
             {!isUser && (
-              <div className="absolute -top-3 left-6 px-2 py-0.5 bg-[#B500D1] rounded-full text-[8px] font-black uppercase tracking-widest text-white z-10 shadow-[0_0_10px_rgba(181,0,209,0.5)]">
+              <div className="absolute -top-3 left-6 px-2 py-0.5 bg-[#0d971f] rounded-full text-[8px] font-black uppercase tracking-widest text-white z-10 shadow-[0_0_10px_rgba(13,151,31,0.5)]">
                 Enlace Alpha
               </div>
             )}
             <p className="text-sm leading-relaxed font-medium uppercase tracking-wider">
               {message.content}
-              {message.isStreaming && <span className="inline-block w-1.5 h-4 ml-1 bg-[#B500D1] animate-pulse align-middle" />}
+              {message.isStreaming && <span className="inline-block w-1.5 h-4 ml-1 bg-[#0d971f] animate-pulse align-middle" />}
             </p>
           </div>
           <span className="text-[8px] font-black text-white/20 uppercase tracking-widest px-2">
@@ -120,8 +120,8 @@ const ChatInput = React.memo(({ onSend, isListening, onToggleListening, isProces
 
   return (
     <div className="max-w-xl mx-auto relative group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#B500D1]/10 via-cyan-400/10 to-[#B500D1]/10 rounded-[2rem] blur-sm opacity-20" />
-      <div className="relative flex flex-col p-1.5 pl-4 pr-2 rounded-[2rem] bg-black/40 border border-white/5 backdrop-blur-xl focus-within:border-[#B500D1]/40 transition-all shadow-xl">
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#0d971f]/10 via-[#d0b04d]/10 to-[#0d971f]/10 rounded-[2rem] blur-sm opacity-20" />
+      <div className="relative flex flex-col p-1.5 pl-4 pr-2 rounded-[2rem] bg-black/40 border border-white/5 backdrop-blur-xl focus-within:border-[#0d971f]/40 transition-all shadow-xl">
         <div className="flex items-end gap-2">
           <Textarea
             value={input}
@@ -156,7 +156,7 @@ const ChatInput = React.memo(({ onSend, isListening, onToggleListening, isProces
               type="button"
               onClick={handleLocalSend}
               disabled={!input.trim() || isProcessing || charCount > MAX_CHARS}
-              className="w-9 h-9 rounded-full bg-[#B500D1] hover:bg-[#B500D1]/80 text-white shadow-xl disabled:opacity-30 transition-all"
+              className="w-9 h-9 rounded-full bg-[#0d971f] hover:bg-[#0d971f]/80 text-white shadow-xl disabled:opacity-30 transition-all"
             >
               {isProcessing ? <Activity size={16} className="animate-spin" /> : <Send size={16} />}
             </Button>
@@ -234,7 +234,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     const handleExternalMessage = (e: CustomEvent) => {
       const { type, payload } = e.detail;
       if (type === 'analyze_node' && wsRef.current) {
-        // Send special command frame
         console.log("📡 Relaying external command to WS:", payload);
         wsRef.current.send(JSON.stringify({ type: 'analyze_node', node: payload.node }));
         setIsProcessing(true);
@@ -242,7 +241,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     }
     window.addEventListener('eleonor-send-message', handleExternalMessage as EventListener);
     return () => window.removeEventListener('eleonor-send-message', handleExternalMessage as EventListener);
-  }, [wsRef.current])
+  }, [])
 
   // Inicializar WebSocket
   useEffect(() => {
@@ -254,7 +253,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
 
     ws.onopen = () => {
       console.log("WS Connected")
-      // Enviar autenticación inmediatamente
       ws.send(JSON.stringify({ token }))
     }
 
@@ -303,7 +301,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
         })
         break
       case "mode":
-        // Opcional: Podrías actualizar el badge o HUD con el modo actual
         break
       case "game":
         console.log("🎮 Game event received:", data.content);
@@ -372,7 +369,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     const formData = new FormData()
     formData.append('file', blob, 'audio.webm')
     
-    // Usar useRef para no depender del closure
     const currentHandleSend = handleSendRef.current || handleSend
     
     try {
@@ -398,7 +394,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     const audioContent = `data:audio/mp3;base64,${base64}`
     const audio = new Audio(audioContent)
 
-    // Configurar Web Audio API
     const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
     const source = audioCtx.createMediaElementSource(audio)
     const analyser = audioCtx.createAnalyser()
@@ -418,7 +413,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
 
       analyser.getByteFrequencyData(dataArray)
 
-      // Calcular volumen promedio
       let sum = 0
       for (let i = 0; i < bufferLength; i++) {
         sum += dataArray[i]
@@ -426,10 +420,9 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       const average = sum / bufferLength
       const volume = average / 255
 
-      // Dispatch para AvatarDisplay
       window.dispatchEvent(new CustomEvent('avatar-speaking', {
         detail: {
-          volume: volume * 5.0, // Multiplicador agresivo para forzar apertura
+          volume: volume * 5.0,
           bass: dataArray[1] / 255,
           mid: dataArray[10] / 255,
           high: dataArray[20] / 255
@@ -466,11 +459,9 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setIsProcessing(true)
 
-    // Enviar por WebSocket
     wsRef.current.send(JSON.stringify({ text }))
   }, [isProcessing])
 
-  // Mantener ref actualizado para evitar stale closures en speech recognition
   const handleSendRef = useRef(handleSend)
   useEffect(() => {
     handleSendRef.current = handleSend;
@@ -497,7 +488,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     setMessages(prev => [...prev, userMsg, assistantMsg])
     setIsProcessing(true)
 
-    // Enviar por WebSocket
     wsRef.current.send(JSON.stringify({
       type: "explain_errors"
     }))
@@ -525,9 +515,8 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       className="h-full flex flex-col bg-transparent relative overflow-hidden"
       style={{ height: viewportHeight }}
     >
-
-      {/* HUD Superior - Ultra-Top (Alineado con Menú Lateral - Desplazado para no taparse) */}
-      <div className="z-[100] fixed top-2 left-0 right-0 pl-20 pr-4 lg:pl-24"> {/* PL-20 para esquivar el botón de menú */}
+      {/* HUD Superior - Ultra-Top */}
+      <div className="z-[100] fixed top-2 left-0 right-0 pl-20 pr-4 lg:pl-24">
         <BlurFade delay={0.1}>
           <div className="flex flex-col gap-2 max-w-full mx-auto">
             <div className="flex items-center justify-between gap-4 p-2 pl-4 rounded-xl bg-black/40 border border-white/10 backdrop-blur-3xl shadow-2xl">
@@ -547,7 +536,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
                 <Button
                   size="icon"
                   variant="outline"
-                  className="w-8 h-8 rounded-lg bg-[#B500D1]/20 border-[#B500D1]/40 text-[#B500D1] hover:bg-[#B500D1]/30 transition-all"
+                  className="w-8 h-8 rounded-lg bg-[#0d971f]/20 border-[#0d971f]/40 text-[#0d971f] hover:bg-[#0d971f]/30 transition-all"
                   onClick={triggerDebugGame}
                   title="Debug Game"
                 >
@@ -558,12 +547,11 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
                 </Button>
               </div>
             </div>
-
           </div>
         </BlurFade>
       </div>
 
-      {/* Area Central: Mensajes (Solo en la zona del input para no tapar cara) */}
+      {/* Area Central: Mensajes */}
       <div className="flex-1 flex flex-col justify-end relative z-[10] px-4 md:px-8 pb-40 md:pb-36 min-h-0">
         <div className="w-full max-w-xl mx-auto pointer-events-none flex flex-col justify-end h-full">
           <ScrollArea className="flex-1 max-h-[30vh] md:max-h-[25vh] pr-4 pointer-events-auto" ref={scrollRef}>
@@ -578,9 +566,21 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
         </div>
       </div>
 
-      {/* Barra Inferior: ChatInput (Componente memoizado para evitar re-renders del chat al escribir) */}
       {/* Barra Inferior: ChatInput */}
-      <div className="z-[100] absolute bottom-12 left-0 right-0 p-4 md:p-8 flex flex-col gap-4 items-center">
+      <div className="z-[100] absolute bottom-12 left-0 right-0 p-4 md:p-8 flex flex-col gap-4 items-center bg-transparent">
+        {!isProcessing && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(13,151,31,0.4)" }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleExplainErrors}
+            className="px-4 py-2 rounded-full bg-black/60 border border-[#0d971f]/40 text-[#0d971f] hover:text-white hover:bg-[#0d971f]/20 backdrop-blur-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+          >
+            <Activity size={12} className="animate-pulse text-[#d0b04d]" />
+            ¿Cuáles fueron mis errores del último examen?
+          </motion.button>
+        )}
         <div className="w-full">
           <ChatInput
             onSend={handleSend}
@@ -593,7 +593,6 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
           />
         </div>
       </div>
-
 
       {/* Mini-Game Overlay */}
       {activeGame && (
@@ -621,8 +620,8 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(181,0,209,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(181,0,209,0.3); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(13,151,31,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(13,151,31,0.3); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </div>

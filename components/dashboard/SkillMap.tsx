@@ -23,7 +23,6 @@ import { fetchUserSkills, UserSkill, fetchProgressHistory, fetchBenchmarking } f
 import { StreakFire } from "./StreakFire"
 import { API_URL } from "@/lib/config"
 
-
 // --- SUB-COMPONENTES ESTILIZADOS ---
 
 const CustomTooltip = ({ active, payload, label, theme }: any) => {
@@ -32,7 +31,6 @@ const CustomTooltip = ({ active, payload, label, theme }: any) => {
       <div className={`p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl ${
         theme === 'dark' ? 'bg-black/80' : 'bg-white/80'
       }`}>
-        
         <p className="text-xs font-black uppercase tracking-widest text-[#d0b04d] mb-2">{label}</p>
         
         {payload.map((entry: any, index: number) => (
@@ -51,9 +49,7 @@ const CustomTooltip = ({ active, payload, label, theme }: any) => {
 
 const ChartHeader = ({ title, description, icon: Icon }: any) => (
   <div className="flex items-start gap-4 mb-6">
-   
     <div className="p-3 rounded-2xl bg-gradient-to-br from-[#d0b04d]/20 to-cyan-500/20 border border-white/10 shadow-lg">
-      
       <Icon className="w-6 h-6 text-[#d0b04d]" />
     </div>
     <div className="flex flex-col">
@@ -67,7 +63,6 @@ const ChartHeader = ({ title, description, icon: Icon }: any) => (
 
 export function SkillMap() {
   const [activeTab, setActiveTab] = useState("matrix")
-
   const [mounted, setMounted] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [skills, setSkills] = useState<UserSkill[]>([])
@@ -90,7 +85,6 @@ export function SkillMap() {
       if (historyData.length > 0) setHistory(historyData);
       if (benchmarkingData.length > 0) setBenchmarking(benchmarkingData);
 
-      // Fetch Gamification
       const gResp = await fetch(`${API_URL}/gamification/status`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem("eleonor_token")}` }
       });
@@ -114,8 +108,6 @@ export function SkillMap() {
     return () => window.removeEventListener('skills-updated', handleUpdate);
   }, [loadSkills, refreshKey])
 
-
-  // Utility to normalize strings for comparison (remove accents and casing)
   const normalize = (str: string) => {
     if (!str) return "";
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -127,7 +119,6 @@ export function SkillMap() {
     return softKeywords.some(kw => norm.includes(kw));
   }
 
-  // Mapping DB skills to the Chart format dynamically
   const academicData = useMemo(() => {
     const academicSkills = skills.filter(s => !isSoftSkill(s.area));
     if (academicSkills.length === 0) return [{ subject: "Sin Evaluaciones", A: 0, fullMark: 10 }];
@@ -150,13 +141,12 @@ export function SkillMap() {
     }));
   }, [skills])
 
-
   const colors = useMemo(() => ({
-  primary: "#d0b04d", // 
-  secondary: "#00FFFF", 
-  accent: "#0d971f", 
-  grid: "rgba(255, 255, 255, 0.05)",
-  text: "rgba(255, 255, 255, 0.6)",
+    primary: "#d0b04d",
+    secondary: "#00FFFF", 
+    accent: "#0d971f", 
+    grid: "rgba(255, 255, 255, 0.05)",
+    text: "rgba(255, 255, 255, 0.6)",
   }), [])
 
   const handleRefresh = () => {
@@ -165,13 +155,11 @@ export function SkillMap() {
 
   if (!mounted) return null
 
-return (
+  return (
     <div className="min-h-screen p-4 md:p-12 bg-transparent relative overflow-hidden w-full">
-      {/* Fondo Ambientales con tonos dorado y verde */}
       <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#d0b04d]/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#0d971f]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Header Principal sin padding lateral forzado que rompa el ancho */}
       <div className="relative z-10 mb-12 w-full">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8">
           <div className="flex flex-col gap-2">
@@ -181,7 +169,6 @@ return (
               </h1>
             </BlurFade>
             
-            {/* Tu única línea con el degradado correcto */}
             <div className="h-[2px] w-48 bg-gradient-to-r from-[#baef00] to-[#032318] mb-4" />
             
             <div className="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-md">
@@ -232,7 +219,6 @@ return (
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            {/* TABS CONTENT: MATRIX */}
             {activeTab === "matrix" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
                 <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group">
@@ -305,7 +291,6 @@ return (
               </div>
             )}
 
-            {/* TABS CONTENT: COMPARISON */}
             {activeTab === "comparison" && (
               <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-10 rounded-[2.5rem] w-full">
                 <ChartHeader
@@ -354,7 +339,6 @@ return (
         </AnimatePresence>
       </Tabs>
 
-      {/* Guía de Interpretación Inferior */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
