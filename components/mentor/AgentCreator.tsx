@@ -21,7 +21,7 @@ interface AgentsData {
 }
 
 const CompetencyTag = ({ label, onRemove }: { label: string; onRemove?: () => void }) => (
-  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[hsl(153,39%,28%)]/30 border border-[hsl(74,100%,47%)]/30 text-[hsl(74,100%,47%)] text-xs font-medium">
+  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[hsl(120, 39%, 28%)]/30 border border-[hsl(74,100%,47%)]/30 text-[hsl(74,100%,47%)] text-xs font-medium">
     {label}
     {onRemove && (
       <button onClick={onRemove} className="hover:text-red-400 transition-colors">
@@ -39,13 +39,13 @@ const AgentCard = ({ agent, isTemplate, onTest }: { agent: Agent; isTemplate: bo
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className={`p-5 rounded-2xl border transition-all duration-300 ${isTemplate
-        ? "bg-gradient-to-br from-[hsl(161,40%,15%)]/60 to-[hsl(153,39%,28%)]/20 border-[hsl(74,100%,47%)]/20 hover:border-[hsl(74,100%,47%)]/40"
+        ? "bg-gradient-to-br from-[hsl(161,40%,15%)]/60 to-[hsl(123, 39%, 28%)]/20 border-[hsl(74,100%,47%)]/20 hover:border-[hsl(74,100%,47%)]/40"
         : "bg-[hsl(161,40%,15%)]/40 border-[hsl(153,30%,75%)]/20 hover:border-[hsl(153,30%,75%)]/40"
         }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isTemplate ? "bg-[hsl(74,100%,47%)]/20 text-[hsl(74,100%,47%)]" : "bg-[hsl(153,39%,28%)]/40 text-[hsl(74,100%,47%)]"}`}>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isTemplate ? "bg-[hsl(74,100%,47%)]/20 text-[hsl(74,100%,47%)]" : "bg-[hsl(120, 39%, 28%)]/40 text-[hsl(74,100%,47%)]"}`}>
             <Bot className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
@@ -246,7 +246,7 @@ export const AgentCreator = () => {
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-8 rounded-3xl border border-[hsl(74,100%,47%)]/30 bg-gradient-to-br from-[hsl(161,40%,15%)]/80 to-[hsl(153,39%,28%)]/30 space-y-6">
+            <div className="p-8 rounded-3xl border border-[hsl(74,100%,47%)]/30 bg-gradient-to-br from-[hsl(120, 40%, 15%)]/80 to-[hsl(120, 39%, 28%)]/30 space-y-6">
               <h2 className="text-xl font-bold flex items-center gap-2 text-white">
                 <Bot className="w-5 h-5 text-[hsl(74,100%,47%)]" />
                 Nuevo Agente Evaluador
@@ -298,7 +298,7 @@ export const AgentCreator = () => {
                     placeholder="Ej: Lógica Deductiva"
                     className="flex-1 h-11 px-4 rounded-xl bg-[hsl(161,67%,9%)] border border-[hsl(153,30%,75%)]/30 text-white focus:border-[hsl(74,100%,47%)] focus:outline-none text-sm"
                   />
-                  <button onClick={addCompetency} type="button" className="px-5 rounded-xl bg-[hsl(153,39%,28%)] hover:bg-[hsl(153,39%,35%)] text-white text-xs font-bold transition-colors">
+                  <button onClick={addCompetency} type="button" className="px-5 rounded-xl bg-[hsl(120, 39%, 28%)] hover:bg-[hsl(153,39%,35%)] text-white text-xs font-bold transition-colors">
                     Agregar
                   </button>
                 </div>

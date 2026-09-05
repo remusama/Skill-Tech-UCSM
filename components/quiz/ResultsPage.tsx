@@ -77,8 +77,8 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
     if (loading) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4" />
-                <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold">Cargando diagnóstico...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(74,100%,47%)] mb-4" />
+                <p className="text-[10px] uppercase tracking-widest text-[hsl(150,10%,80%)]/50 font-bold">Cargando diagnóstico...</p>
             </div>
         )
     }
@@ -86,18 +86,18 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
     if (skills.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center flex-1 min-h-[600px] text-center p-8">
-                <AlertCircle className="w-12 h-12 text-gray-600 mb-4" />
+                <AlertCircle className="w-12 h-12 text-[hsl(150,10%,80%)]/30 mb-4" />
                 <h3 className="text-xl text-white font-bold mb-2">Sin datos de diagnóstico</h3>
-                <p className="text-gray-400 mb-8 max-w-md text-sm">
+                <p className="text-[hsl(150,10%,80%)] mb-8 max-w-md text-sm">
                     No se han encontrado registros de evaluaciones recientes. Completa un diagnóstico para visualizar tu grafo de competencias.
                 </p>
                 <div className="flex gap-4">
                     <Button
                         onClick={loadData}
                         variant="outline"
-                        className="border-white/10 text-white hover:bg-white/5"
+                        className="border-[hsl(153,30%,75%)]/20 text-white bg-[hsl(161,40%,15%)]/60 hover:bg-[hsl(161,40%,15%)]"
                     >
-                        <RefreshCw className="w-4 h-4 mr-2" />
+                        <RefreshCw className="w-4 h-4 mr-2 text-[hsl(74,100%,47%)]" />
                         Sincronizar
                     </Button>
                 </div>
@@ -117,8 +117,8 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
                         Resultados de Diagnóstico
                     </h1>
                     <div className="flex items-center gap-2 mt-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">
+                        <div className="w-2 h-2 rounded-full bg-[hsl(74,100%,47%)] animate-pulse" />
+                        <span className="text-[10px] font-bold text-[hsl(74,100%,47%)] uppercase tracking-widest">
                             Sistema Sincronizado
                         </span>
                     </div>
@@ -126,7 +126,7 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
                 <Button
                     variant="ghost"
                     onClick={loadData}
-                    className="text-white/40 hover:text-white"
+                    className="text-[hsl(150,10%,80%)]/60 hover:text-white hover:bg-[hsl(161,40%,15%)]/60"
                 >
                     <RefreshCw className="w-4 h-4" />
                 </Button>
