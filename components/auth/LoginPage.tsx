@@ -219,39 +219,41 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
 
       <div className="w-full max-w-md relative z-10">
         {/* Logos and Title */}
-<div className="w-full max-w-md grid grid-cols-2 items-center justify-items-center mb-6 pt-8">
+        <div className="w-full flex flex-row items-center justify-between gap-2 mb-6 pt-8 px-1 sm:px-2">
 
-  {/* LOGO SKILLTECH */}
-  <div className="flex flex-col items-center">
-    <div className="relative w-20 h-20 mb-1">
-      <Image
-        src="/new-logo.png"
-        alt="SkillTech Logo"
-        fill
-        className="object-contain drop-shadow-[0_0_20px_rgba(208,176,77,0.6)]"
-      />
-    </div>
+          {/* LADO IZQUIERDO: SkillTech completo */}
+          <div className="w-[45%] flex flex-col items-center justify-center text-center">
+            <div className="relative w-full max-w-[70px] sm:max-w-[80px] aspect-square mb-1">
+              <Image
+                src="/new-logo.png"
+                alt="SkillTech Logo"
+                fill
+                className="object-contain drop-shadow-[0_0_20px_rgba(208,176,77,0.6)]"
+              />
+            </div>
 
-    <h1 className="text-4xl font-black bg-gradient-to-r from-[#0d971f] via-[#d0b04d] to-[#d0b04d] bg-clip-text text-transparent tracking-tighter leading-none text-center">
-      SkillTech
-    </h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-[#0d971f] via-[#d0b04d] to-[#d0b04d] bg-clip-text text-transparent tracking-tighter leading-none text-center">
+              SkillTech
+            </h1>
 
-    <p className="text-[#cae13c]/60 text-[10px] uppercase tracking-[0.3em] font-black mt-1 text-center">
-      Learning Ecosystem
-    </p>
-  </div>
+            <p className="text-[#cae13c]/60 text-[8px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.3em] font-black mt-1 text-center whitespace-nowrap">
+              Learning Ecosystem
+            </p>
+          </div>
 
-  {/* LOGO LIDERAZGO */}
-  <div className="relative w-60 h-36 flex items-center justify-center -translate-x-6">
-    <Image
-      src="/Logo.png"
-      alt="Logo institucional"
-      fill
-      className="object-contain"
-    />
-  </div>
+          {/* LADO DERECHO: Logo Liderazgo */}
+          <div className="w-[52%] flex items-center justify-center">
+            <div className="relative w-full aspect-[16/9] max-w-[210px]">
+              <Image
+                src="/Logo.png"
+                alt="Logo institucional"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
 
-</div>
+        </div>
 
         <Card className="border-[#d0b04d]/30 bg-[#063924]/90 shadow-[0_20px_50px_rgba(6,57,36,0.35)] rounded-2xl">
           <CardHeader>

@@ -33,9 +33,8 @@ import { Meteors } from "@/components/ui/meteors"
 const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
   { icon: Clock, label: "Level up", page: "practice" },
-  { icon: Brain, label: "Liderometro", page: "diagnosis" },
-  { icon: User, label: "Perfil / Credencial", page: "profile" },
-  { icon: MessageSquare, label: "Eleonor AI", page: "assistant" },
+  { icon: Brain, label: "Liderómetro", page: "diagnosis" },
+  { icon: MessageSquare, label: "Moya", page: "assistant" },
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
 
@@ -63,29 +62,46 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
   const { isGuideActive, guideHighlight, completeOnboarding } = useEleonor()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [userName, setUserName] = useState("Estudiante")
+  const [userSubtitle, setUserSubtitle] = useState("Fundador")
   const sidebarRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
-  const isSidebarHighlighted = guideHighlight === 'sidebar'
-  const isNavItemHighlighted = currentItems.some(item => item.page === guideHighlight)
-
   useEffect(() => {
-    if (isGuideActive) {
-      if (guideHighlight === 'sidebar' || isNavItemHighlighted) {
-        setIsOpen(true)
-      } else {
-        if (isMobile) {
-          setIsOpen(false)
+    try {
+      const stored = localStorage.getItem("eleonor_user")
+      if (stored) {
+        const u = JSON.parse(stored)
+        if (u.full_name || u.username) {
+          setUserName(u.full_name || u.username)
+        }
+        if (u.classroom) {
+          setUserSubtitle(u.classroom)
+        } else if (u.role) {
+          setUserSubtitle(u.role === "teacher" ? "Docente" : u.role === "admin" ? "Administrador" : "Estudiante")
         }
       }
+    } catch (e) {
+      console.error("Error reading user from localStorage:", e)
     }
-  }, [isGuideActive, guideHighlight, isMobile, isNavItemHighlighted])
+  }, [])
 
+  // Sidebar fluid border based on guideHighlight
+  const isSidebarHighlighted = guideHighlight === 'sidebar'
+  const isProfileHighlighted = guideHighlight === 'profile'
+
+  // Manejo dinámico de apertura temporizada (1.4s) en móviles durante la guía
   useEffect(() => {
-    if (isMobile && currentPage && guideHighlight !== 'sidebar' && !isNavItemHighlighted) {
-      setIsOpen(false)
+    if (isGuideActive && guideHighlight) {
+      if (isMobile) {
+        setIsOpen(true)
+        const timer = setTimeout(() => {
+          setIsOpen(false)
+        }, 1400)
+        return () => clearTimeout(timer)
+      }
     }
-  }, [currentPage, isMobile, guideHighlight, isNavItemHighlighted])
+  }, [isGuideActive, guideHighlight, isMobile])
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -199,17 +215,23 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     if (isMobile) setIsOpen(false)
                   }
                 }}
-                className={`p-4 mb-10 bg-white/5 border border-white/10 rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 ${role === "student" ? "cursor-pointer hover:border-[#d0b04d]/40 transition-all duration-300" : ""}`}
+                className={`p-4 mb-10 bg-white/5 border rounded-[2rem] backdrop-blur-3xl relative group overflow-hidden flex-shrink-0 transition-all duration-500 ${
+                  isProfileHighlighted
+                    ? "border-[#B500D1] bg-[#B500D1]/20 shadow-[0_0_35px_rgba(181,0,209,0.5)] scale-105"
+                    : "border-white/5"
+                } ${role === "student" ? "cursor-pointer hover:border-white/20 animate-pulse-subtle" : ""}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#d0b04d]/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 <div className="flex items-center gap-3 relative z-10">
                   <Avatar className="h-12 w-12 border-2 border-[#d0b04d]/40">
                     <AvatarImage src="/placeholder.svg?height=40&width=40" />
-                    <AvatarFallback className="bg-gradient-to-br from-[#0d971f] to-[#063924] text-[#d0b04d] font-black text-sm">AD</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-[#B500D1] to-[#D100B5] text-white font-black text-sm">
+                      {userName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "ST"}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-white truncate uppercase tracking-tighter">Usuario Demo</p>
-                    <p className="text-[9px] text-[#d0b04d]/70 truncate tracking-widest font-bold uppercase mt-0.5">Fundador</p>
+                    <p className="text-xs font-black text-white truncate uppercase tracking-tighter">{userName}</p>
+                    <p className="text-[9px] text-white/40 truncate tracking-widest font-bold uppercase mt-0.5">{userSubtitle}</p>
                   </div>
                 </div>
               </div>

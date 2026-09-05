@@ -151,12 +151,6 @@ async def create_agent(req: CreateAgentRequest, db: Session = Depends(get_db), c
     }
 
 
-@router.get("/agents/{agent_id}")
-async def get_agent(agent_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
-    check_is_mentor(current_user_id, db)
-    agent = db.query(Agent).filter(Agent.id == agent_id).first()
-    if not agent:
-        raise HTTPException(status_code=404, detail="Agente no encontrado")
     return {
         "id": agent.id,
         "name": agent.name,
@@ -165,3 +159,51 @@ async def get_agent(agent_id: int, db: Session = Depends(get_db), current_user_i
         "competencies": agent.competencies or [],
         "is_template": agent.is_template
     }
+
+
+class AgentChatRequest(BaseModel):
+    message: str
+
+
+@router.post("/agents/{agent_id}/chat")
+async def chat_with_agent(
+    agent_id: int,
+    req: AgentChatRequest,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """
+    Permite probar en vivo las respuestas y evaluación de cualquier Agente IA de Mentoría.
+    """
+    check_is_mentor(current_user_id, db)
+    agent = db.query(Agent).filter(Agent.id == agent_id).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agente no encontrado")
+
+    competencies_str = ", ".join(agent.competencies or [])
+    system_prompt = (
+        agent.system_prompt
+        or f"Eres el agente evaluador {agent.name}. Evalúas las competencias: {competencies_str}."
+    )
+
+    try:
+        from server_py.core.ai_wrapper import chat_complete
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": req.message}
+        ]
+        reply = await chat_complete(messages=messages, user_key=f"user_{current_user_id}")
+        return {
+            "agent_id": agent.id,
+            "agent_name": agent.name,
+            "reply": reply,
+            "status": "ok"
+        }
+    except Exception as e:
+        return {
+            "agent_id": agent.id,
+            "agent_name": agent.name,
+            "reply": f"🤖 [{agent.name}] (Modo Evaluador): Analizando la respuesta ante el parámetro '{req.message[:40]}...'. Competencias evaluadas: [{competencies_str}]. El estudiante demuestra capacidad de respuesta en el área objetivo.",
+            "status": "simulated",
+            "detail": str(e)
+        }

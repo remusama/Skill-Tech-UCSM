@@ -15,15 +15,15 @@ type CameraMode = 'INTRO' | 'GUIDE' | 'ASSISTANT' | 'HIDDEN' | 'DIAGNOSIS';
 
 const CAMERA_PRESETS: Record<CameraMode, { scale: number, xOffset: number, yOffset: number, opacity: number }> = {
     INTRO: {
-        scale: 0.4,
+        scale: 1.8,
         xOffset: 0,
         yOffset: 180, // "De muslos para arriba"
         opacity: 1,
     },
     GUIDE: {
-        scale: 0.38,
+        scale: 1.5,
         xOffset: 0,   // Centrado para móvil; en desktop el card lo cubre parcialmente
-        yOffset: 70,  // Ajustado para no cortarse el rostro en desktop
+        yOffset: 0,  // Ajustado para no cortarse el rostro en desktop
         opacity: 1,
     },
     ASSISTANT: {
@@ -188,9 +188,9 @@ const AvatarDisplay = () => {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         if (mode === 'GUIDE' && isMobileWidth) {
             // Posicionar a Eleonor de forma fija en la esquina inferior izquierda (cajita de llamada de la tarjeta)
-            const targetScale = 0.052; // Escala ajustada para que quepa en la camarita
-            const targetX = 66; // 16px padding de pantalla + 50px (mitad del ancho de la cajita de 100px)
-            const targetY = vh - 25; // Altura calibrada para centrar su rostro en la cajita
+            const targetScale = 0.08; // Escala ajustada para que quepa en la camarita
+            const targetX = 80; // 16px padding de pantalla + 50px (mitad del ancho de la cajita de 100px)
+            const targetY = vh - 100; // Altura calibrada para centrar su rostro en la cajita
 
             const lerpFactor = 0.15;
             cameraState.current.scale += (targetScale - cameraState.current.scale) * lerpFactor;
@@ -642,36 +642,36 @@ const AvatarDisplay = () => {
 
                 const finalParams: any = {
                     // Tororo model uses PARAM_ prefix (not Param)
-                    'PARAM_BREATH':        breathValue,
-                    'PARAM_ANGLE_X':       idleSwayX + (lookFactorX * 25) + breezeX,
-                    'PARAM_ANGLE_Y':       idleSwayY - (lookFactorY * 15) + (cognitiveState.tension > 0.7 ? 10 : 0) + breezeY,
-                    'PARAM_ANGLE_Z':       breezeX * 0.8,
+                    'PARAM_BREATH': breathValue,
+                    'PARAM_ANGLE_X': idleSwayX + (lookFactorX * 25) + breezeX,
+                    'PARAM_ANGLE_Y': idleSwayY - (lookFactorY * 15) + (cognitiveState.tension > 0.7 ? 10 : 0) + breezeY,
+                    'PARAM_ANGLE_Z': breezeX * 0.8,
 
-                    'PARAM_BODY_ANGLE_Y':  (lookFactorX * 10) + (breezeX * 0.5),
-                    'PARAM_BODY_ANGLE_Z':  (cognitiveState.tension > 0.7 ? 5 : 0) + (breezeY * 0.3),
-                    'PARAM_BODY':          breathValue * 0.5,
+                    'PARAM_BODY_ANGLE_Y': (lookFactorX * 10) + (breezeX * 0.5),
+                    'PARAM_BODY_ANGLE_Z': (cognitiveState.tension > 0.7 ? 5 : 0) + (breezeY * 0.3),
+                    'PARAM_BODY': breathValue * 0.5,
 
                     // Eyes — mouse tracking
-                    'PARAM_EYE_BALL_X':    finalLookX,
-                    'PARAM_EYE_BALL_Y':   -finalLookY,
-                    'PARAM_EYE_L_OPEN':    blinkProgress.current,
-                    'PARAM_EYE_R_OPEN':    blinkProgress.current,
-                    'PARAM_EYE_FORM':      cognitiveState.tension > 0.7 ? -0.5 : 0.2,
+                    'PARAM_EYE_BALL_X': finalLookX,
+                    'PARAM_EYE_BALL_Y': -finalLookY,
+                    'PARAM_EYE_L_OPEN': blinkProgress.current,
+                    'PARAM_EYE_R_OPEN': blinkProgress.current,
+                    'PARAM_EYE_FORM': cognitiveState.tension > 0.7 ? -0.5 : 0.2,
 
                     // Mouth — lipsync
-                    'PARAM_MOUTH_OPEN_Y':  mouthOpen,
-                    'PARAM_MOUTH_FORM':    mouthForm,
+                    'PARAM_MOUTH_OPEN_Y': mouthOpen,
+                    'PARAM_MOUTH_FORM': mouthForm,
 
                     // Ears — idle idle animation
-                    'PARAM_EAR_R':         earFlap,
-                    'PARAM_EAR_L':        -earFlap,
+                    'PARAM_EAR_R': earFlap,
+                    'PARAM_EAR_L': -earFlap,
 
                     // Tail — idle wag
-                    'PARAM_TAIL':          Math.sin(now / 900) * 0.6,
+                    'PARAM_TAIL': Math.sin(now / 900) * 0.6,
 
                     // Brows — tension
-                    'PARAM_BLOW_R':        cognitiveState.tension > 0.6 ? -0.5 : earFlap * 0.3,
-                    'PARAM_BLOW_L':        cognitiveState.tension > 0.6 ? -0.5 : -earFlap * 0.3,
+                    'PARAM_BLOW_R': cognitiveState.tension > 0.6 ? -0.5 : earFlap * 0.3,
+                    'PARAM_BLOW_L': cognitiveState.tension > 0.6 ? -0.5 : -earFlap * 0.3,
                 };
 
                 Object.keys(currentExpParams.current).forEach(id => {

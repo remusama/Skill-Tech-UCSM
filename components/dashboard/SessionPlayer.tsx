@@ -190,9 +190,13 @@ export function SessionPlayer({ session, onClose, onComplete, theme }: SessionPl
                 setShowTextExplanation(true)
 
                 const baseUrl = API_BASE_URL
+                const ttsToken = localStorage.getItem("eleonor_token")
                 const ttsResp = await fetch(`${baseUrl}/api/tts`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(ttsToken ? { "Authorization": `Bearer ${ttsToken}` } : {})
+                    },
                     body: JSON.stringify({ text: data.explanation })
                 })
                 const ttsData = await ttsResp.json()

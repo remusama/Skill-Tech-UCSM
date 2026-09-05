@@ -1,9 +1,10 @@
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from pydantic import BaseModel
-from server_py.memoria.database import get_db, User
-from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorExamAnswer, MentorGroup, GroupStudent
+from server_py.memoria.database import get_db, User # Aqui se arreglo el import de User para que funcione correctamente
+from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorGroup, GroupStudent # Aqui se agregan algunos mas por si acaso (no me fije si los usa o no xd)
+from server_py.routers.mentor import check_is_mentor
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic
 from collections import defaultdict

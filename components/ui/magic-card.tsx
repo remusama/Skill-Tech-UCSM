@@ -47,7 +47,7 @@ export function MagicCard({
                 {...props}
             >
                 {showMeteors && <Meteors number={meteorCount} className={meteorOpacity} />}
-                <div className="relative z-10">{children}</div>
+                <div className="relative z-10 w-full">{children}</div>
             </Card>
         </BlurFade>
     )

@@ -20,6 +20,8 @@ services:
       - key: ELEVENLABS_API_KEY
         sync: false
       # ─── Auth JWT ──────────────────────────────────────────────────
+      - key: JWT_SECRET
+        sync: false
       - key: JWT_SECRET_KEY
         sync: false
       # ─── CORS: URL del frontend en Netlify ─────────────────────────
