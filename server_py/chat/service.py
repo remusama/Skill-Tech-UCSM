@@ -1,10 +1,35 @@
+"""Módulo de servicio de chat.
+
+Este módulo define la clase ChatService, encargada de generar respuestas
+en streaming desde el modelo de lenguaje. Se construyen mensajes con
+contexto cognitivo e historial, se envían al cliente OpenAI y se procesan
+los fragmentos de texto recibidos junto con métricas de uso.
+"""
 from server_py.config.app_config import client
 
 
 class ChatService:
-    async def stream_response(self, prompt: str, cognitive_context: str = "", history: list = []):
-        """
-        Generates a streaming response from OpenAI.
+    async def stream_response(
+        self,
+        prompt: str,
+        cognitive_context: str = "",
+        history: list = [],
+    ):
+        """Genera una respuesta en streaming desde el modelo de lenguaje.
+
+        Pasos:
+        1. Construye los mensajes con contexto cognitivo e historial.
+        2. Envía el prompt al cliente OpenAI.
+        3. Procesa el flujo de tokens recibidos.
+        4. Devuelve texto parcial, métricas de uso y estado final.
+
+        Args:
+        prompt (str): Texto enviado por el usuario.
+        cognitive_context (str): Contexto cognitivo adicional.
+        history (list): Historial de mensajes previos.
+
+        Yields:
+        dict: Eventos de tipo 'text', 'done' o 'error'.
         """
         messages = [{"role": "system", "content": cognitive_context}] + history
         if prompt:
@@ -26,14 +51,17 @@ class ChatService:
                     yield {"type": "text", "content": delta}
 
                 if chunk.usage:
-                    u = chunk.usage
-                    print(f"📊 [ChatService] Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens}")
+                    usage_data = chunk.usage
+                    print(
+                        f"[ChatService] Prompt: {usage_data.prompt_tokens} "
+                        f"| Completion: {usage_data.completion_tokens}"
+                    )
 
             yield {"type": "done", "content": full_content}
 
-        except Exception as e:
-            print(f"❌ [ChatService] Error: {e}")
-            yield {"type": "error", "content": str(e)}
+        except Exception as error:
+            print(f"[ChatService] Error: {error}")
+            yield {"type": "error", "content": str(error)}
 
 
 chat_service = ChatService()
