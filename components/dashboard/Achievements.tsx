@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import React, { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -153,10 +153,11 @@ const AchievementItem = ({ achievement, categoryColor, index }: { achievement: A
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.05 }}
       whileHover={{ x: 5 }}
-      className={`group relative p-5 rounded-[2rem] border transition-all duration-500 overflow-hidden ${achievement.unlocked
-        ? 'bg-white/[0.03] border-white/5 hover:border-white/10 hover:bg-white/[0.06]'
-        : 'bg-black/20 border-white/5 opacity-60 grayscale'
-        }`}
+      className={`group relative p-5 rounded-[2rem] border transition-all duration-500 overflow-hidden ${
+        achievement.unlocked
+          ? 'bg-zinc-900/40 dark:bg-white/[0.03] border-zinc-200 dark:border-white/5 hover:border-zinc-300 dark:hover:border-white/10 hover:bg-zinc-900/60 dark:hover:bg-white/[0.06]'
+          : 'bg-zinc-100/50 dark:bg-black/20 border-zinc-200 dark:border-white/5 opacity-60 grayscale'
+      }`}
     >
       {/* Glow Effect on Hover */}
       {achievement.unlocked && (
@@ -169,51 +170,56 @@ const AchievementItem = ({ achievement, categoryColor, index }: { achievement: A
       <div className="flex items-center gap-5 relative z-10">
         {/* Icon Container */}
         <div className="relative">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${achievement.unlocked
-            ? 'bg-gradient-to-br from-white/10 to-white/5 shadow-xl border border-white/10'
-            : 'bg-white/5'
-            }`}>
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${
+            achievement.unlocked
+              ? 'bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-white/10 dark:to-white/5 shadow-xl border border-zinc-200 dark:border-white/10'
+              : 'bg-zinc-200 dark:bg-white/5'
+          }`}>
             <achievement.icon
               size={24}
-              className={`transition-all duration-500 ${achievement.unlocked ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' : 'text-white/20'
-                }`}
+              className={`transition-all duration-500 ${
+                achievement.unlocked 
+                  ? 'text-zinc-900 dark:text-white drop-shadow-[0_0_8px_rgba(0,0,0,0.1)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]' 
+                  : 'text-zinc-400 dark:text-white/20'
+              }`}
               style={achievement.unlocked ? { color: categoryColor } : {}}
             />
           </div>
           {achievement.unlocked ? (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#4AE54A] rounded-full flex items-center justify-center border-2 border-[#0B0121] shadow-lg">
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#4AE54A] rounded-full flex items-center justify-center border-2 border-zinc-50 dark:border-[#0B0121] shadow-lg">
               <CheckCircle size={10} className="text-white" />
             </div>
           ) : (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-white/10 rounded-full flex items-center justify-center border-2 border-[#0B0121]">
-              <Lock size={10} className="text-white/40" />
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-zinc-200 dark:bg-white/10 rounded-full flex items-center justify-center border-2 border-zinc-50 dark:border-[#0B0121]">
+              <Lock size={10} className="text-zinc-500 dark:text-white/40" />
             </div>
           )}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start mb-1">
-            <h4 className={`text-sm font-black uppercase tracking-widest truncate ${achievement.unlocked ? 'text-white' : 'text-white/20'
-              }`}>
+            <h4 className={`text-sm font-black uppercase tracking-widest truncate ${
+              achievement.unlocked ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-white/20'
+            }`}>
               {achievement.title}
             </h4>
             {achievement.unlocked && (
-              <span className="text-[10px] font-black text-white/40 uppercase tracking-tighter">
-                LVL <span className="text-white">{achievement.level}</span>
+              <span className="text-[10px] font-black text-zinc-500 dark:text-white/40 uppercase tracking-tighter">
+                LVL <span className="text-zinc-900 dark:text-white">{achievement.level}</span>
               </span>
             )}
           </div>
-          <p className="text-[10px] font-bold text-white/30 uppercase tracking-tight leading-tight mb-3 line-clamp-1">
+          <p className="text-[10px] font-bold text-zinc-500 dark:text-white/30 uppercase tracking-tight leading-tight mb-3 line-clamp-1">
             {achievement.description}
           </p>
 
           {/* Progress Bar */}
           <div className="space-y-1">
             <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-[0.2em]">
-              <span className="text-white/20">Progreso Operativo</span>
-              <span className="text-white/40">{Math.round(percentage)}%</span>
+              <span className="text-zinc-400 dark:text-white/20">Progreso Operativo</span>
+              <span className="text-zinc-500 dark:text-white/40">{Math.round(percentage)}%</span>
             </div>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/[0.02]">
+            <div className="h-1.5 w-full bg-zinc-200 dark:bg-white/5 rounded-full overflow-hidden border border-zinc-300/50 dark:border-white/[0.02]">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -236,22 +242,22 @@ const AchievementItem = ({ achievement, categoryColor, index }: { achievement: A
 const CategorySection = ({ category }: { category: SkillCategory }) => {
   return (
     <MagicCard
-      className="bg-white/[0.02] backdrop-blur-3xl border-white/5 p-8 rounded-[3rem] relative overflow-hidden h-full group"
+      className="bg-zinc-50/50 dark:bg-white/[0.02] backdrop-blur-3xl border-zinc-200 dark:border-white/5 p-8 rounded-[3rem] relative overflow-hidden h-full group"
       gradientColor={category.color}
       gradientOpacity={0.05}
     >
       <div className="flex items-center gap-4 mb-8">
         <div
-          className="p-4 rounded-[1.5rem] border border-white/10 shadow-2xl transition-transform duration-500 group-hover:rotate-6"
+          className="p-4 rounded-[1.5rem] border border-zinc-200 dark:border-white/10 shadow-2xl transition-transform duration-500 group-hover:rotate-6"
           style={{ backgroundColor: `${category.color}15` }}
         >
           <category.icon size={26} style={{ color: category.color }} />
         </div>
         <div className="flex flex-col">
-          <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase">{category.name}</h3>
+          <h3 className="text-2xl font-black text-zinc-900 dark:text-white italic tracking-tighter uppercase">{category.name}</h3>
           <div className="flex items-center gap-2 mt-1">
             <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: category.color }} />
-            <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">Sector Identificado</span>
+            <span className="text-[10px] font-black text-zinc-500 dark:text-white/30 uppercase tracking-[0.3em]">Sector Identificado</span>
           </div>
         </div>
       </div>
@@ -279,30 +285,30 @@ export function Achievements() {
   return (
     <div className="w-full h-full p-4 md:p-12 relative overflow-hidden">
       {/* Ambient Backgrounds */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#B500D1]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-500/10 dark:bg-[#B500D1]/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-500/5 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Header */}
       <BlurFade delay={0.1} inView>
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16 relative z-10 pl-20 md:pl-0">
           <div className="flex flex-col gap-2">
-            <MagicTitle variant="sparkles" className="text-4xl md:text-7xl tracking-[0.2em] font-black uppercase">
+            <MagicTitle variant="sparkles" className="text-4xl md:text-7xl tracking-[0.2em] font-black uppercase text-zinc-900 dark:text-white">
               LOGROS
             </MagicTitle>
-            <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl">
+            <div className="flex items-center gap-3 px-4 py-2 bg-zinc-200/50 dark:bg-white/5 border border-zinc-300 dark:border-white/10 rounded-full self-start backdrop-blur-xl">
               <Award size={14} className="text-[#B500D1]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Registro de Habilidades y Desafíos</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 dark:text-white/60">Registro de Habilidades y Desafíos</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-3xl backdrop-blur-3xl">
+          <div className="flex items-center gap-4 p-4 bg-zinc-200/50 dark:bg-white/5 border border-zinc-300/50 dark:border-white/5 rounded-3xl backdrop-blur-3xl">
             <div className="flex flex-col text-right">
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Global Rank</span>
-              <span className="text-xl font-black text-white italic">#1,248</span>
+              <span className="text-[9px] font-black text-zinc-500 dark:text-white/30 uppercase tracking-widest">Global Rank</span>
+              <span className="text-xl font-black text-zinc-900 dark:text-white italic">#1,248</span>
             </div>
-            <div className="w-px h-8 bg-white/10 mx-2" />
+            <div className="w-px h-8 bg-zinc-300 dark:bg-white/10 mx-2" />
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Total XP</span>
+              <span className="text-[9px] font-black text-zinc-500 dark:text-white/30 uppercase tracking-widest">Total XP</span>
               <span className="text-xl font-black text-[#B500D1] italic">45.2k</span>
             </div>
           </div>
@@ -310,17 +316,17 @@ export function Achievements() {
       </BlurFade>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
-        <TabsList className="mb-12 bg-white/5 border border-white/5 p-1.5 rounded-[2.5rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full">
+        <TabsList className="mb-12 bg-zinc-200/50 dark:bg-white/5 border border-zinc-300/50 dark:border-white/5 p-1.5 rounded-[2.5rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full">
           <TabsTrigger
             value="academic"
-            className="data-[state=active]:bg-[#B500D1] data-[state=active]:text-white rounded-[2rem] px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_25px_rgba(181,0,209,0.3)]"
+            className="data-[state=active]:bg-[#B500D1] data-[state=active]:text-white rounded-[2rem] px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_25px_rgba(181,0,209,0.3)] text-zinc-700 dark:text-zinc-300"
           >
             <BookOpen size={18} />
             Estructuras Académicas
           </TabsTrigger>
           <TabsTrigger
             value="personal"
-            className="data-[state=active]:bg-[#B500D1] data-[state=active]:text-white rounded-[2rem] px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_25px_rgba(181,0,209,0.3)]"
+            className="data-[state=active]:bg-[#B500D1] data-[state=active]:text-white rounded-[2rem] px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_25px_rgba(181,0,209,0.3)] text-zinc-700 dark:text-zinc-300"
           >
             <Star size={18} />
             Potencial Personal
@@ -347,22 +353,22 @@ export function Achievements() {
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
-        className="mt-20 p-10 bg-gradient-to-br from-[#B500D1]/10 to-transparent border border-white/5 rounded-[3rem] relative overflow-hidden"
+        className="mt-20 p-10 bg-gradient-to-br from-[#B500D1]/10 to-transparent border border-zinc-200 dark:border-white/5 rounded-[3rem] relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 p-8 text-white/5 pointer-events-none">
+        <div className="absolute top-0 right-0 p-8 text-zinc-300/40 dark:text-white/5 pointer-events-none">
           <Sparkles size={140} strokeWidth={1} />
         </div>
         <div className="flex flex-col md:flex-row gap-10 items-center relative z-10">
-          <div className="p-6 rounded-full bg-white/5 border border-white/10 shadow-2xl">
+          <div className="p-6 rounded-full bg-zinc-200/50 dark:bg-white/5 border border-zinc-300 dark:border-white/10 shadow-2xl">
             <Zap size={40} className="text-[#B500D1]" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h4 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">Desbloquea tu Siguiente Nivel</h4>
-            <p className="text-sm text-white/40 font-bold uppercase tracking-wide leading-relaxed">
+            <h4 className="text-2xl font-black text-zinc-900 dark:text-white uppercase italic tracking-tighter mb-2">Desbloquea tu Siguiente Nivel</h4>
+            <p className="text-sm text-zinc-600 dark:text-white/40 font-bold uppercase tracking-wide leading-relaxed">
               Cada interacción con Eleonor y cada examen completado alimenta este sistema de logros. Mantén la consistencia para ver cómo tu aura de habilidades crece.
             </p>
           </div>
-          <Button className="bg-white text-black font-black uppercase tracking-widest px-10 h-16 rounded-[1.5rem] hover:bg-[#B500D1] hover:text-white transition-all duration-500 shadow-2xl">
+          <Button className="bg-zinc-900 dark:bg-white text-white dark:text-black font-black uppercase tracking-widest px-10 h-16 rounded-[1.5rem] hover:bg-[#B500D1] hover:text-white transition-all duration-500 shadow-2xl">
             Ver Próximos Retos
           </Button>
         </div>

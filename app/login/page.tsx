@@ -56,13 +56,13 @@ export default function LoginRoute() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0121] text-white p-4">
-                <div className="bg-red-950/40 border border-red-500/30 p-6 rounded-xl max-w-md text-center">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4">
+                <div className="bg-destructive/20 border border-destructive/40 p-6 rounded-xl max-w-md text-center">
                     <p className="text-red-400 font-semibold mb-4 text-lg">Error de Autenticación</p>
-                    <p className="text-gray-300 mb-6">{error}</p>
+                    <p className="text-muted-foreground mb-6">{error}</p>
                     <button 
                         onClick={() => router.push("/")}
-                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all"
+                        className="px-6 py-2 bg-primary hover:bg-primary/80 text-primary-foreground rounded-lg transition-all"
                     >
                         Volver al inicio
                     </button>
@@ -72,9 +72,9 @@ export default function LoginRoute() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0121] text-white gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
-            <p className="text-gray-300 font-medium">{status}</p>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground font-medium">{status}</p>
         </div>
     )
 }
