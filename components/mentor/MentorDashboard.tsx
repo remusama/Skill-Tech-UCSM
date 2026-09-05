@@ -169,9 +169,28 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
                 <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">
-                        Agregar estudiantes ({selectedIds.length} seleccionados)
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">
+                            Agregar estudiantes ({selectedIds.length} seleccionados)
+                        </p>
+                        {filteredStudents.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const allFilteredIds = filteredStudents.map(s => s.id)
+                                    const areAllSelected = allFilteredIds.every(id => selectedIds.includes(id))
+                                    if (areAllSelected) {
+                                        setSelectedIds(prev => prev.filter(id => !allFilteredIds.includes(id)))
+                                    } else {
+                                        setSelectedIds(prev => Array.from(new Set([...prev, ...allFilteredIds])))
+                                    }
+                                }}
+                                className="text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wider transition-colors px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg border border-emerald-500/20"
+                            >
+                                {filteredStudents.every(s => selectedIds.includes(s.id)) ? "Desmarcar todo" : "Seleccionar todo"}
+                            </button>
+                        )}
+                    </div>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                         {filteredStudents.map(s => {
                             const sel = selectedIds.includes(s.id)

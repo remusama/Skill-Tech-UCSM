@@ -77,9 +77,9 @@ async def create_attendance_class(req: CreateClassRequest, db: Session = Depends
 @router.get("/classes")
 async def get_attendance_classes(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     check_is_mentor(current_user_id, db)
+    # Todos los mentores comparten las clases de asistencia entre ellos
     classes = (
         db.query(AttendanceClass)
-        .filter(AttendanceClass.mentor_id == current_user_id)
         .order_by(AttendanceClass.created_at.desc())
         .all()
     )
@@ -119,8 +119,7 @@ async def get_attendance_classes(db: Session = Depends(get_db), current_user_id:
 @router.get("/classes/{class_id}")
 async def get_class_details(class_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     check_is_mentor(current_user_id, db)
-    c = db.query(AttendanceClass).filter(AttendanceClass.id == class_id,
-                                         AttendanceClass.mentor_id == current_user_id).first()
+    c = db.query(AttendanceClass).filter(AttendanceClass.id == class_id).first()
     if not c:
         raise HTTPException(status_code=404, detail="Clase no encontrada.")
 

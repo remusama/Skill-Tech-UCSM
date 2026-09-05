@@ -63,7 +63,8 @@ async def get_mentor_students(db: Session = Depends(get_db), current_user_id: in
 @router.get("/groups")
 async def get_mentor_groups(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     check_is_mentor(current_user_id, db)
-    groups = db.query(MentorGroup).filter(MentorGroup.mentor_id == current_user_id).all()
+    # Todos los mentores comparten la misma base de datos de grupos de estudiantes
+    groups = db.query(MentorGroup).all()
 
     return [
         {
@@ -136,7 +137,7 @@ async def get_global_stats(db: Session = Depends(get_db), current_user_id: int =
 async def get_group_students(group_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     """Returns students belonging to a specific group with their skill data."""
     check_is_mentor(current_user_id, db)
-    group = db.query(MentorGroup).filter(MentorGroup.id == group_id, MentorGroup.mentor_id == current_user_id).first()
+    group = db.query(MentorGroup).filter(MentorGroup.id == group_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
 

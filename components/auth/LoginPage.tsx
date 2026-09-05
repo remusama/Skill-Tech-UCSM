@@ -146,7 +146,13 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
       return
     }
 
-    if (isTeacher && teacherKey !== "87654321") {
+    if (isRegister && !isTeacher && (!cleanEmail || !cleanEmail.toLowerCase().endsWith("@liderazgo.ucsm.pe"))) {
+      setError("Para crear cuenta de estudiante debe ser un correo de @liderazgo.ucsm.pe")
+      setIsLoading(false)
+      return
+    }
+
+    if (isTeacher && teacherKey !== "liderazgo.ucsm.2026") {
       setError("Contraseña de docente incorrecta")
       setIsLoading(false)
       return
@@ -252,13 +258,13 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-white/70 text-xs font-bold uppercase tracking-widest">
-                  Usuario
+                  Correo
                 </Label>
                 <Input
                   id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
-                  placeholder={isRegister ? "Tu nombre de usuario" : "Usuario"}
+                  placeholder={isRegister ? "correo@liderazgo.ucsm.pe" : "Correo"}
                   className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-colors"
                   required
                 />
@@ -272,7 +278,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value.replace(/\s/g, ""))}
-                    placeholder="correo@ejemplo.com"
+                    placeholder="correo@liderazgo.ucsm.pe"
                     className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-colors"
                     required
                   />

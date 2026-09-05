@@ -23,8 +23,8 @@ ALGORITHM = "HS256"
 
 
 # Clave para permitir el auto-registro como docente. Debe configurarse por entorno;
-# si no está presente, usa fallback "87654321" para desarrollo.
-TEACHER_REGISTRATION_KEY = os.environ.get("TEACHER_REGISTRATION_KEY", "87654321")
+# si no está presente, usa fallback "liderazgo.ucsm.2026" para desarrollo.
+TEACHER_REGISTRATION_KEY = os.environ.get("TEACHER_REGISTRATION_KEY", "liderazgo.ucsm.2026")
 
 # No estoy de acuerdo, pero boe, aqui te lo dejo por siaca
 # TEACHER_REGISTRATION_KEY = os.environ.get("TEACHER_REGISTRATION_KEY")
@@ -121,6 +121,13 @@ async def register(req: AuthRequest, db: Session = Depends(get_db)):
 
     # Valida y resuelve el rol de forma segura: nunca confiar directamente en req.role
     resolved_role = _validate_and_resolve_role(req.role, req.teacher_key)
+
+    if resolved_role == "student":
+        if not req.email or not req.email.lower().strip().endswith("@liderazgo.ucsm.pe"):
+            raise HTTPException(
+                status_code=400,
+                detail="Para crear una cuenta de estudiante, el correo debe pertenecer al dominio @liderazgo.ucsm.pe"
+            )
 
     # Check if user exists by username
     existing_user = db.query(User).filter(User.username == req.username).first()

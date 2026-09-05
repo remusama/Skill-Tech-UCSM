@@ -542,7 +542,20 @@ export const ExamCreator = () => {
 
           {groups.length > 0 && (
             <div>
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Grupos</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Grupos</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allGroupIds = groups.map(g => g.id)
+                    const allSelected = allGroupIds.every(id => selectedGroupIds.includes(id))
+                    setSelectedGroupIds(allSelected ? [] : allGroupIds)
+                  }}
+                  className="text-xs text-[#baef00] hover:underline uppercase tracking-wider font-bold"
+                >
+                  {groups.every(g => selectedGroupIds.includes(g.id)) ? "Desmarcar todos los grupos" : "Seleccionar todos los grupos"}
+                </button>
+              </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 {groups.map(g => {
                   const isSelected = selectedGroupIds.includes(g.id)
@@ -566,7 +579,22 @@ export const ExamCreator = () => {
           )}
 
           <div>
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Estudiantes Individuales</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Estudiantes Individuales</h3>
+              {students.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allStudentIds = students.map(s => s.id)
+                    const allSelected = allStudentIds.every(id => selectedStudentIds.includes(id))
+                    setSelectedStudentIds(allSelected ? [] : allStudentIds)
+                  }}
+                  className="text-xs text-[#baef00] hover:underline uppercase tracking-wider font-bold"
+                >
+                  {students.every(s => selectedStudentIds.includes(s.id)) ? "Desmarcar todos los estudiantes" : "Seleccionar todos los estudiantes"}
+                </button>
+              )}
+            </div>
             <div className="space-y-2 max-h-72 overflow-y-auto pr-2">
               {students.map(s => {
                 const isSelected = selectedStudentIds.includes(s.id)

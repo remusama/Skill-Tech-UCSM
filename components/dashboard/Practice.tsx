@@ -210,12 +210,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
     const handleStartExam = (exam: any) => {
         if (!currentArea) return;
-        if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
-            setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
-            return
-        }
-        if (currentArea.id === "psicometria" && exam.id === "neo-240") {
-            setActiveExam({ ...exam, areaName: currentArea.name, isNeo: true })
+        if (currentArea.id === "psicometria" || exam.disabled || exam.status?.includes("trabajando")) {
             return
         }
         if (currentArea.id === "expectativas" && exam.id === "cepv-20") {
@@ -540,11 +535,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                                     Módulo 0{i + 1}
                                                                 </span>
                                                                 <Badge variant="outline" className={cn("border-0 font-bold text-[10px] px-2 py-0.5 backdrop-blur-md rounded-md",
-                                                                    exam.status === 'Disponible' 
-                                                                        ? 'text-emerald-900 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-400/10' 
-                                                                        : 'text-slate-700 bg-slate-200/80 dark:text-gray-500 dark:bg-black/40'
+                                                                    (currentArea?.id === "psicometria" || exam.disabled)
+                                                                        ? 'text-amber-900 bg-amber-200 dark:text-amber-300 dark:bg-amber-500/20 border border-amber-500/30'
+                                                                        : exam.status === 'Disponible' 
+                                                                            ? 'text-emerald-900 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-400/10' 
+                                                                            : 'text-slate-700 bg-slate-200/80 dark:text-gray-500 dark:bg-black/40'
                                                                 )}>
-                                                                    {exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
+                                                                    {(currentArea?.id === "psicometria" || exam.disabled) ? '(Ingenieros trabajando)' : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
                                                                 </Badge>
                                                             </div>
                                                             <div className="p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors">
@@ -589,13 +586,22 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                             </div>
                                                         </div>
 
-                                                        <Button
-                                                            onClick={() => handleStartExam(exam)}
-                                                            className={cn("w-full text-white font-bold tracking-wide border-0 py-5 rounded-xl shadow-lg transition-all group-hover:scale-[1.02] bg-gradient-to-r hover:brightness-110", theme.color)}
-                                                        >
-                                                            <Play className="w-3.5 h-3.5 mr-2 fill-current" />
-                                                            INICIAR
-                                                        </Button>
+                                                        {(currentArea?.id === "psicometria" || exam.disabled) ? (
+                                                            <Button
+                                                                disabled
+                                                                className="w-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold tracking-wide py-5 rounded-xl cursor-not-allowed opacity-80"
+                                                            >
+                                                                (Ingenieros trabajando)
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                onClick={() => handleStartExam(exam)}
+                                                                className={cn("w-full text-white font-bold tracking-wide border-0 py-5 rounded-xl shadow-lg transition-all group-hover:scale-[1.02] bg-gradient-to-r hover:brightness-110", theme.color)}
+                                                            >
+                                                                <Play className="w-3.5 h-3.5 mr-2 fill-current" />
+                                                                INICIAR
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </motion.div>
