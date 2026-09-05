@@ -42,9 +42,9 @@ export function DiagnosisResults({ analysis, skills, onExit, onExploreMap, area 
             {/* Icono Central (Cerebro) */}
             <BlurFade delay={0.1}>
                 <div className="relative group">
-                    <div className="absolute inset-0 bg-purple-600/20 blur-3xl rounded-full scale-150 animate-pulse" />
-                    <div className="relative w-16 h-16 rounded-full border border-purple-500/30 flex items-center justify-center bg-[#050110] shadow-[0_0_20px_-5px_rgba(191,0,255,0.4)]">
-                        <Brain className="text-purple-500 w-8 h-8" />
+                    <div className="absolute inset-0 bg-[hsl(74,100%,47%)]/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                    <div className="relative w-16 h-16 rounded-full border border-[hsl(74,100%,47%)]/30 flex items-center justify-center bg-[#050110] shadow-[0_0_20px_-5px_rgba(186,239,0,0.4)]">
+                        <Brain className="text-[hsl(74,100%,47%)] w-8 h-8" />
                     </div>
                 </div>
             </BlurFade>
@@ -52,7 +52,7 @@ export function DiagnosisResults({ analysis, skills, onExit, onExploreMap, area 
             {/* Títulos del Encabezado */}
             <BlurFade delay={0.2} className="text-center space-y-2">
                 <h1 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-none">
-                    PROCESAMIENTO <span className="text-[#bf00ff]">COMPLETADO</span>
+                    PROCESAMIENTO <span className="text-[hsl(74,100%,47%)]">COMPLETADO</span>
                 </h1>
                 <p className="text-[10px] md:text-xs font-bold text-cyan-400 uppercase tracking-[0.4em]">
                     SKILLNEXUS • NEURAL INTERFACE v3.0
@@ -68,7 +68,7 @@ export function DiagnosisResults({ analysis, skills, onExit, onExploreMap, area 
                         </span>
                         <div className="flex items-baseline gap-1 mt-auto md:mt-0">
                             <span className="text-5xl md:text-7xl font-black text-white italic">{analysis?.nivel ?? 0}</span>
-                            <span className="text-xl md:text-2xl font-black text-purple-600 italic">%</span>
+                            <span className="text-xl md:text-2xl font-black text-[hsl(74,100%,47%)] italic">%</span>
                         </div>
                     </div>
                 </BlurFade>
@@ -88,10 +88,10 @@ export function DiagnosisResults({ analysis, skills, onExit, onExploreMap, area 
             {/* Tarjeta Full Width */}
             <BlurFade delay={0.5} className="w-full mt-2">
                 <div className="bg-[#050110]/60 backdrop-blur-sm border border-white/5 p-6 md:p-10 rounded-[2rem] relative overflow-hidden">
-                    <div className="absolute left-0 top-6 bottom-6 w-1 bg-[#bf00ff] shadow-[0_0_20px_#bf00ff] rounded-full" />
+                    <div className="absolute left-0 top-6 bottom-6 w-1 bg-[hsl(74,100%,47%)] shadow-[0_0_20px_hsl(74,100%,47%)] rounded-full" />
                     <div className="flex items-center gap-3 mb-5 md:mb-8">
-                        <Brain className="text-[#bf00ff] w-4 h-4" />
-                        <span className="text-[9px] md:text-[10px] font-black text-[#bf00ff] uppercase tracking-[0.3em]">
+                        <Brain className="text-[hsl(74,100%,47%)] w-4 h-4" />
+                        <span className="text-[9px] md:text-[10px] font-black text-[hsl(74,100%,47%)] uppercase tracking-[0.3em]">
                             INSIGHT DEL NÚCLEO
                         </span>
                     </div>
@@ -113,7 +113,7 @@ export function DiagnosisResults({ analysis, skills, onExit, onExploreMap, area 
 
                 <Button
                     onClick={onExit}
-                    className="w-full bg-[#bf00ff] hover:bg-[#9200c5] text-white rounded-[1.5rem] h-14 md:h-18 text-[11px] md:text-sm font-black uppercase tracking-[0.3em] shadow-[0_15px_45px_-10px_rgba(191,0,255,0.6)] transition-all hover:scale-[1.01] active:scale-[0.98]"
+                    className="w-full bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,40%)] text-black rounded-[1.5rem] h-14 md:h-18 text-[11px] md:text-sm font-black uppercase tracking-[0.3em] shadow-[0_15px_45px_-10px_rgba(186,239,0,0.4)] transition-all hover:scale-[1.01] active:scale-[0.98]"
                 >
                     FINALIZAR EVALUACIÓN
                 </Button>
