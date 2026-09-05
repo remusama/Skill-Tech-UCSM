@@ -326,62 +326,28 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                     <Label htmlFor="confirmPassword" className="text-white/70 text-xs font-bold uppercase tracking-widest">Confirmar contraseña</Label>
                     <Input
                       id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ""))}
-                      placeholder="••••••••"
-                      className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-all h-12 rounded-xl"
-                      required
-                    />
-                  </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* COLEGIO */}
-              <div className="space-y-2">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Colegio</Label>
-                <Select value={school} onValueChange={setSchool} required>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#baef00]/60 focus:ring-[#baef00]/30 transition-all h-12 rounded-xl">
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#0c1c11] border-[#3c5a21]/50 text-white z-[999] shadow-2xl">
-                    <SelectItem value="Francisco Mostajo" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Francisco Mostajo</SelectItem>
-                    <SelectItem value="Carlos José Echavarry Osacar" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Carlos José Echavarry</SelectItem>
-                    <SelectItem value="Franklin Roosevelt" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">Franklin Roosevelt</SelectItem>
-                  </SelectContent>
-                </Select>
+type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value.replace(/\s/g, ""))}
+                  placeholder="••••••••"
+                  className="bg-white/5 border-white/10 text-white focus:border-[#d0b04d]/50 transition-all h-12 rounded-xl"
+                  required
+                />
               </div>
 
-              {/* GRADO / SECCIÓN */}
-              <div className="space-y-2">
-                <Label className="text-white/70 text-xs font-bold uppercase tracking-widest">Grado/Sección</Label>
-                <Select value={classroom} onValueChange={setClassroom} required>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white focus:border-[#baef00]/60 focus:ring-[#baef00]/30 transition-all h-12 rounded-xl">
-                    <SelectValue placeholder="Seleccionar" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#0c1c11] border-[#3c5a21]/50 text-white z-[999] shadow-2xl">
-                    <SelectItem value="4A" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4A</SelectItem>
-                    <SelectItem value="4B" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4B</SelectItem>
-                    <SelectItem value="4C" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">4C</SelectItem>
-                    <SelectItem value="5A" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5A</SelectItem>
-                    <SelectItem value="5B" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5B</SelectItem>
-                    <SelectItem value="5C" className="focus:bg-[#3c5a21] focus:text-[#baef00] cursor-pointer">5C</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-                </>
-              )}
+            </>
+          )}
 
-              {/* Toggle Docente */}
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                <button
-                  type="button"
-                  id="teacher-toggle"
-                  onClick={() => { setIsTeacher(prev => !prev); setTeacherKey("") }}
-                  className={`relative w-10 h-5 rounded-full transition-all duration-300 shrink-0 ${
-                    isTeacher ? "bg-[#a3ca02] shadow-[0_0_10px_rgba(163,202,2,0.35)]" : "bg-white/10"
-                  }`}
-                >
+          {/* Toggle Docente */}
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+            <button
+              type="button"
+              id="teacher-toggle"
+              onClick={() => { setIsTeacher(prev => !prev); setTeacherKey("") }}
+              className={`relative w-10 h-5 rounded-full transition-all duration-300 shrink-0 ${
+                isTeacher ? "bg-[#a3ca02] shadow-[0_0_10px_rgba(163,202,2,0.35)]" : "bg-white/10"
+              }`}
+            >
                   <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${
                     isTeacher ? "left-5" : "left-0.5"
                   }`} />

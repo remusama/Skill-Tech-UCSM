@@ -145,7 +145,7 @@ export function Settings() {
                     /* CLASES CSS MODIFICADAS PARA IGUALAR EL TAMAÑO Y ESTILO */
                     className="justify-start gap-4 h-14 rounded-2xl px-6 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-white/5 group w-full"
                   >
-                    <tab.icon size={18} className="text-[#d0b04d] group-hover:scale-110 transition-transform" />
+                    <tab.icon size={18} className="text-[#c7c7c7] group-hover:scale-110 transition-transform" />
                     <span>{tab.label}</span>
                     <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100" />
                   </TabsTrigger>
@@ -190,24 +190,29 @@ export function Settings() {
 
                     <div className="space-y-10">
                       <div className="flex flex-col md:flex-row gap-10 items-center">
-                        <div className="relative group/avatar">
-                          <div className="absolute -inset-1 bg-gradient-to-br from-[#063924] to-[#d0b04d] rounded-full blur-sm opacity-50 group-hover/avatar:opacity-100 transition-opacity" />
-                          <Avatar className="w-28 h-28 border-4 border-[#0B0121] relative z-10 shadow-2xl">
-                            <AvatarImage src="/placeholder.svg?height=112&width=112" />
-                            <AvatarFallback className="bg-gradient-to-br from-white/10 to-white/5 font-black text-xl italic text-[#d0b04d]">AD</AvatarFallback>
-                          </Avatar>
-                          <Button size="sm" className="absolute -bottom-2 right-1/2 translate-x-1/2 rounded-full h-8 px-4 bg-white text-black font-black text-[9px] uppercase tracking-widest z-20 hover:bg-[#063924] hover:text-[#d0b04d] transition-all">
-                            Cambiar
-                          </Button>
-                        </div>
+                        <div className="relative group/avatar flex flex-col items-center">
+                        <div className="absolute -inset-1 bg-gradient-to-br from-[#063924] to-[#84cc16] rounded-full blur-sm opacity-50 group-hover/avatar:opacity-100 transition-opacity" />
+                        
+                        <Avatar className="w-28 h-28 border-4 border-[#0B0121] relative z-10 shadow-2xl">
+                          <AvatarImage src="/placeholder.svg?height=112&width=112" />
+                          <AvatarFallback className="bg-gradient-to-br from-white/10 to-white/5 font-black text-xl italic text-white">AD</AvatarFallback>
+                        </Avatar>
+
+                        <Button 
+                          size="sm" 
+                          className="absolute -bottom-2 rounded-full h-8 px-4 bg-[#84cc16] text-black font-black text-[9px] uppercase tracking-widest z-20 hover:bg-[#063924] hover:text-white transition-colors"
+                        >
+                          Cambiar
+                        </Button>
+                      </div>
                         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">Nombre Agente</Label>
-                            <Input defaultValue="Usuario" className="h-14 rounded-2xl bg-white/5 border-white/10 focus:border-[#d0b04d]/50 text-white font-bold" />
+                            <Input defaultValue="Usuario" className="h-14 rounded-2xl bg-white/5 border-white/10 focus:border-white/40 text-white font-bold" />
                           </div>
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-4">Alias Digital</Label>
-                            <Input defaultValue="Demo" className="h-14 rounded-2xl bg-white/5 border-white/10 focus:border-[#d0b04d]/50 text-white font-bold" />
+                            <Input defaultValue="Demo" className="h-14 rounded-2xl bg-white/5 border-white/10 focus:border-white/40 text-white font-bold" />
                           </div>
                         </div>
                       </div>

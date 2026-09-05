@@ -32,8 +32,8 @@ import { Meteors } from "@/components/ui/meteors"
 
 const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
-  { icon: Clock, label: "Examenes", page: "practice" },
-  { icon: Brain, label: "Diagnostico", page: "diagnosis" },
+  { icon: Clock, label: "Level up", page: "practice" },
+  { icon: Brain, label: "Liderometro", page: "diagnosis" },
   { icon: User, label: "Perfil / Credencial", page: "profile" },
   { icon: MessageSquare, label: "Eleonor AI", page: "assistant" },
   { icon: Settings, label: "Configuración", page: "settings" },

@@ -10,8 +10,7 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { History, User, Bot, Clock, Trash2, X } from "lucide-react";
+import { History, User, Bot } from "lucide-react";
 import { useEleonor } from "@/contexts/eleonor-context";
 
 type Message = {
@@ -31,22 +30,33 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
     return (
         <Sheet open={isHistoryOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
-                <Button
-                    variant="outline"
-                    className={`h-8 px-4 rounded-lg border-white/10 text-[9px] font-black uppercase tracking-widest transition-all ${isHistoryOpen ? 'bg-[#B500D1] text-white shadow-[0_0_15px_rgba(181,0,209,0.4)]' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'}`}
+                {/* Usamos un <button> nativo estilizado con Tailwind para evitar cualquier variante o variable CSS global (como el magenta) */}
+                <button
+                    type="button"
+                    className={`h-8 px-4 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center cursor-pointer ${
+                        isHistoryOpen 
+                            ? 'bg-[#0d971f] text-white border-[#0d971f] shadow-[0_0_15px_rgba(13,151,31,0.6)]' 
+                            : 'bg-white/5 text-white/50 border-white/10 hover:text-white hover:bg-white/10 hover:border-white/20'
+                    }`}
                 >
-                    <History className={`w-3.5 h-3.5 mr-2 ${isHistoryOpen ? 'text-white' : 'text-[#60d4ea]'}`} />
+                    <History className={`w-3.5 h-3.5 mr-2 ${isHistoryOpen ? 'text-white' : 'text-[#d0b04d]'}`} />
                     Historial
-                </Button>
+                </button>
             </SheetTrigger>
             <SheetContent
                 side="right"
-                className="w-full sm:max-w-[500px] bg-black/40 border-l border-white/10 backdrop-blur-3xl text-white p-0 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-[400]"
+                className="w-full sm:max-w-[500px] bg-black/85 border-l border-[#0d971f]/20 backdrop-blur-3xl text-white p-0 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] z-[400] [&>button]:hidden"
             >
-                <SheetHeader className="p-6 border-b border-white/5">
-                    <SheetTitle className="text-[#60d4ea] flex items-center gap-3 text-xl font-black uppercase tracking-tighter">
-                        <div className="p-2 rounded-xl bg-[#60d4ea]/10">
-                            <History className="w-5 h-5" />
+                <SheetHeader className="p-6 border-b border-white/5 relative">
+                    <button 
+                        onClick={() => setHistoryOpen(false)}
+                        className="absolute right-6 top-6 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-[#d0b04d] hover:bg-[#0d971f]/10 hover:border-[#0d971f]/40 transition-all cursor-pointer"
+                    >
+                        ✕
+                    </button>
+                    <SheetTitle className="text-[#d0b04d] flex items-center gap-3 text-xl font-black uppercase tracking-tighter">
+                        <div className="p-2 rounded-xl bg-[#0d971f]/10 border border-[#0d971f]/20">
+                            <History className="w-5 h-5 text-[#0d971f]" />
                         </div>
                         Registro Sináptico
                     </SheetTitle>
@@ -60,15 +70,15 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
                         {messages.map((message) => (
                             <div key={message.id} className="relative group">
                                 <div className={`flex items-center gap-3 mb-2 ${message.role === "assistant" ? "flex-row" : "flex-row-reverse text-right"}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${message.role === "assistant" ? "bg-[#B500D1]/20 border-[#B500D1]/30" : "bg-cyan-500/20 border-cyan-500/30"
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${message.role === "assistant" ? "bg-[#0d971f]/20 border-[#0d971f]/40" : "bg-[#d0b04d]/20 border-[#d0b04d]/40"
                                         }`}>
                                         {message.role === "assistant" ? (
-                                            <Bot className="w-3.5 h-3.5 text-[#B500D1]" />
+                                            <Bot className="w-3.5 h-3.5 text-[#0d971f]" />
                                         ) : (
-                                            <User className="w-3.5 h-3.5 text-cyan-400" />
+                                            <User className="w-3.5 h-3.5 text-[#d0b04d]" />
                                         )}
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${message.role === "assistant" ? "text-[#B500D1]" : "text-cyan-400"
+                                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${message.role === "assistant" ? "text-[#0d971f]" : "text-[#d0b04d]"
                                         }`}>
                                         {message.role === "assistant" ? "Unidad Eleonor" : "Sujeto de Prueba"}
                                     </span>
@@ -80,7 +90,7 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
                                     p-4 rounded-2xl text-xs leading-relaxed font-medium tracking-wide
                                     ${message.role === "assistant"
                                         ? "bg-white/[0.03] border border-white/10 text-white/80 rounded-tl-none"
-                                        : "bg-cyan-500/5 border border-cyan-500/10 text-cyan-50/70 rounded-tr-none"}
+                                        : "bg-[#0d971f]/5 border border-[#0d971f]/20 text-white/90 rounded-tr-none"}
                                     backdrop-blur-md shadow-xl transition-all group-hover:border-white/20
                                 `}>
                                     {message.content.replace(/\[emocion:\s*[^\]]+\]/g, '').trim()}
@@ -89,7 +99,7 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
                         ))}
                         {messages.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-20 text-white/10 gap-4">
-                                <History className="w-12 h-12 opacity-20" />
+                                <History className="w-12 h-12 opacity-20 text-[#0d971f]" />
                                 <p className="text-[10px] font-black uppercase tracking-[0.3em]">Memoria vacía</p>
                             </div>
                         )}
