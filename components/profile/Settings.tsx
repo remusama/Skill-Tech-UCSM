@@ -2,19 +2,17 @@
 
 import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { User, Lock, Save, KeyRound, ShieldCheck, ChevronRight, UserCheck, School, BookOpen, Palette, Sun, Moon, Sparkles } from "lucide-react"
+import { User, Lock, Save, KeyRound, ShieldCheck, ChevronRight, UserCheck, School, BookOpen } from "lucide-react"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { MagicCard } from "@/components/ui/magic-card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { useTheme } from "@/contexts/theme-context" 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { API_BASE_URL } from "@/lib/config"
 
 export function Settings() {
-  const { theme, setTheme } = useTheme()
   const [activeTab, setActiveTab] = useState("account")
 
   // Datos del Usuario
@@ -98,23 +96,23 @@ export function Settings() {
   const initials = displayName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "ST"
 
   return (
-    <div className="min-h-screen p-4 md:p-12 bg-slate-50 dark:bg-transparent relative overflow-hidden text-slate-900 dark:text-white transition-colors duration-500">
-      {/* Fondos Decorativos con soporte claro/oscuro */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#d0b04d]/10 dark:bg-[#d0b04d]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#0d971f]/10 dark:bg-[#0d971f]/5 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen p-4 md:p-12 bg-[#02140c] relative overflow-hidden text-white">
+      {/* Fondos Decorativos con tonos verdes y dorados */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#d0b04d]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#0d971f]/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-5xl mx-auto relative z-10">
 
         {/* Encabezado */}
         <BlurFade delay={0.1} inView>
           <div className="flex flex-col gap-2 mb-10 pl-16 md:pl-0">
-            <h1 className="text-3xl md:text-6xl tracking-[0.2em] font-black uppercase text-slate-900 dark:text-white">
+            <h1 className="text-3xl md:text-6xl tracking-[0.2em] font-black uppercase text-white">
               CONFIGURACIÓN
             </h1>
             <div className="w-48 sm:w-64 md:w-80 h-[2px] bg-gradient-to-r from-[#baef00] to-[#3c5a21] my-2" />
-            <div className="flex items-center gap-3 px-4 py-2 bg-slate-200/60 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-full self-start backdrop-blur-xl">
-              <ShieldCheck size={14} className="text-[#0d971f] dark:text-[#d0b04d]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 dark:text-white/60">Información de la Cuenta, Seguridad y Apariencia</span>
+            <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl">
+              <ShieldCheck size={14} className="text-[#d0b04d]" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Información de la Cuenta y Seguridad</span>
             </div>
           </div>
         </BlurFade>
@@ -123,11 +121,11 @@ export function Settings() {
 
           {/* Menú Lateral de Opciones */}
           <div className="lg:w-72 flex-shrink-0">
-            <MagicCard className="p-3 rounded-[2rem] bg-white/70 dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200/80 dark:border-white/5 shadow-xl dark:shadow-2xl sticky top-8">
+            <MagicCard className="p-3 rounded-[2rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl sticky top-8">
               <TabsList className="flex flex-col h-auto bg-transparent gap-2 w-full">
                 <TabsTrigger
                   value="account"
-                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-700 dark:text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-slate-200/50 dark:hover:bg-white/5 group"
+                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-white/5 group"
                 >
                   <User size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
                   <span className="text-left truncate">Información</span>
@@ -136,19 +134,10 @@ export function Settings() {
 
                 <TabsTrigger
                   value="password"
-                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-700 dark:text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-slate-200/50 dark:hover:bg-white/5 group"
+                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-white/5 group"
                 >
                   <Lock size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
                   <span className="text-left truncate">Cambiar Contraseña</span>
-                  <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100 flex-shrink-0" />
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="theme"
-                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-700 dark:text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-slate-200/50 dark:hover:bg-white/5 group"
-                >
-                  <Palette size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <span className="text-left truncate">Apariencia / Tema</span>
                   <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100 flex-shrink-0" />
                 </TabsTrigger>
               </TabsList>
@@ -167,16 +156,16 @@ export function Settings() {
               >
                 {/* --- TAB 1: INFORMACIÓN DE LA CUENTA --- */}
                 {activeTab === "account" && (
-                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/80 dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200/80 dark:border-white/5 shadow-xl dark:shadow-2xl overflow-hidden">
-                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-200 dark:border-white/5">
+                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl overflow-hidden">
+                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/5">
                       <Avatar className="w-16 h-16 border-2 border-[#0d971f]/50 shadow-xl">
                         <AvatarFallback className="bg-gradient-to-br from-[#0d971f] to-[#d0b04d] text-white font-black text-xl">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">{displayName}</h3>
-                        <p className="text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mt-0.5">
+                        <h3 className="text-xl font-black text-white uppercase tracking-wider">{displayName}</h3>
+                        <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-0.5">
                           {userData.role === "teacher" ? "Docente" : userData.role === "admin" ? "Administrador" : "Estudiante"}
                         </p>
                       </div>
@@ -184,32 +173,32 @@ export function Settings() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Nombre de Usuario</Label>
-                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Nombre de Usuario</Label>
+                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
                           <UserCheck size={16} className="text-[#0d971f]" />
                           <span>{userData.username || "No asignado"}</span>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Correo Electrónico</Label>
-                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold truncate">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Correo Electrónico</Label>
+                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold truncate">
                           <User size={16} className="text-[#d0b04d]" />
                           <span className="truncate">{userData.email || "No registrado"}</span>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Universidad</Label>
-                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Universidad</Label>
+                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
                           <School size={16} className="text-[#0d971f]" />
                           <span>{userData.school || "UCSM"}</span>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Grupo</Label>
-                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Grupo</Label>
+                        <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
                           <BookOpen size={16} className="text-[#d0b04d]" />
                           <span>{userData.classroom || "No asignada"}</span>
                         </div>
@@ -220,14 +209,14 @@ export function Settings() {
 
                 {/* --- TAB 2: CAMBIAR CONTRASEÑA --- */}
                 {activeTab === "password" && (
-                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/80 dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200/80 dark:border-white/5 shadow-xl dark:shadow-2xl">
-                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-200 dark:border-white/5">
+                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl">
+                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/5">
                       <div className="w-12 h-12 rounded-2xl bg-[#0d971f]/10 border border-[#0d971f]/20 flex items-center justify-center text-[#0d971f]">
                         <KeyRound size={24} />
                       </div>
                       <div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Actualizar Credencial</h3>
-                        <p className="text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mt-0.5">Ingresa tu contraseña actual y define tu nueva clave de acceso.</p>
+                        <h3 className="text-xl font-black text-white uppercase tracking-wider">Actualizar Credencial</h3>
+                        <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-0.5">Ingresa tu contraseña actual y define tu nueva clave de acceso.</p>
                       </div>
                     </div>
 
@@ -235,43 +224,43 @@ export function Settings() {
                       {passMessage && (
                         <div className={`p-4 rounded-2xl text-xs font-bold uppercase tracking-wider ${
                           passMessage.type === "success" 
-                            ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-600 dark:text-emerald-400" 
-                            : "bg-red-500/20 border border-red-500/40 text-red-600 dark:text-red-400"
+                            ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" 
+                            : "bg-red-500/20 border border-red-500/40 text-red-400"
                         }`}>
                           {passMessage.text}
                         </div>
                       )}
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Contraseña Actual</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Contraseña Actual</Label>
                         <Input
                           type="password"
                           placeholder="••••••••"
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold focus:border-[#0d971f]"
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#0d971f]"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Nueva Contraseña (mínimo 8 caracteres)</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Nueva Contraseña (mínimo 8 caracteres)</Label>
                         <Input
                           type="password"
                           placeholder="••••••••"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold focus:border-[#0d971f]"
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#0d971f]"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 ml-2">Confirmar Nueva Contraseña</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Confirmar Nueva Contraseña</Label>
                         <Input
                           type="password"
                           placeholder="••••••••"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold focus:border-[#0d971f]"
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#0d971f]"
                         />
                       </div>
 
@@ -283,59 +272,6 @@ export function Settings() {
                         {passLoading ? "Guardando..." : "Actualizar Contraseña"}
                       </Button>
                     </form>
-                  </MagicCard>
-                )}
-
-                {/* --- TAB 3: TEMA / APARIENCIA --- */}
-                {activeTab === "theme" && (
-                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/80 dark:bg-white/[0.02] backdrop-blur-3xl border border-slate-200/80 dark:border-white/5 shadow-xl dark:shadow-2xl">
-                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-200 dark:border-white/5">
-                      <div className="w-12 h-12 rounded-2xl bg-[#0d971f]/10 border border-[#0d971f]/20 flex items-center justify-center text-[#0d971f]">
-                        <Palette size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-wider">Personalización de Apariencia</h3>
-                        <p className="text-xs text-slate-500 dark:text-white/40 font-bold uppercase tracking-widest mt-0.5">Selecciona el modo visual con el que prefieres trabajar.</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl">
-                      {/* Opción Tema Oscuro */}
-                      <button
-                        onClick={() => setTheme("dark")}
-                        className={`flex flex-col items-start gap-4 p-6 rounded-3xl border text-left transition-all duration-300 ${
-                          theme === "dark"
-                            ? "bg-[#0d971f]/10 border-[#0d971f] shadow-[0_0_25px_rgba(13,151,31,0.2)]"
-                            : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded-2xl bg-[#032318] border border-white/10 flex items-center justify-center text-[#baef00]">
-                          <Moon size={20} />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">Modo Oscuro</h4>
-                          <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium">Tonos verdes oscuros institucionales adaptados para reducir fatiga visual.</p>
-                        </div>
-                      </button>
-
-                      {/* Opción Tema Claro */}
-                      <button
-                        onClick={() => setTheme("light")}
-                        className={`flex flex-col items-start gap-4 p-6 rounded-3xl border text-left transition-all duration-300 ${
-                          theme === "light"
-                            ? "bg-[#0d971f]/10 border-[#0d971f] shadow-[0_0_25px_rgba(13,151,31,0.2)]"
-                            : "bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20"
-                        }`}
-                      >
-                        <div className="w-10 h-10 rounded-2xl bg-white border border-slate-300 flex items-center justify-center text-[#d0b04d]">
-                          <Sun size={20} />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">Modo Claro</h4>
-                          <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium">Paleta luminosa basada en tonos dorados y acentos claros.</p>
-                        </div>
-                      </button>
-                    </div>
                   </MagicCard>
                 )}
 
