@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import React, { useState, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -50,7 +50,7 @@ const MessageBubble = React.memo(({ message }: { message: Message }) => {
       className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 pointer-events-auto`}
     >
       <div className={`flex gap-3 max-w-[85%] ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-        <Avatar className={`w-8 h-8 border ${isUser ? "border-[#d0b04d]/30" : "border-[#0d971f]/30"} shadow-lg shrink-0`}>
+        <Avatar className={`w-8 h-8 border ${isUser ? "border-[#b8860b]/50" : "border-[#0d971f]/50"} shadow-lg shrink-0`}>
           <AvatarImage src={isUser ? "https://i.pravatar.cc/150?u=user" : "/eleonor_avatar.png"} />
           <AvatarFallback className="bg-transparent font-black text-[9px] text-white italic">{isUser ? "YO" : "EL"}</AvatarFallback>
         </Avatar>
@@ -59,18 +59,18 @@ const MessageBubble = React.memo(({ message }: { message: Message }) => {
           <div className={`
             p-4 rounded-2xl 
             ${isUser ?
-              "bg-[#0d971f]/20 border border-[#0d971f]/30 text-white rounded-tr-none" :
-              "bg-black/60 border border-white/10 text-white rounded-tl-none backdrop-blur-md"}
+              "bg-[#0d971f]/20 border border-[#0d971f]/40 text-white rounded-tr-none" :
+              "bg-black/60 border border-[#b8860b]/30 text-white rounded-tl-none backdrop-blur-md"}
             shadow-xl relative group
           `}>
             {!isUser && (
-              <div className="absolute -top-2.5 left-4 px-2 py-0.5 bg-[#0d971f] rounded-full text-[7px] font-black uppercase tracking-widest text-white z-10 shadow-[0_0_8px_rgba(13,151,31,0.5)]">
+              <div className="absolute -top-2.5 left-4 px-2 py-0.5 bg-[#b8860b] rounded-full text-[7px] font-black uppercase tracking-widest text-black z-10 shadow-[0_0_8px_rgba(184,134,11,0.5)]">
                 Alpha
               </div>
             )}
             <p className="text-xs leading-relaxed font-medium uppercase tracking-wider">
               {message.content}
-              {message.isStreaming && <span className="inline-block w-1.5 h-3 ml-1 bg-[#0d971f] animate-pulse align-middle" />}
+              {message.isStreaming && <span className="inline-block w-1.5 h-3 ml-1 bg-[#b8860b] animate-pulse align-middle" />}
             </p>
           </div>
           <span className="text-[7px] font-black text-white/40 uppercase tracking-widest px-1">
@@ -115,12 +115,12 @@ const ChatInput = React.memo(({ onSend, isListening, onToggleListening, isProces
   const counterColor = isVeryNearLimit
     ? "text-red-500 font-black animate-pulse"
     : isNearLimit
-      ? "text-yellow-500 font-bold"
+      ? "text-[#b8860b] font-bold"
       : "text-white/30"
 
   return (
     <div className="max-w-xl mx-auto relative group w-full pointer-events-auto">
-      <div className="relative flex flex-col p-1.5 pl-4 pr-2 rounded-[2rem] bg-black/80 border border-white/10 backdrop-blur-xl focus-within:border-[#0d971f]/50 transition-all shadow-2xl">
+      <div className="relative flex flex-col p-1.5 pl-4 pr-2 rounded-[2rem] bg-black/80 border border-[#b8860b]/30 backdrop-blur-xl focus-within:border-[#b8860b]/70 transition-all shadow-2xl">
         <div className="flex items-end gap-2">
           <Textarea
             value={input}
@@ -141,7 +141,7 @@ const ChatInput = React.memo(({ onSend, isListening, onToggleListening, isProces
               variant="ghost"
               size="icon"
               onClick={() => onToggleListening(!isListening)}
-              className={`w-8 h-8 rounded-full transition-all ${isListening ? "bg-red-500/80 text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
+              className={`w-8 h-8 rounded-full transition-all ${isListening ? "bg-red-500/80 text-white animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.5)]" : "bg-white/5 text-[#b8860b] hover:bg-[#b8860b]/20"}`}
             >
               {isListening ? (
                 <div className="relative">
@@ -504,26 +504,26 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       {/* HUD Superior */}
       <div className="z-[100] fixed top-2 left-64 md:left-72 right-4 md:right-8 flex pointer-events-auto">
         <BlurFade delay={0.1} className="w-full">
-          <div className="w-full flex items-center justify-between gap-8 px-8 py-3.5 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-3xl shadow-2xl">
+          <div className="w-full flex items-center justify-between gap-8 px-8 py-3.5 rounded-2xl bg-black/40 border border-[#b8860b]/30 backdrop-blur-3xl shadow-2xl">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2"></div>
               <EleonorHistory messages={messages} />
             </div>
 
             <div className="flex items-center gap-4">
-              <Button size="icon" variant="outline" className="w-10 h-10 rounded-xl bg-white/5 border-white/10 text-white/40 hover:text-white" onClick={() => setIsSpeaking(!isSpeaking)}>
+              <Button size="icon" variant="outline" className="w-10 h-10 rounded-xl bg-white/5 border-[#b8860b]/30 text-[#b8860b] hover:text-white hover:bg-[#b8860b]/20" onClick={() => setIsSpeaking(!isSpeaking)}>
                 {isSpeaking ? <Volume2 size={18} /> : <VolumeX size={18} />}
               </Button>
               <Button
                 size="icon"
                 variant="outline"
-                className="w-10 h-10 rounded-xl bg-[#0d971f]/20 border-[#0d971f]/40 text-[#0d971f] hover:bg-[#0d971f]/30 transition-all"
+                className="w-10 h-10 rounded-xl bg-[#b8860b]/20 border-[#b8860b]/50 text-[#b8860b] hover:bg-[#b8860b]/30 transition-all"
                 onClick={triggerDebugGame}
                 title="Debug Game"
               >
                 <Gamepad2 size={18} />
               </Button>
-              <Button size="icon" variant="outline" className="w-10 h-10 rounded-xl bg-white/5 border-white/10 text-white/40 hover:text-white">
+              <Button size="icon" variant="outline" className="w-10 h-10 rounded-xl bg-white/5 border-[#b8860b]/30 text-[#b8860b] hover:text-white hover:bg-[#b8860b]/20">
                 <RotateCcw size={18} />
               </Button>
             </div>
@@ -531,7 +531,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
         </BlurFade>
       </div>
 
-      {/* Area Central: Mensajes (CONTENEDOR 100% TRANSPARENTE, SIN RECUADRO NEGRO) */}
+      {/* Area Central: Mensajes */}
       <div className="flex-1 flex flex-col justify-center items-center relative z-[10] px-4 w-full min-h-0 bg-transparent pointer-events-none">
         <div className="w-full max-w-xl mx-auto flex flex-col justify-center h-full bg-transparent">
           <ScrollArea className="flex-1 max-h-[30vh] md:max-h-[25vh] pr-4 pointer-events-auto bg-transparent [&>[data-radix-scroll-area-viewport]]:bg-transparent" ref={scrollRef}>
@@ -552,12 +552,12 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(13,151,31,0.4)" }}
+            whileHover={{ scale: 1.03, boxShadow: "0 0 15px rgba(184,134,11,0.4)" }}
             whileTap={{ scale: 0.98 }}
             onClick={handleExplainErrors}
-            className="px-4 py-2 rounded-full bg-black/60 border border-[#0d971f]/40 text-[#0d971f] hover:text-white hover:bg-[#0d971f]/20 backdrop-blur-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 rounded-full bg-black/60 border border-[#b8860b]/50 text-[#b8860b] hover:text-white hover:bg-[#b8860b]/20 backdrop-blur-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg flex items-center gap-2 cursor-pointer"
           >
-            <Activity size={12} className="animate-pulse text-[#d0b04d]" />
+            <Activity size={12} className="animate-pulse text-[#b8860b]" />
             ¿Cuáles fueron mis errores del último examen?
           </motion.button>
         )}
@@ -600,8 +600,8 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(13,151,31,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(13,151,31,0.3); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(184,134,11,0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(184,134,11,0.5); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </div>

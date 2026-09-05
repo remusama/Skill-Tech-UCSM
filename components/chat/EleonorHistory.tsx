@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React from "react";
 import {
@@ -39,7 +39,7 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
                             : 'bg-white/5 text-white/50 border-white/10 hover:text-white hover:bg-white/10 hover:border-white/20'
                     }`}
                 >
-                    <History className={`w-3.5 h-3.5 mr-2 ${isHistoryOpen ? 'text-white' : 'text-[#d0b04d]'}`} />
+                    <History className={`w-3.5 h-3.5 mr-2 ${isHistoryOpen ? 'text-white' : 'text-[#b8860b]'}`} />
                     Historial
                 </button>
             </SheetTrigger>
@@ -50,11 +50,11 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
                 <SheetHeader className="p-6 border-b border-white/5 relative">
                     <button 
                         onClick={() => setHistoryOpen(false)}
-                        className="absolute right-6 top-6 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-[#d0b04d] hover:bg-[#0d971f]/10 hover:border-[#0d971f]/40 transition-all cursor-pointer"
+                        className="absolute right-6 top-6 w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-[#b8860b] hover:bg-[#0d971f]/10 hover:border-[#0d971f]/40 transition-all cursor-pointer"
                     >
                         ✕
                     </button>
-                    <SheetTitle className="text-[#d0b04d] flex items-center gap-3 text-xl font-black uppercase tracking-tighter">
+                    <SheetTitle className="text-[#b8860b] flex items-center gap-3 text-xl font-black uppercase tracking-tighter">
                         <div className="p-2 rounded-xl bg-[#0d971f]/10 border border-[#0d971f]/20">
                             <History className="w-5 h-5 text-[#0d971f]" />
                         </div>
@@ -70,15 +70,15 @@ export function EleonorHistory({ messages }: EleonorHistoryProps) {
                         {messages.map((message) => (
                             <div key={message.id} className="relative group">
                                 <div className={`flex items-center gap-3 mb-2 ${message.role === "assistant" ? "flex-row" : "flex-row-reverse text-right"}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${message.role === "assistant" ? "bg-[#0d971f]/20 border-[#0d971f]/40" : "bg-[#d0b04d]/20 border-[#d0b04d]/40"
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border ${message.role === "assistant" ? "bg-[#0d971f]/20 border-[#0d971f]/40" : "bg-[#b8860b]/20 border-[#b8860b]/40"
                                         }`}>
                                         {message.role === "assistant" ? (
                                             <Bot className="w-3.5 h-3.5 text-[#0d971f]" />
                                         ) : (
-                                            <User className="w-3.5 h-3.5 text-[#d0b04d]" />
+                                            <User className="w-3.5 h-3.5 text-[#b8860b]" />
                                         )}
                                     </div>
-                                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${message.role === "assistant" ? "text-[#0d971f]" : "text-[#d0b04d]"
+                                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${message.role === "assistant" ? "text-[#0d971f]" : "text-[#b8860b]"
                                         }`}>
                                         {message.role === "assistant" ? "Unidad Eleonor" : "Sujeto de Prueba"}
                                     </span>
