@@ -14,6 +14,7 @@ export const personalAreas = [
         exams: [
             { id: "lewin-33", title: "Test de Liderazgo — Kurt Lewin", professor: "Kurt Lewin (33 ítems A/D)", duration: "15 min", questions: 33, date: "Siempre", status: "(Ingenieros trabajando)", disabled: true, difficulty: 50 },
             { id: "neo-240", title: "NEO PI-R — Personalidad (240 ítems)", professor: "Costa & McCrae — requiere licencia TEA/PAR o IPIP-NEO", duration: "40 min", questions: 240, date: "Siempre", status: "(Ingenieros trabajando)", disabled: true, difficulty: 50 },
+            { id: "ccl-36", title: "Cuestionario de Competencias de Liderazgo (CCL)", professor: "Marco de Goleman — instrumento de elaboración propia (36 ítems)", duration: "15 min", questions: 36, date: "Siempre", status: "Disponible", difficulty: 40 },
         ],
     },
     {
