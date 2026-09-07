@@ -32,7 +32,7 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [userRole, setUserRole] = useState("student")
 
-  const { hide: hideEleonor, setPage, preload, presence, isGuideActive } = useEleonor()
+  const { hide: hideEleonor, setPage, preload, presence, isGuideActive, enterPresence } = useEleonor()
   const showEleonorColumn = currentPage === "assistant" || isGuideActive || presence === "GUIDE_ACTIVE"
 
   // Verificar si hay una sesión activa al cargar
@@ -135,6 +135,9 @@ export default function Home() {
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false)
     setCurrentPage("assistant")
+    setPage("assistant")
+    enterPresence("INTRO_DONE")
+    enterPresence("INTERVENTION")
 
     // Persistir estado en backend y localStorage
     const token = localStorage.getItem("eleonor_token")

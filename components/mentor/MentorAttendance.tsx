@@ -406,7 +406,8 @@ export function MentorAttendance() {
         s.username.toLowerCase().includes(statsSearchTerm.toLowerCase())
     )
 
-    // Recharts benchmarking theme styles
+   // Recharts benchmarking theme styles
+// Recharts benchmarking theme styles
     const colors = {
         grid: "rgba(255, 255, 255, 0.05)",
         text: "rgba(255, 255, 255, 0.4)",
@@ -421,7 +422,7 @@ export function MentorAttendance() {
     ] : []
 
     const statusColors: Record<string, string> = {
-        presente: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        presente: "text-[#0a6b17] bg-[#0a6b17]/10 border-[#0a6b17]/20",
         tardanza: "text-amber-400 bg-amber-500/10 border-amber-500/20",
         falta: "text-rose-400 bg-rose-500/10 border-rose-500/20",
     }
@@ -429,8 +430,8 @@ export function MentorAttendance() {
     return (
         <div className="min-h-screen p-4 md:p-12 bg-transparent relative overflow-hidden text-white">
             {/* Ambient background glows */}
-            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#B500D1]/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#0a6b17]/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-slate-500/10 rounded-full blur-[120px] pointer-events-none" />
 
             <div className="max-w-7xl mx-auto relative z-10 space-y-12 pb-20">
                 {/* Header */}
@@ -441,7 +442,7 @@ export function MentorAttendance() {
                                 ASISTENCIAS
                             </MagicTitle>
                             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl mt-2 w-fit">
-                                <Calendar size={14} className="text-[#B500D1]" />
+                                <Calendar size={14} className="text-[#0a6b17]" />
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Registro QR & NFC - Módulo Docente</span>
                             </div>
                         </div>
@@ -456,7 +457,7 @@ export function MentorAttendance() {
                             </Button>
                             <Button
                                 onClick={() => setShowCreateModal(true)}
-                                className="bg-[#B500D1] hover:bg-[#B500D1]/80 text-white rounded-2xl h-12 px-6 font-black uppercase tracking-widest shadow-[0_0_20px_rgba(181,0,209,0.3)] transition-all active:scale-95 flex items-center gap-2"
+                                className="bg-[#0a6b17] hover:bg-[#085512] text-white rounded-2xl h-12 px-6 font-black uppercase tracking-widest shadow-[0_0_20px_rgba(10,107,23,0.3)] transition-all active:scale-95 flex items-center gap-2"
                             >
                                 <Plus size={16} />
                                 Nueva Clase
@@ -470,21 +471,21 @@ export function MentorAttendance() {
                     <div className="mb-12 bg-white/5 border border-white/5 p-1.5 rounded-[2.5rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full">
                         <button
                             onClick={() => { setActiveTab("classes"); setSelectedClassId(null); setClassDetail(null) }}
-                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "classes" ? "bg-[#B500D1] text-white shadow-[0_0_20px_rgba(181,0,209,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "classes" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
                         >
                             <Calendar size={16} />
                             Clases y Sesiones
                         </button>
                         <button
                             onClick={() => setActiveTab("scanner")}
-                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "scanner" ? "bg-[#B500D1] text-white shadow-[0_0_20px_rgba(181,0,209,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "scanner" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
                         >
                             <QrCode size={16} />
                             Escanear Entrada
                         </button>
                         <button
                             onClick={() => { setActiveTab("benchmarking"); setSelectedStudentId(null); setStudentStats(null) }}
-                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "benchmarking" ? "bg-[#B500D1] text-white shadow-[0_0_20px_rgba(181,0,209,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "benchmarking" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
                         >
                             <BarChart3 size={16} />
                             Análisis / Benchmarking
@@ -507,7 +508,7 @@ export function MentorAttendance() {
                                         <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest px-1">Clases Recientes</h3>
                                         {loading ? (
                                             <div className="flex items-center justify-center py-20">
-                                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500" />
+                                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0a6b17]" />
                                             </div>
                                         ) : classes.length === 0 ? (
                                             <div className="text-center py-20 bg-white/5 border border-white/5 rounded-[2rem] text-gray-500 text-sm">
@@ -522,16 +523,16 @@ export function MentorAttendance() {
                                                             key={c.id}
                                                             whileHover={{ x: 4 }}
                                                             onClick={() => setSelectedClassId(c.id)}
-                                                            className={`p-5 rounded-[2rem] border transition-all duration-300 cursor-pointer ${isSelected ? "bg-gradient-to-r from-purple-500/20 to-cyan-500/10 border-purple-500/35 shadow-lg" : "bg-white/[0.03] border-white/5 hover:border-white/15"}`}
+                                                            className={`p-5 rounded-[2rem] border transition-all duration-300 cursor-pointer ${isSelected ? "bg-gradient-to-r from-[#0a6b17]/20 to-slate-500/10 border-[#0a6b17]/35 shadow-lg" : "bg-white/[0.03] border-white/5 hover:border-white/15"}`}
                                                         >
                                                             <div className="flex justify-between items-start">
                                                                 <div>
-                                                                    <span className="text-[9px] font-black uppercase text-purple-400 tracking-wider bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">${c.code}</span>
-                                                                    <h4 className="font-black text-white text-base tracking-wide italic mt-1.5 uppercase">${c.name}</h4>
-                                                                    <p className="text-xs text-gray-400 font-bold mt-1 uppercase">${c.group_name}</p>
+                                                                    <span className="text-[9px] font-black uppercase text-[#0a6b17] tracking-wider bg-[#0a6b17]/10 px-2.5 py-0.5 rounded-full border border-[#0a6b17]/20">{c.code}</span>
+                                                                    <h4 className="font-black text-white text-base tracking-wide italic mt-1.5 uppercase">{c.name}</h4>
+                                                                    <p className="text-xs text-gray-400 font-bold mt-1 uppercase">{c.group_name}</p>
                                                                 </div>
                                                                 {c.is_active ? (
-                                                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(74,229,74,0.5)]" />
+                                                                    <span className="w-2 h-2 rounded-full bg-[#0a6b17] animate-pulse shadow-[0_0_8px_rgba(10,107,23,0.5)]" />
                                                                 ) : (
                                                                     <span className="w-2 h-2 rounded-full bg-white/10" />
                                                                 )}
@@ -539,10 +540,10 @@ export function MentorAttendance() {
                                                             <div className="flex justify-between items-center mt-5 pt-3 border-t border-white/5 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
                                                                 <div className="flex items-center gap-1">
                                                                     <Clock size={11} className="text-gray-500" />
-                                                                    <span>${c.start_time} (Lim: ${c.late_time})</span>
+                                                                    <span>{c.start_time} (Lim: {c.late_time})</span>
                                                                 </div>
                                                                 {c.stats && (
-                                                                    <span className="text-[#B500D1]">${c.stats.rate}% Asistencia</span>
+                                                                    <span className="text-[#0a6b17]">{c.stats.rate}% Asistencia</span>
                                                                 )}
                                                             </div>
                                                         </motion.div>
@@ -557,7 +558,7 @@ export function MentorAttendance() {
                                         {loadingDetail ? (
                                             <MagicCard className="bg-white/5 border-white/5 p-12 rounded-[2.5rem] flex items-center justify-center min-h-[400px]">
                                                 <div className="flex flex-col items-center gap-4">
-                                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500" />
+                                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#0a6b17]" />
                                                     <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Cargando detalles de sesión...</p>
                                                 </div>
                                             </MagicCard>
@@ -566,9 +567,9 @@ export function MentorAttendance() {
                                                 {/* Header Stats */}
                                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5">
                                                     <div>
-                                                        <span className="text-[9px] font-black uppercase text-purple-400 tracking-[0.2em]">${classDetail.code}</span>
-                                                        <h2 className="text-3xl font-black text-white italic uppercase tracking-tight mt-1">${classDetail.name}</h2>
-                                                        <p className="text-xs text-gray-500 font-bold mt-1 uppercase">Clase para: ${classDetail.group_name} (${classDetail.date})</p>
+                                                        <span className="text-[9px] font-black uppercase text-[#0a6b17] tracking-[0.2em]">{classDetail.code}</span>
+                                                        <h2 className="text-3xl font-black text-white italic uppercase tracking-tight mt-1">{classDetail.name}</h2>
+                                                        <p className="text-xs text-gray-500 font-bold mt-1 uppercase">Clase para: {classDetail.group_name} ({classDetail.date})</p>
                                                     </div>
 
                                                     <Button
@@ -576,7 +577,7 @@ export function MentorAttendance() {
                                                             setScannedClassCode(classDetail.code)
                                                             setActiveTab("scanner")
                                                         }}
-                                                        className="bg-cyan-500 hover:bg-cyan-500/80 text-black font-black uppercase tracking-widest rounded-2xl h-12 px-6 flex items-center gap-2 self-start md:self-auto"
+                                                        className="bg-[#0a6b17] hover:bg-[#085512] text-white font-black uppercase tracking-widest rounded-2xl h-12 px-6 flex items-center gap-2 self-start md:self-auto"
                                                     >
                                                         <QrCode size={16} />
                                                         Escanear esta clase
@@ -588,25 +589,25 @@ export function MentorAttendance() {
                                                     <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                                                         <span className="text-[9px] text-gray-500 font-black uppercase tracking-wider block">Registrados</span>
                                                         <span className="text-2xl font-black text-white tracking-tighter mt-1 block">
-                                                            ${classDetail.records?.length || 0}
+                                                            {classDetail.records?.length || 0}
                                                         </span>
                                                     </div>
-                                                    <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10">
-                                                        <span className="text-[9px] text-emerald-400 font-black uppercase tracking-wider block">Presentes</span>
-                                                        <span className="text-2xl font-black text-emerald-400 tracking-tighter mt-1 block">
-                                                            ${classDetail.records?.filter(r => r.status === "presente").length || 0}
+                                                    <div className="p-4 rounded-2xl bg-[#0a6b17]/5 border border-[#0a6b17]/10">
+                                                        <span className="text-[9px] text-[#0a6b17] font-black uppercase tracking-wider block">Presentes</span>
+                                                        <span className="text-2xl font-black text-[#0a6b17] tracking-tighter mt-1 block">
+                                                            {classDetail.records?.filter(r => r.status === "presente").length || 0}
                                                         </span>
                                                     </div>
                                                     <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10">
                                                         <span className="text-[9px] text-amber-400 font-black uppercase tracking-wider block">Tardanzas</span>
                                                         <span className="text-2xl font-black text-amber-400 tracking-tighter mt-1 block">
-                                                            ${classDetail.records?.filter(r => r.status === "tardanza").length || 0}
+                                                            {classDetail.records?.filter(r => r.status === "tardanza").length || 0}
                                                         </span>
                                                     </div>
                                                     <div className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10">
                                                         <span className="text-[9px] text-rose-400 font-black uppercase tracking-wider block">Inasistencias</span>
                                                         <span className="text-2xl font-black text-rose-400 tracking-tighter mt-1 block">
-                                                            ${classDetail.records?.filter(r => r.status === "falta").length || 0}
+                                                            {classDetail.records?.filter(r => r.status === "falta").length || 0}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -622,12 +623,12 @@ export function MentorAttendance() {
                                                                     className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-2xl hover:bg-white/[0.04] transition-colors"
                                                                 >
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className="w-8 h-8 rounded-lg bg-[#B500D1]/10 border border-[#B500D1]/20 flex items-center justify-center text-[#B500D1] font-black text-sm uppercase">
-                                                                            ${r.student_name.substring(0, 1)}
+                                                                        <div className="w-8 h-8 rounded-lg bg-[#0a6b17]/10 border border-[#0a6b17]/20 flex items-center justify-center text-[#0a6b17] font-black text-sm uppercase">
+                                                                            {r.student_name.substring(0, 1)}
                                                                         </div>
                                                                         <div>
-                                                                            <h4 className="font-bold text-sm tracking-wide">${r.student_name}</h4>
-                                                                            <p className="text-[10px] text-gray-500 font-medium">@${r.student_username}</p>
+                                                                            <h4 className="font-bold text-sm tracking-wide">{r.student_name}</h4>
+                                                                            <p className="text-[10px] text-gray-500 font-medium">@{r.student_username}</p>
                                                                         </div>
                                                                     </div>
                                                                     <div className="flex items-center gap-4">
@@ -638,7 +639,7 @@ export function MentorAttendance() {
                                                                             </span>
                                                                         )}
                                                                         <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${statusColors[r.status]}`}>
-                                                                            ${r.status}
+                                                                            {r.status}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -662,23 +663,23 @@ export function MentorAttendance() {
                                 </div>
                             )}
 
-                            {/* TAB 2: SCANNER */}
+                          {/* TAB 2: SCANNER */}
                             {activeTab === "scanner" && (
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" onClick={handleScannerContainerClick}>
                                     {/* Left pane: Scanner interface */}
                                     <div className="lg:col-span-7 space-y-6">
-                                        <MagicCard className="bg-white/5 border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden">
+                                        <MagicCard className="bg-[#0B120E] border-white/10 p-8 rounded-[2.5rem] relative overflow-hidden">
                                             {/* Selector de clase */}
                                             <div className="space-y-2 mb-6">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Seleccionar Clase de Destino</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-[#A3B8B0]/60 ml-2">Seleccionar Clase de Destino</label>
                                                 <select
                                                     value={scannedClassCode}
                                                     onChange={(e) => setScannedClassCode(e.target.value)}
-                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#B500D1] text-sm text-white font-bold h-12"
+                                                    className="w-full bg-[#050A07] border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#00FF66] text-sm text-[#E2ECE8] font-bold h-12"
                                                 >
-                                                    <option value="" className="bg-[#110826] text-white">Selecciona una clase activa...</option>
+                                                    <option value="" className="bg-[#050A07] text-[#E2ECE8]">Selecciona una clase activa...</option>
                                                     {classes.map(c => (
-                                                        <option key={c.id} value={c.code} className="bg-[#110826] text-white">
+                                                        <option key={c.id} value={c.code} className="bg-[#050A07] text-[#E2ECE8]">
                                                             ${c.name} (${c.code}) - ${c.group_name}
                                                         </option>
                                                     ))}
@@ -686,17 +687,17 @@ export function MentorAttendance() {
                                             </div>
 
                                             {/* Selector de metodo QR/NFC */}
-                                            <div className="flex gap-3 mb-8 bg-white/5 p-1 rounded-2xl border border-white/5">
+                                            <div className="flex gap-3 mb-8 bg-[#050A07] p-1 rounded-2xl border border-white/10">
                                                 <button
                                                     onClick={() => setScanMethod("qr")}
-                                                    className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${scanMethod === "qr" ? "bg-[#B500D1] text-white" : "text-white/40 hover:text-white"}`}
+                                                    className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${scanMethod === "qr" ? "bg-[#00FF66] text-black shadow-[0_0_15px_rgba(0,255,102,0.3)]" : "text-[#A3B8B0]/50 hover:text-white"}`}
                                                 >
                                                     <QrCode size={14} />
                                                     Escáner QR
                                                 </button>
                                                 <button
                                                     onClick={() => setScanMethod("nfc")}
-                                                    className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${scanMethod === "nfc" ? "bg-[#B500D1] text-white" : "text-white/40 hover:text-white"}`}
+                                                    className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${scanMethod === "nfc" ? "bg-[#00FF66] text-black shadow-[0_0_15px_rgba(0,255,102,0.3)]" : "text-[#A3B8B0]/50 hover:text-white"}`}
                                                 >
                                                     <Rss size={14} />
                                                     Lector NFC
@@ -704,7 +705,7 @@ export function MentorAttendance() {
                                             </div>
 
                                             {/* SCAN VIEWPORT CONTAINER */}
-                                            <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/10 bg-black/40 flex flex-col items-center justify-center group shadow-2xl">
+                                            <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border border-white/10 bg-[#030604] flex flex-col items-center justify-center group shadow-2xl">
                                                 {/* Styles injection for the QR video stream */}
                                                 <style dangerouslySetInnerHTML={{__html: `
                                                     #qr-reader-container video {
@@ -746,30 +747,30 @@ export function MentorAttendance() {
                                                             className="absolute inset-0 flex flex-col items-center justify-center p-6"
                                                         >
                                                             {/* Simulated webcam viewer with tech HUD overlay */}
-                                                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.8)_100%)] z-10 pointer-events-none" />
-                                                            <div className="absolute inset-0 bg-cyan-500/[0.03] animate-pulse pointer-events-none" />
+                                                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(3,6,4,0.85)_100%)] z-10 pointer-events-none" />
+                                                            <div className="absolute inset-0 bg-[#00FF66]/[0.02] animate-pulse pointer-events-none" />
                                                             
                                                             {/* Hologram scan lines */}
-                                                            <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400/30 shadow-[0_0_8px_rgba(34,211,238,0.5)] animate-[scan_3s_infinite_linear] z-10 pointer-events-none" />
+                                                            <div className="absolute top-0 left-0 w-full h-[2px] bg-[#00FF66]/40 shadow-[0_0_8px_rgba(0,255,102,0.6)] animate-[scan_3s_infinite_linear] z-10 pointer-events-none" />
 
                                                             {/* Tech HUD frames */}
-                                                            <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-cyan-400 rounded-tl-lg pointer-events-none z-10" />
-                                                            <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-cyan-400 rounded-tr-lg pointer-events-none z-10" />
-                                                            <div className="absolute bottom-8 left-8 w-8 h-8 border-b-2 border-l-2 border-cyan-400 rounded-bl-lg pointer-events-none z-10" />
-                                                            <div className="absolute bottom-8 right-8 w-8 h-8 border-b-2 border-r-2 border-cyan-400 rounded-br-lg pointer-events-none z-10" />
+                                                            <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-[#00FF66] rounded-tl-lg pointer-events-none z-10" />
+                                                            <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-[#00FF66] rounded-tr-lg pointer-events-none z-10" />
+                                                            <div className="absolute bottom-8 left-8 w-8 h-8 border-b-2 border-l-2 border-[#00FF66] rounded-bl-lg pointer-events-none z-10" />
+                                                            <div className="absolute bottom-8 right-8 w-8 h-8 border-b-2 border-r-2 border-[#00FF66] rounded-br-lg pointer-events-none z-10" />
 
                                                             {cameraError ? (
-                                                                <div className="flex flex-col items-center justify-center p-6 text-center z-20 max-w-xs relative bg-black/60 backdrop-blur-md rounded-2xl border border-white/5">
-                                                                    <AlertTriangle className="text-rose-500 mb-3 animate-bounce" size={40} />
+                                                                <div className="flex flex-col items-center justify-center p-6 text-center z-20 max-w-xs relative bg-[#050A07]/90 backdrop-blur-md rounded-2xl border border-white/10">
+                                                                    <AlertTriangle className="text-rose-400 mb-3 animate-bounce" size={40} />
                                                                     <p className="text-xs text-rose-400 font-black uppercase tracking-widest mb-2">Error de Cámara</p>
-                                                                    <p className="text-[9px] text-gray-300 font-bold uppercase tracking-wider leading-relaxed">
+                                                                    <p className="text-[9px] text-[#A3B8B0]/70 font-bold uppercase tracking-wider leading-relaxed">
                                                                         {cameraError}
                                                                     </p>
                                                                 </div>
                                                             ) : (
                                                                 <>
-                                                                    <QrCode size={70} className="text-cyan-400/20 mb-4 animate-pulse relative z-10" />
-                                                                    <p className="text-[10px] font-black text-cyan-400/50 uppercase tracking-[0.3em] z-10 text-center max-w-xs">
+                                                                    <QrCode size={70} className="text-[#00FF66]/30 mb-4 animate-pulse relative z-10" />
+                                                                    <p className="text-[10px] font-black text-[#A3B8B0]/70 uppercase tracking-[0.3em] z-10 text-center max-w-xs">
                                                                         Apunta la cámara al código QR de la credencial
                                                                     </p>
                                                                 </>
@@ -784,27 +785,27 @@ export function MentorAttendance() {
                                                             className="absolute inset-0 flex flex-col items-center justify-center p-6"
                                                         >
                                                             {/* Simulated NFC receiver viewport */}
-                                                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(0,0,0,0.8)_100%)] z-10" />
-                                                            <div className="absolute inset-0 bg-[#B500D1]/[0.03] animate-pulse pointer-events-none" />
+                                                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(3,6,4,0.85)_100%)] z-10" />
+                                                            <div className="absolute inset-0 bg-[#00FF66]/[0.02] animate-pulse pointer-events-none" />
 
                                                             {/* Tech HUD frames */}
-                                                            <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-[#B500D1] rounded-tl-lg pointer-events-none z-10" />
-                                                            <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-[#B500D1] rounded-tr-lg pointer-events-none z-10" />
-                                                            <div className="absolute bottom-8 left-8 w-8 h-8 border-b-2 border-l-2 border-[#B500D1] rounded-bl-lg pointer-events-none z-10" />
-                                                            <div className="absolute bottom-8 right-8 w-8 h-8 border-b-2 border-r-2 border-[#B500D1] rounded-br-lg pointer-events-none z-10" />
+                                                            <div className="absolute top-8 left-8 w-8 h-8 border-t-2 border-l-2 border-[#00FF66] rounded-tl-lg pointer-events-none z-10" />
+                                                            <div className="absolute top-8 right-8 w-8 h-8 border-t-2 border-r-2 border-[#00FF66] rounded-tr-lg pointer-events-none z-10" />
+                                                            <div className="absolute bottom-8 left-8 w-8 h-8 border-b-2 border-l-2 border-[#00FF66] rounded-bl-lg pointer-events-none z-10" />
+                                                            <div className="absolute bottom-8 right-8 w-8 h-8 border-b-2 border-r-2 border-[#00FF66] rounded-br-lg pointer-events-none z-10" />
 
                                                             <div className="relative mb-6 z-10">
-                                                                <Rss size={70} className="text-[#B500D1]/30 animate-[ping_2s_infinite_linear]" />
-                                                                <Smartphone size={32} className="text-white absolute inset-0 m-auto" />
+                                                                <Rss size={70} className="text-[#00FF66]/40 animate-[ping_2s_infinite_linear]" />
+                                                                <Smartphone size={32} className="text-[#E2ECE8] absolute inset-0 m-auto" />
                                                             </div>
-                                                            <p className="text-[10px] font-black text-[#B500D1] uppercase tracking-[0.3em] z-10 text-center max-w-xs">
+                                                            <p className="text-[10px] font-black text-[#00FF66] uppercase tracking-[0.3em] z-10 text-center max-w-xs">
                                                                 Lector NFC USB Activo
                                                             </p>
-                                                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1 z-10 text-center max-w-xs">
+                                                            <p className="text-[9px] text-[#A3B8B0]/50 font-bold uppercase tracking-widest mt-1 z-10 text-center max-w-xs">
                                                                 (Aproxima la tarjeta NFC al dispositivo lector físico)
                                                             </p>
                                                             {nfcInput && (
-                                                                <span className="text-[9px] px-2 py-0.5 bg-purple-500/20 text-[#B500D1] border border-purple-500/20 rounded font-mono mt-3 z-10 uppercase animate-pulse">
+                                                                <span className="text-[9px] px-2 py-0.5 bg-[#00FF66]/20 text-[#00FF66] border border-[#00FF66]/20 rounded font-mono mt-3 z-10 uppercase animate-pulse">
                                                                     Leyendo tarjeta...
                                                                 </span>
                                                             )}
@@ -819,15 +820,15 @@ export function MentorAttendance() {
                                                             initial={{ opacity: 0 }}
                                                             animate={{ opacity: 1 }}
                                                             exit={{ opacity: 0 }}
-                                                            className={`absolute inset-0 flex flex-col items-center justify-center z-20 ${scanFeedback.status === "tardanza" ? "bg-amber-500/90" : "bg-emerald-500/90"} text-black p-8 text-center`}
+                                                            className={`absolute inset-0 flex flex-col items-center justify-center z-20 ${scanFeedback.status === "tardanza" ? "bg-amber-500/90" : "bg-[#00FF66]/95"} text-black p-8 text-center`}
                                                         >
-                                                            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-4">
-                                                                <Check size={36} className="text-white" />
+                                                            <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center mb-4">
+                                                                <Check size={36} className="text-black" />
                                                             </div>
-                                                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/80">ASISTENCIA REGISTRADA</span>
-                                                            <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white mt-1">${scanFeedback.student}</h3>
-                                                            <p className="text-sm text-white font-bold uppercase mt-2 tracking-wide">${scanFeedback.message}</p>
-                                                            <span className="text-[10px] font-black uppercase px-4 py-1.5 bg-black/20 text-white rounded-full mt-4 border border-white/10 tracking-widest">
+                                                            <span className="text-[11px] font-black uppercase tracking-[0.3em] text-black/70">ASISTENCIA REGISTRADA</span>
+                                                            <h3 className="text-3xl font-black uppercase italic tracking-tighter text-black mt-1">${scanFeedback.student}</h3>
+                                                            <p className="text-sm text-black font-bold uppercase mt-2 tracking-wide">${scanFeedback.message}</p>
+                                                            <span className="text-[10px] font-black uppercase px-4 py-1.5 bg-black/10 text-black rounded-full mt-4 border border-black/10 tracking-widest">
                                                                 ${scanFeedback.status.toUpperCase()}
                                                             </span>
                                                         </motion.div>
@@ -861,14 +862,14 @@ export function MentorAttendance() {
                                             {/* Audio toggle */}
                                             <div className="flex justify-between items-center mt-6">
                                                 <div className="flex items-center gap-2">
-                                                    <div className={`w-2 h-2 rounded-full ${scannerStatus === "scanning" ? "bg-amber-400 animate-pulse" : "bg-emerald-400"} animate-pulse shadow-md`} />
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+                                                    <div className={`w-2 h-2 rounded-full ${scannerStatus === "scanning" ? "bg-amber-400 animate-pulse" : "bg-[#00FF66]"} animate-pulse shadow-md`} />
+                                                    <span className="text-[10px] text-[#A3B8B0]/60 font-bold uppercase tracking-wider">
                                                         Lector en espera...
                                                     </span>
                                                 </div>
                                                 <button
                                                     onClick={() => setSoundEnabled(!soundEnabled)}
-                                                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                                                    className="flex items-center gap-1.5 text-xs text-[#A3B8B0]/60 hover:text-white transition-colors"
                                                 >
                                                     {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
                                                     <span className="text-[10px] font-bold uppercase tracking-widest">{soundEnabled ? "Audio ON" : "Mute"}</span>
@@ -880,29 +881,29 @@ export function MentorAttendance() {
                                     {/* Right pane: Quick Simulator Panel & Scan logs */}
                                     <div className="lg:col-span-5 space-y-6">
                                         {/* Simulator panel */}
-                                        <MagicCard className="bg-[#B500D1]/5 border-[#B500D1]/15 p-6 rounded-[2.5rem] relative overflow-hidden">
+                                        <MagicCard className="bg-[#0B120E] border-[#00FF66]/20 p-6 rounded-[2.5rem] relative overflow-hidden">
                                             <div className="absolute top-0 right-0 p-4 opacity-5">
-                                                <Play className="w-16 h-16 text-[#B500D1]" />
+                                                <Play className="w-16 h-16 text-[#00FF66]" />
                                             </div>
                                             <div className="flex items-center gap-2 mb-4">
-                                                <Play className="w-4 h-4 text-[#B500D1]" />
-                                                <span className="text-[10px] font-black text-[#B500D1] uppercase tracking-[0.2em]">PANEL DE SIMULACIÓN</span>
+                                                <Play className="w-4 h-4 text-[#00FF66]" />
+                                                <span className="text-[10px] font-black text-[#00FF66] uppercase tracking-[0.2em]">PANEL DE SIMULACIÓN</span>
                                             </div>
-                                            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mb-4 leading-normal">
+                                            <p className="text-[11px] text-[#A3B8B0]/70 font-bold uppercase tracking-wider mb-4 leading-normal">
                                                 Utiliza este panel para simular el escaneo de credenciales de alumnos rápidamente sin lector NFC ni cámara.
                                             </p>
 
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Seleccionar Alumno</label>
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#A3B8B0]/60 ml-2">Seleccionar Alumno</label>
                                                     <select
                                                         value={simulatedStudentId}
                                                         onChange={(e) => setSimulatedStudentId(e.target.value)}
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#B500D1] text-xs text-white font-bold h-12"
+                                                        className="w-full bg-[#050A07] border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#00FF66] text-xs text-[#E2ECE8] font-bold h-12"
                                                     >
-                                                        <option value="" className="bg-[#110826] text-white">Elige un alumno a simular...</option>
+                                                        <option value="" className="bg-[#050A07] text-[#E2ECE8]">Elige un alumno a simular...</option>
                                                         {students.map(s => (
-                                                            <option key={s.id} value={s.id} className="bg-[#110826] text-white">
+                                                            <option key={s.id} value={s.id} className="bg-[#050A07] text-[#E2ECE8]">
                                                                 ${s.full_name} (@${s.username})
                                                             </option>
                                                         ))}
@@ -912,7 +913,7 @@ export function MentorAttendance() {
                                                 <Button
                                                     onClick={triggerSimulatedScan}
                                                     disabled={!simulatedStudentId || !scannedClassCode}
-                                                    className="w-full bg-gradient-to-r from-purple-600 to-[#B500D1] text-white font-black uppercase tracking-widest rounded-2xl h-12 transition-all active:scale-95 disabled:opacity-40"
+                                                    className="w-full bg-[#00FF66] text-black hover:bg-[#00e65c] font-black uppercase tracking-widest rounded-2xl h-12 transition-all active:scale-95 disabled:opacity-40 shadow-[0_0_20px_rgba(0,255,102,0.2)] hover:shadow-[0_0_25px_rgba(0,255,102,0.4)]"
                                                 >
                                                     Simular Escaneo Completo
                                                 </Button>
@@ -920,25 +921,25 @@ export function MentorAttendance() {
                                         </MagicCard>
 
                                         {/* Scan History logs */}
-                                        <MagicCard className="bg-white/5 border-white/5 p-6 rounded-[2.5rem]">
-                                            <h3 className="text-xs font-black uppercase tracking-widest text-white/40 mb-4 px-1">Historial del Escáner (Sesión)</h3>
+                                        <MagicCard className="bg-[#0B120E] border-white/10 p-6 rounded-[2.5rem]">
+                                            <h3 className="text-xs font-black uppercase tracking-widest text-[#A3B8B0]/60 mb-4 px-1">Historial del Escáner (Sesión)</h3>
                                             <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
                                                 {scanHistory.length === 0 ? (
-                                                    <div className="text-center py-10 opacity-30 italic text-xs">
+                                                    <div className="text-center py-10 opacity-30 italic text-xs text-[#A3B8B0]">
                                                         Esperando lecturas de QR o NFC...
                                                     </div>
                                                 ) : (
                                                     scanHistory.map((log, idx) => (
                                                         <div
                                                             key={idx}
-                                                            className="flex items-center justify-between p-3.5 bg-white/[0.01] border border-white/[0.03] rounded-xl text-xs"
+                                                            className="flex items-center justify-between p-3.5 bg-[#050A07]/60 border border-white/5 rounded-xl text-xs"
                                                         >
                                                             <div>
                                                                 <div className="flex items-center gap-1.5">
-                                                                    <span className={`w-1.5 h-1.5 rounded-full ${log.success ? (log.status === "tardanza" ? "bg-amber-400" : "bg-emerald-400") : "bg-rose-500"}`} />
-                                                                    <span className="font-bold text-white uppercase">${log.student}</span>
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${log.success ? (log.status === "tardanza" ? "bg-amber-400" : "bg-[#00FF66]") : "bg-rose-500"}`} />
+                                                                    <span className="font-bold text-[#E2ECE8] uppercase">${log.student}</span>
                                                                 </div>
-                                                                <p className="text-[10px] text-gray-500 font-medium mt-0.5 uppercase">
+                                                                <p className="text-[10px] text-[#A3B8B0]/50 font-medium mt-0.5 uppercase">
                                                                     ${log.time} - ${log.method === "qr" ? "Código QR" : "Tarjeta NFC"}
                                                                 </p>
                                                             </div>
@@ -953,8 +954,7 @@ export function MentorAttendance() {
                                     </div>
                                 </div>
                             )}
-
-                            {/* TAB 3: BENCHMARKING */}
+                           {/* TAB 3: BENCHMARKING */}
                             {activeTab === "benchmarking" && (
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     {/* Left pane: Students List */}
@@ -966,7 +966,7 @@ export function MentorAttendance() {
                                                 placeholder="Buscar estudiante..."
                                                 value={statsSearchTerm}
                                                 onChange={(e) => setStatsSearchTerm(e.target.value)}
-                                                className="bg-white/5 border-white/10 rounded-2xl py-3 pl-12 pr-6 focus:outline-none focus:ring-1 focus:ring-[#B500D1] text-white w-full h-12 font-bold"
+                                                className="bg-white/5 border-white/10 rounded-2xl py-3 pl-12 pr-6 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-white w-full h-12 font-bold"
                                             />
                                         </div>
 
@@ -982,18 +982,18 @@ export function MentorAttendance() {
                                                         <div
                                                             key={s.id}
                                                             onClick={() => setSelectedStudentId(s.id)}
-                                                            className={`p-4 rounded-2xl border cursor-pointer transition-all duration-300 flex items-center justify-between ${isSelected ? "bg-gradient-to-r from-purple-500/20 to-cyan-500/10 border-purple-500/35" : "bg-white/[0.02] border-white/5 hover:border-white/12"}`}
+                                                            className={`p-4 rounded-2xl border cursor-pointer transition-all duration-300 flex items-center justify-between ${isSelected ? "bg-gradient-to-r from-emerald-500/20 to-cyan-500/10 border-emerald-500/35" : "bg-white/[0.02] border-white/5 hover:border-white/12"}`}
                                                         >
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-sm">
-                                                                    ${s.full_name.substring(0, 1)}
+                                                                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500/20 to-blue-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm">
+                                                                    {s.full_name.substring(0, 1)}
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="font-bold text-sm tracking-wide">${s.full_name}</h4>
-                                                                    <p className="text-[10px] text-gray-500 font-medium">@${s.username}</p>
+                                                                    <h4 className="font-bold text-sm tracking-wide">{s.full_name}</h4>
+                                                                    <p className="text-[10px] text-gray-500 font-medium">@{s.username}</p>
                                                                 </div>
                                                             </div>
-                                                            <ChevronRight size={14} className={isSelected ? "text-purple-400" : "text-gray-600"} />
+                                                            <ChevronRight size={14} className={isSelected ? "text-emerald-400" : "text-gray-600"} />
                                                         </div>
                                                     )
                                                 })
@@ -1006,7 +1006,7 @@ export function MentorAttendance() {
                                         {loadingStats ? (
                                             <MagicCard className="bg-white/5 border-white/5 p-12 rounded-[2.5rem] flex items-center justify-center min-h-[400px]">
                                                 <div className="flex flex-col items-center gap-4">
-                                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500" />
+                                                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500" />
                                                     <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Cargando métricas de asistencia...</p>
                                                 </div>
                                             </MagicCard>
@@ -1015,15 +1015,15 @@ export function MentorAttendance() {
                                                 {/* Comparative Benchmarking Chart Card */}
                                                 <MagicCard className="bg-white/5 border-white/5 p-8 md:p-10 rounded-[2.5rem]">
                                                     <div className="flex items-center gap-3 mb-6">
-                                                        <BarChart3 className="text-[#B500D1]" size={22} />
+                                                        <BarChart3 className="text-emerald-400" size={22} />
                                                         <div>
-                                                            <span className="text-[9px] font-black uppercase text-purple-400 tracking-[0.2em]">ANÁLISIS COMPARATIVO</span>
+                                                            <span className="text-[9px] font-black uppercase text-emerald-400 tracking-[0.2em]">ANÁLISIS COMPARATIVO</span>
                                                             <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mt-0.5">Benchmarking de Asistencia</h3>
                                                         </div>
                                                     </div>
 
                                                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-8 leading-normal">
-                                                        Rendimiento relativo de asistencia de <span className="text-white">${studentStats.student_name}</span> frente a la media del grupo o sistema de SkillTech.
+                                                        Rendimiento relativo de asistencia de <span className="text-white">{studentStats.student_name}</span> frente a la media del grupo o sistema de SkillTech.
                                                     </p>
 
                                                     <div className="h-[250px] w-full mt-4">
@@ -1047,7 +1047,7 @@ export function MentorAttendance() {
                                                                 <Legend wrapperStyle={{ paddingTop: 30, fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }} />
                                                                 <Bar
                                                                     dataKey="Estudiante"
-                                                                    fill="#B500D1"
+                                                                    fill="#10b981"
                                                                     radius={[12, 12, 0, 0]}
                                                                     barSize={60}
                                                                 />
@@ -1070,25 +1070,25 @@ export function MentorAttendance() {
                                                             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                                                 <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider block">Porcentaje</span>
                                                                 <span className="text-2xl font-black text-white tracking-tighter mt-1 block">
-                                                                    ${studentStats.stats.rate}%
+                                                                    {studentStats.stats.rate}%
                                                                 </span>
                                                             </div>
                                                             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                                                 <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider block">Presentes</span>
                                                                 <span className="text-2xl font-black text-emerald-400 tracking-tighter mt-1 block">
-                                                                    ${studentStats.stats.present}
+                                                                    {studentStats.stats.present}
                                                                 </span>
                                                             </div>
                                                             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                                                 <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider block">Tardanzas</span>
                                                                 <span className="text-2xl font-black text-amber-400 tracking-tighter mt-1 block">
-                                                                    ${studentStats.stats.tardy}
+                                                                    {studentStats.stats.tardy}
                                                                 </span>
                                                             </div>
                                                             <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                                                                 <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider block">Faltas</span>
                                                                 <span className="text-2xl font-black text-rose-400 tracking-tighter mt-1 block">
-                                                                    ${studentStats.stats.absent}
+                                                                    {studentStats.stats.absent}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1101,11 +1101,11 @@ export function MentorAttendance() {
                                                                 studentStats.history.map((h: any, idx: number) => (
                                                                     <div key={idx} className="flex justify-between items-center p-3 bg-white/[0.01] border border-white/[0.03] rounded-xl text-xs">
                                                                         <div>
-                                                                            <h4 className="font-bold text-white uppercase">${h.class_name}</h4>
-                                                                            <p className="text-[9px] text-gray-500 font-medium mt-0.5">${h.date}</p>
+                                                                            <h4 className="font-bold text-white uppercase">{h.class_name}</h4>
+                                                                            <p className="text-[9px] text-gray-500 font-medium mt-0.5">{h.date}</p>
                                                                         </div>
                                                                         <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded border ${statusColors[h.status]}`}>
-                                                                            ${h.status}
+                                                                            {h.status}
                                                                         </span>
                                                                     </div>
                                                                 ))
@@ -1146,9 +1146,9 @@ export function MentorAttendance() {
                             initial={{ scale: 0.95, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 20 }}
-                            className="w-full max-w-lg bg-[#110826] border border-white/10 rounded-[2.5rem] p-6 md:p-8 space-y-6 relative overflow-hidden"
+                            className="w-full max-w-lg bg-[#051c14] border border-emerald-500/20 rounded-[2.5rem] p-6 md:p-8 space-y-6 relative overflow-hidden"
                         >
-                            <div className="absolute top-[-20%] right-[-20%] w-[50%] h-[50%] bg-[#B500D1]/10 rounded-full blur-[60px] pointer-events-none" />
+                            <div className="absolute top-[-20%] right-[-20%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none" />
                             <div className="absolute bottom-[-20%] left-[-20%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
 
                             <div className="flex items-center justify-between relative z-10">
@@ -1165,7 +1165,7 @@ export function MentorAttendance() {
                                         value={className}
                                         onChange={e => setClassName(e.target.value)}
                                         placeholder="Ej: Clase de Algoritmos Avanzados"
-                                        className="h-12 rounded-2xl bg-white/5 border-white/10 focus:border-[#B500D1]/50 focus:ring-1 focus:ring-[#B500D1]/50 text-white font-bold"
+                                        className="h-12 rounded-2xl bg-white/5 border-white/10 focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 text-white font-bold"
                                         required
                                     />
                                 </div>
@@ -1175,13 +1175,13 @@ export function MentorAttendance() {
                                     <select
                                         value={selectedGroupId}
                                         onChange={(e) => setSelectedGroupId(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-[#B500D1]/50 text-sm text-white font-bold h-12"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 text-sm text-white font-bold h-12"
                                         required
                                     >
-                                        <option value="" className="bg-[#110826] text-white">Selecciona el grupo de alumnos...</option>
+                                        <option value="" className="bg-[#051c14] text-white">Selecciona el grupo de alumnos...</option>
                                         {groups.map(g => (
-                                            <option key={g.id} value={g.id} className="bg-[#110826] text-white">
-                                                ${g.name} (${g.student_count} alumnos)
+                                            <option key={g.id} value={g.id} className="bg-[#051c14] text-white">
+                                                {g.name} ({g.student_count} alumnos)
                                             </option>
                                         ))}
                                     </select>
@@ -1231,7 +1231,7 @@ export function MentorAttendance() {
                                     <Button
                                         type="submit"
                                         disabled={submitting}
-                                        className="h-12 px-8 bg-[#B500D1] hover:bg-[#B500D1]/80 text-white font-black uppercase tracking-widest rounded-2xl text-xs transition-all active:scale-95"
+                                        className="h-12 px-8 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest rounded-2xl text-xs transition-all active:scale-95"
                                     >
                                         {submitting ? "Creando..." : "Crear Clase"}
                                     </Button>

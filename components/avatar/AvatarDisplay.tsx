@@ -15,7 +15,7 @@ type CameraMode = 'INTRO' | 'GUIDE' | 'ASSISTANT' | 'HIDDEN' | 'DIAGNOSIS';
 
 const CAMERA_PRESETS: Record<CameraMode, { scale: number, xOffset: number, yOffset: number, opacity: number }> = {
     INTRO: {
-        scale: 1.8,
+        scale: 1.5,
         xOffset: 0,
         yOffset: 180, // "De muslos para arriba"
         opacity: 1,
@@ -502,7 +502,11 @@ const AvatarDisplay = () => {
     // Eventos (LipSync, Expresiones)
     useEffect(() => {
         const handleLipSync = (e: any) => {
-            currentVolume.current = e.detail?.volume || 0;
+            const vol = e.detail?.volume || 0;
+            currentVolume.current = vol;
+            if (vol === 0) {
+                vSmooth.current = 0;
+            }
             freqBands.current = {
                 bass: e.detail?.bass || 0,
                 mid: e.detail?.mid || 0,
@@ -587,9 +591,12 @@ const AvatarDisplay = () => {
                     }
                 }
 
-                // LipSync
-                vSmooth.current += (currentVolume.current - vSmooth.current) * 0.4;
-                const mouthOpen = Math.min(1.0, Math.pow(vSmooth.current, 1.2));
+                // LipSync Suave y Sutil (Apertura máxima acotada a 0.45 para evitar boca totalmente abierta)
+                vSmooth.current += (currentVolume.current - vSmooth.current) * 0.85;
+                if (currentVolume.current < 0.03) {
+                    vSmooth.current *= 0.5; // Cierre rápido de boca en silencios
+                }
+                const mouthOpen = Math.min(0.45, Math.pow(vSmooth.current, 1.4) * 0.6);
 
                 // LookAt Logic (Mouse Tracking / Gyro)
                 // 1. Suavizado (Lerp) de mirada ultra-rápida
@@ -794,11 +801,11 @@ const AvatarDisplay = () => {
                         justifyContent: 'center'
                     }}
                 >
-                    {/* Partículas (Solo en modo normal y no incrustado) */}
+                   {/* Partículas (Solo en modo normal y no incrustado) */}
                     {!isPip && isVisible && [...Array(window.innerWidth < 1024 ? 5 : 12)].map((_, i) => (
                         <motion.div
                             key={i}
-                            className="absolute rounded-full bg-cyan-400/20 blur-[1px]"
+                            className="absolute rounded-full bg-[#9b51e0]/20 blur-[1px]"
                             style={{
                                 width: Math.random() * 4 + 2,
                                 height: Math.random() * 4 + 2,
@@ -823,16 +830,16 @@ const AvatarDisplay = () => {
             {/* Error & Loading */}
             {error && cameraMode !== 'HIDDEN' && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-[110] p-6">
-                    <div className="bg-red-500/20 border border-red-500 p-6 rounded-2xl backdrop-blur-xl text-center">
-                        <p className="text-red-400 font-black mb-2 uppercase tracking-tighter">Fallo de Sistema</p>
-                        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-500 text-white rounded-xl text-xs font-black uppercase">Reiniciar</button>
+                    <div className="bg-red-500/20 border border-red-500/50 p-6 rounded-3xl backdrop-blur-xl text-center shadow-2xl">
+                        <p className="text-red-400 font-black mb-4 uppercase tracking-wider text-xs">Fallo de Sistema</p>
+                        <button onClick={() => window.location.reload()} className="px-6 py-3 bg-[#9b51e0] hover:bg-[#bb6bd9] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_rgba(155,81,224,0.4)] transition-all">Reiniciar</button>
                     </div>
                 </div>
             )}
             {isAuthorized && !isModelLoaded && !error && cameraMode !== 'HIDDEN' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10">
-                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-cyan-500 border-t-transparent mb-4" />
-                    <p className="text-[10px] font-black tracking-[0.2em] text-cyan-500 uppercase">{status}</p>
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md z-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#9b51e0] border-t-transparent mb-4 shadow-[0_0_15px_rgba(155,81,224,0.3)]" />
+                    <p className="text-[10px] font-black tracking-[0.3em] text-[#bb6bd9] uppercase">{status}</p>
                 </div>
             )}
         </div>
@@ -845,4 +852,3 @@ const AvatarDisplay = () => {
 };
 
 export default AvatarDisplay;
-

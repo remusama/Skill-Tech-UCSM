@@ -72,13 +72,13 @@ const StreamEdge = ({
         targetPosition,
     });
 
-    // Parse color from the string "from-emerald-400 to-cyan-500" or hex
-    let strokeColor = '#d946ef'; // Default Magenta
+    // Parse color using the updated palette (#baef00 primary, #cae13c accent, etc.)
+    let strokeColor = '#baef00'; // Default Primary (Lime)
     if (data?.color) {
-        if (data.color.includes('emerald') || data.color.includes('green')) strokeColor = '#34d399';
-        else if (data.color.includes('blue') || data.color.includes('cyan')) strokeColor = '#22d3ee';
-        else if (data.color.includes('purple') || data.color.includes('violet')) strokeColor = '#a855f7';
-        else if (data.color.includes('rose') || data.color.includes('red')) strokeColor = '#fb7185';
+        if (data.color.includes('emerald') || data.color.includes('green') || data.color.includes('lime') || data.color.includes('primary')) strokeColor = '#baef00';
+        else if (data.color.includes('accent') || data.color.includes('teal')) strokeColor = '#cae13c';
+        else if (data.color.includes('muted') || data.color.includes('slate')) strokeColor = '#80a880';
+        else if (data.color.includes('rose') || data.color.includes('red') || data.color.includes('destructive')) strokeColor = '#ef4444';
         else if (data.color.includes('yellow') || data.color.includes('amber')) strokeColor = '#facc15';
     }
 
@@ -112,11 +112,11 @@ const HolographicNode = ({ data, selected }: any) => {
     const isArea = data.type === 'area'
     const isMentor = data.type === 'mentor'
 
-    // Color determination
-    let colorClass = 'text-[#d946ef]';
-    let borderClass = 'border-[#d946ef]/50';
-    let bgGlow = 'bg-[#d946ef]/10';
-    let shadowGlow = 'shadow-[0_0_40px_-10px_rgba(217,70,239,0.5)]';
+    // Color determination aligned with theme variables
+    let colorClass = 'text-[hsl(74,100%,47%)]';
+    let borderClass = 'border-[hsl(74,100%,47%)]/50';
+    let bgGlow = 'bg-[hsl(74,100%,47%)]/10';
+    let shadowGlow = 'shadow-[0_0_40px_-10px_rgba(186,239,0,0.5)]';
 
     if (isRoot) {
         colorClass = 'text-white';
@@ -124,22 +124,21 @@ const HolographicNode = ({ data, selected }: any) => {
         bgGlow = 'bg-white/10';
         shadowGlow = 'shadow-[0_0_40px_-10px_rgba(255,255,255,0.5)]';
     } else if (data.color) {
-        // Simplistic mapping for Tailwind gradients descriptions to specific hexes for glow
-        if (data.color.includes('emerald') || data.color.includes('green')) {
-            colorClass = 'text-emerald-400';
-            borderClass = 'border-emerald-400/50';
-            bgGlow = 'bg-emerald-400/10';
-            shadowGlow = 'shadow-[0_0_40px_-10px_rgba(52,211,153,0.5)]';
-        } else if (data.color.includes('blue') || data.color.includes('cyan')) {
-            colorClass = 'text-cyan-400';
-            borderClass = 'border-cyan-400/50';
-            bgGlow = 'bg-cyan-400/10';
-            shadowGlow = 'shadow-[0_0_40px_-10px_rgba(34,211,238,0.5)]';
-        } else if (data.color.includes('purple') || data.color.includes('violet')) {
-            colorClass = 'text-purple-400';
-            borderClass = 'border-purple-400/50';
-            bgGlow = 'bg-purple-400/10';
-            shadowGlow = 'shadow-[0_0_40px_-10px_rgba(168,85,247,0.5)]';
+        if (data.color.includes('emerald') || data.color.includes('green') || data.color.includes('lime') || data.color.includes('primary')) {
+            colorClass = 'text-[hsl(74,100%,47%)]';
+            borderClass = 'border-[hsl(74,100%,47%)]/50';
+            bgGlow = 'bg-[hsl(74,100%,47%)]/10';
+            shadowGlow = 'shadow-[0_0_40px_-10px_rgba(186,239,0,0.5)]';
+        } else if (data.color.includes('accent') || data.color.includes('teal')) {
+            colorClass = 'text-[hsl(153,39%28%)]';
+            borderClass = 'border-[hsl(153,39%28%)]/50';
+            bgGlow = 'bg-[hsl(153,39%28%)]/10';
+            shadowGlow = 'shadow-[0_0_40px_-10px_rgba(202,225,60,0.5)]';
+        } else if (data.color.includes('muted') || data.color.includes('slate')) {
+            colorClass = 'text-[hsl(150,10%,80%)]';
+            borderClass = 'border-[hsl(150,10%,80%)]/50';
+            bgGlow = 'bg-[hsl(150,10%,80%)]/10';
+            shadowGlow = 'shadow-[0_0_40px_-10px_rgba(204,217,204,0.5)]';
         } else if (data.color.includes('yellow') || data.color.includes('amber')) {
             colorClass = 'text-yellow-400';
             borderClass = 'border-yellow-400/50';
@@ -174,11 +173,11 @@ const HolographicNode = ({ data, selected }: any) => {
                     borderClass,
                     bgGlow,
                     shadowGlow,
-                    selected ? "scale-110 brightness-125 ring-2 ring-offset-2 ring-offset-black ring-white/50" : "hover:scale-105"
+                    selected ? "scale-110 brightness-125 ring-2 ring-offset-2 ring-offset-[hsl(161,67%,9%)] ring-white/50" : "hover:scale-105"
                 )}>
                     <div className="absolute inset-0 opacity-20 bg-[url('/noise.svg')] mix-blend-overlay rounded-inherit pointer-events-none" />
 
-                    <div className={cn("relative z-10 p-2 rounded-xl mb-1", isRoot ? "" : "bg-black/20")}>
+                    <div className={cn("relative z-10 p-2 rounded-xl mb-1", isRoot ? "" : "bg-[hsl(161,67%,9%)]/40")}>
                         <Icon className={cn(isRoot ? "w-12 h-12" : isArea ? "w-8 h-8" : "w-5 h-5", colorClass, "drop-shadow-[0_0_10px_currentColor]")} />
                     </div>
 
@@ -201,7 +200,7 @@ const HolographicNode = ({ data, selected }: any) => {
                 {/* Label */}
                 <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 flex flex-col items-center text-center w-40 pointer-events-none z-20">
                     <div className={cn(
-                        "relative px-2 py-1 bg-[#050110]/90 border backdrop-blur-md rounded-md",
+                        "relative px-2 py-1 bg-[hsl(161,67%,9%)]/90 border backdrop-blur-md rounded-md shadow-xl",
                         borderClass
                     )}>
                         <span className={cn(
@@ -220,7 +219,6 @@ const HolographicNode = ({ data, selected }: any) => {
         </div>
     )
 }
-
 const nodeTypes = {
     holographic: HolographicNode
 }
@@ -478,14 +476,14 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
     }, [])
 
     return (
-        <div className="w-full h-full relative bg-[#03000a] rounded-[2rem] border border-white/5 overflow-hidden shadow-[0_0_100px_-20px_rgba(0,0,0,1)] group">
+        <div className="w-full h-full relative bg-[hsl(161,67%,9%)] rounded-[2rem] border border-[hsl(150,10%,80%)]/10 overflow-hidden shadow-[0_0_100px_-20px_rgba(0,0,0,1)] group">
             <style jsx global>{`
                 .react-flow__attribution { display: none !important; }
             `}</style>
 
             {/* Cinematic Background */}
             <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#03000a] to-[#03000a]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[hsl(120, 39%, 28%)]/20 viargb(8, 38, 14)%)] to-[hsl(138, 65%, 9%)]" />
                 <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-soft-light" />
                 <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
             </div>
@@ -493,12 +491,12 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
             {/* HUD Header */}
             <div className="absolute top-8 left-8 z-20 pointer-events-none">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="w-1 h-8 bg-gradient-to-b from-cyan-400 to-purple-600 rounded-full" />
+                    <div className="w-1 h-8 bg-gradient-to-b from-[hsl(74,100%,47%)] to-[hsl(120, 39%, 28%)] rounded-full" />
                     <div>
                         <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 italic uppercase tracking-tighter">
-                            SKILL<span className="text-purple-500">NEXUS</span>
+                            SKILL<span className="text-[hsl(74,100%,47%)]">NEXUS</span>
                         </h3>
-                        <p className="text-[9px] font-bold text-cyan-400 uppercase tracking-[0.4em]">Neural Mapping Interface v3.0</p>
+                        <p className="text-[9px] font-bold text-[hsl(74,100%,47%)] uppercase tracking-[0.4em]">Neural Mapping Interface v3.0</p>
                     </div>
                 </div>
             </div>
@@ -521,9 +519,9 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
 
             {/* CUSTOM CONTROLS OVERLAY */}
             <div className="absolute bottom-6 left-6 z-30 flex flex-col gap-2">
-                <Button onClick={() => zoomIn()} className="w-10 h-10 rounded-xl bg-[#050110]/80 border border-white/10 text-cyan-400 hover:bg-white/10 p-0 shadow-xl"><ZoomIn className="w-5 h-5" /></Button>
-                <Button onClick={() => zoomOut()} className="w-10 h-10 rounded-xl bg-[#050110]/80 border border-white/10 text-purple-400 hover:bg-white/10 p-0 shadow-xl"><ZoomOut className="w-5 h-5" /></Button>
-                <Button onClick={() => fitView()} className="w-10 h-10 rounded-xl bg-[#050110]/80 border border-white/10 text-white hover:bg-white/10 p-0 shadow-xl"><Maximize className="w-5 h-5" /></Button>
+                <Button onClick={() => zoomIn()} className="w-10 h-10 rounded-xl bg-[hsl(124, 65%, 9%)]/80 border border-white/10 text-[hsl(74,100%,47%)] hover:bg-white/10 p-0 shadow-xl"><ZoomIn className="w-5 h-5" /></Button>
+                <Button onClick={() => zoomOut()} className="w-10 h-10 rounded-xl bg-[hsl(124, 65%, 9%)]/80 border border-white/10 text-[hsl(120, 39%, 28%)] hover:bg-white/10 p-0 shadow-xl"><ZoomOut className="w-5 h-5" /></Button>
+                <Button onClick={() => fitView()} className="w-10 h-10 rounded-xl bg-[hsl(124, 65%, 9%)]/80 border border-white/10 text-white hover:bg-white/10 p-0 shadow-xl"><Maximize className="w-5 h-5" /></Button>
             </div>
 
             {/* Detail Sidebar - Glassmorphic */}
@@ -533,7 +531,7 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                         initial={{ x: "100%", opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: "100%", opacity: 0 }}
-                        className="absolute right-0 top-0 bottom-0 w-full md:w-[450px] bg-[#03000a]/90 backdrop-blur-3xl border-l border-white/10 p-8 md:p-12 z-50 flex flex-col shadow-[-50px_0_100px_rgba(0,0,0,1)] overflow-y-auto custom-scrollbar"
+                        className="absolute right-0 top-0 bottom-0 w-full md:w-[450px] bg-[hsl(161,67%,9%)]/90 backdrop-blur-3xl border-l border-white/10 p-8 md:p-12 z-50 flex flex-col shadow-[-50px_0_100px_rgba(0,0,0,1)] overflow-y-auto custom-scrollbar"
                     >
                         <button onClick={() => setSelectedNodeData(null)} className="absolute top-8 right-8 px-6 py-2.5 rounded-2xl bg-red-500/20 border-2 border-red-500/50 flex items-center gap-3 hover:bg-red-500/40 text-red-200 transition-all z-50 shadow-[0_0_20px_rgba(239,68,68,0.4)] group">
                             <span className="text-[11px] font-black uppercase tracking-widest">Cerrar</span>
@@ -556,19 +554,17 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                             <h2 className="text-4xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none text-center">
                                 {selectedNodeData.label}
                             </h2>
-                            <div className={cn("h-1 w-24 rounded-full bg-gradient-to-r", selectedNodeData.color || "from-purple-500 to-cyan-500")} />
+                            <div className={cn("h-1 w-24 rounded-full bg-gradient-to-r", selectedNodeData.color || "from-[hsl(74,100%,47%)] to-[hsl(120, 39%, 28%)]")} />
                         </div>
-
-                        {/* Progress Bar */}
+{/* Progress Bar */}
                         {(() => {
                             const diags = Array.isArray(selectedNodeData.diagnosis) ? selectedNodeData.diagnosis : (selectedNodeData.diagnosis ? [selectedNodeData.diagnosis] : []);
-                            // Count all separate evaluations as steps
                             const progress = Math.min(diags.length, 3);
                             return (
                                 <div className="mb-10 bg-white/[0.02] border border-white/5 rounded-3xl p-6 w-full">
                                     <div className="flex justify-between items-center mb-4 px-2">
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest leading-none mb-1">Hitos de Evaluación</span>
+                                            <span className="text-[10px] font-black text-[hsl(74,100%,47%)] uppercase tracking-widest leading-none mb-1">Hitos de Evaluación</span>
                                             <span className="text-lg font-black text-white italic tracking-tighter uppercase whitespace-nowrap">
                                                 {progress >= 3 ? (
                                                     <span className="text-yellow-400 animate-pulse">Análisis Completo</span>
@@ -586,7 +582,7 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                                     </div>
                                     <div className="flex gap-2.5 h-2 px-1">
                                         {[1, 2, 3].map(step => (
-                                            <div key={step} className={cn("flex-1 rounded-full transition-all duration-700", step <= progress ? "bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]" : "bg-white/5")} />
+                                            <div key={step} className={cn("flex-1 rounded-full transition-all duration-700", step <= progress ? "bg-[hsl(74,100%,47%)] shadow-[0_0_10px_rgba(186,239,0,0.4)]" : "bg-white/5")} />
                                         ))}
                                     </div>
                                 </div>
@@ -596,7 +592,7 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                         {/* History Timeline */}
                         {Array.isArray(selectedNodeData.diagnosis) && selectedNodeData.diagnosis.length > 1 && (
                             <div className="mb-10 w-full px-2">
-                                <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em] mb-4 block">Historial de Evaluación</span>
+                                <span className="text-[10px] font-black text-[hsl(120, 39%, 28%)] uppercase tracking-[0.3em] mb-4 block">Historial de Evaluación</span>
                                 <div className="flex items-center justify-between relative px-4">
                                     <div className="absolute left-8 right-8 h-0.5 bg-white/5 z-0" />
                                     {selectedNodeData.diagnosis.map((_: any, idx: number) => (
@@ -606,8 +602,8 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                                             className={cn(
                                                 "relative z-10 w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center",
                                                 activeStage === idx
-                                                    ? "bg-purple-500 border-purple-400 scale-125 shadow-[0_0_20px_rgba(181,0,209,0.5)]"
-                                                    : "bg-[#0b0121] border-white/10 hover:border-white/30"
+                                                    ? "bg-[hsl(120, 39%, 28%)] border-[hsl(74,100%,47%)] scale-125 shadow-[0_0_20px_rgba(202,225,60,0.5)]"
+                                                    : "bg-[hsl(124, 65%, 9%)] border-white/10 hover:border-white/30"
                                             )}
                                         >
                                             <span className={cn("text-[10px] font-black", activeStage === idx ? "text-white" : "text-white/40")}>
@@ -638,10 +634,10 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                                             className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden group/obs"
                                         >
                                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/obs:opacity-20 transition-opacity">
-                                                <Brain className="w-16 h-16 text-purple-500" />
+                                                <Brain className="w-16 h-16 text-[hsl(120, 39%, 28%)]" />
                                             </div>
-                                            <span className="text-[10px] font-black text-purple-400 uppercase tracking-[0.3em] mb-4 block">Síntesis de Diagnóstico</span>
-                                            <div className="text-sm md:text-base font-medium text-white/90 leading-relaxed space-y-4 border-l-4 border-purple-500 pl-6 py-1">
+                                            <span className="text-[10px] font-black text-[hsl(74,100%,47%)] uppercase tracking-[0.3em] mb-4 block">Síntesis de Diagnóstico</span>
+                                            <div className="text-sm md:text-base font-medium text-white/90 leading-relaxed space-y-4 border-l-4 border-[hsl(74,100%,47%)] pl-6 py-1">
                                                 {currentDiag.observaciones.split('\n').map((paragraph: string, i: number) => {
                                                     if (!paragraph.trim()) return null;
                                                     const parts = paragraph.split(/\*\*(.*?)\*\*/g);
@@ -653,18 +649,16 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                                                 })}
                                             </div>
                                         </motion.div>
-
-                                        {/* Removed: Dual Metric Cards and State Indicators per user request */}
                                     </>
                                 );
                             })()}
                         </div>
 
                         <div className="mt-10 space-y-4">
-                            <Button onClick={() => setShowFullReport(true)} className="w-full h-14 rounded-xl bg-purple-600/20 text-purple-200 border border-purple-500/50 font-black uppercase tracking-widest text-[10px] hover:bg-purple-500/40 hover:text-white transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                            <Button onClick={() => setShowFullReport(true)} className="w-full h-14 rounded-xl bg-[hsl(120, 39%, 28%)]/30 text-[hsl(74,100%,47%)] border border-[hsl(74,100%,47%)]/50 font-black uppercase tracking-widest text-[10px] hover:bg-[hsl(120, 39%, 28%)]/50 hover:text-white transition-all shadow-[0_0_15px_rgba(186,239,0,0.3)]">
                                 Ver Reporte Detallado
                             </Button>
-                            <Button className="w-full h-14 rounded-xl bg-white text-black font-black uppercase tracking-widest text-[10px] hover:bg-cyan-400 transition-all">Feedback Eleonor</Button>
+                            <Button onClick={() => onFeedbackRequest && onFeedbackRequest(selectedNodeData.label)} className="w-full h-14 rounded-xl bg-white text-black font-black uppercase tracking-widest text-[10px] hover:bg-[hsl(74,100%,47%)] transition-all">Feedback Eleonor</Button>
                             <p className="text-[7px] text-center font-bold text-white/10 uppercase tracking-widest">v3.0 Cognitive Module</p>
                         </div>
                     </motion.div>
@@ -679,7 +673,6 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
 
                     if (!raw) return null;
 
-                    // 1. Lewin Test custom results screen
                     if (raw.estilo_dominante || raw.detalle || raw.counts || (raw.observaciones && raw.observaciones.toLowerCase().includes('lewin'))) {
                         const counts = raw.detalle || raw.counts || { autoritario: 6, democratico: 3, "laissez-faire": 2 };
                         const dominant = raw.estilo_dominante || raw.dominant || "autoritario";
@@ -691,7 +684,6 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                         );
                     }
 
-                    // 2. NEO PI-R custom results screen
                     if (raw.dominios && raw.facetas) {
                         return (
                             <NeoPiRResults 
@@ -701,7 +693,6 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                         );
                     }
 
-                    // 3. CEPV-20 custom results screen
                     if (raw.avg) {
                         return (
                             <CepvResults 
@@ -711,7 +702,6 @@ function NaturalWorkflowContent({ skills, mentorSkills = [], onFeedbackRequest }
                         );
                     }
 
-                    // 4. Default / Generic Diagnosis Overlay
                     const analysisData = {
                         ...raw,
                         razonamiento: raw.razonamiento || raw.razonamiento_tipo || "ANÁLISIS COGNITIVO",

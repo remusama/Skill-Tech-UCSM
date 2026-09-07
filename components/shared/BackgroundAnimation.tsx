@@ -31,14 +31,17 @@ export function BackgroundAnimation() {
       y: null as number | null,
     }
 
-    window.addEventListener("mousemove", (event) => {
-      mouse.x = event.x
-      mouse.y = event.y
-    })
-    window.addEventListener("mouseout", () => {
+    const handleMouseMove = (event: MouseEvent) => {
+      mouse.x = event.clientX
+      mouse.y = event.clientY
+    }
+    const handleMouseOut = () => {
       mouse.x = null
       mouse.y = null
-    })
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mouseout", handleMouseOut)
 
     const particlesArray: Particle[] = []
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024
@@ -47,7 +50,10 @@ export function BackgroundAnimation() {
     const numberOfParticles = level === 'low' ? 10 : (level === 'medium' ? 30 : (isMobile ? 25 : 80))
     const enableConnections = level !== 'low' && !isMobile
 
-    const particleColor = theme === "dark" ? "#8B00FF" : "#8B00FF"
+    // Colores adaptados a las nuevas paletas
+    // Tema oscuro: particulas con tonos de verde oscuro (#063924 / #0a6b17)
+    // Tema claro: particulas con tonos de acento (#d0b04d / #cae13c)
+    const particleColor = theme === "dark" ? "#0a6b17" : "#d0b04d"
 
     class Particle {
       x: number
@@ -60,7 +66,7 @@ export function BackgroundAnimation() {
       constructor() {
         this.x = Math.random() * (canvas?.width || window.innerWidth)
         this.y = Math.random() * (canvas?.height || window.innerHeight)
-        this.size = Math.random() * 2 + 1
+        this.size = Math.random() * 2 + 1.2
         this.speedX = Math.random() * 0.4 - 0.2
         this.speedY = Math.random() * 0.4 - 0.2
         this.color = particleColor
@@ -99,6 +105,12 @@ export function BackgroundAnimation() {
     const connect = () => {
       if (!ctx || !enableConnections) return
       let opacityValue = 1
+      
+      // Color de las líneas de conexión según el tema
+      // Oscuro: Usamos tonos verdosos/cian sutiles (#214f3c)
+      // Claro: Usamos grises/dorados suaves (#c0c0ba)
+      const strokeColorRgb = theme === 'light' ? '192, 192, 186' : '33, 79, 60'
+
       for (let a = 0; a < particlesArray.length; a++) {
         for (let b = a; b < particlesArray.length; b++) {
           const dx = particlesArray[a].x - particlesArray[b].x
@@ -107,7 +119,7 @@ export function BackgroundAnimation() {
 
           if (distance < 100) {
             opacityValue = 1 - distance / 100
-            ctx.strokeStyle = `rgba(${theme === 'light' ? '192,192,192' : '42,42,106'}, ${opacityValue})`
+            ctx.strokeStyle = `rgba(${strokeColorRgb}, ${opacityValue * 0.6})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particlesArray[a].x, particlesArray[a].y)
@@ -116,6 +128,7 @@ export function BackgroundAnimation() {
           }
         }
       }
+
       // Conectar con el ratón
       if (mouse.x !== null && mouse.y !== null) {
         for (let i = 0; i < particlesArray.length; i++) {
@@ -124,7 +137,7 @@ export function BackgroundAnimation() {
           const distance = Math.sqrt(dx * dx + dy * dy)
           if (distance < 150) {
             opacityValue = 1 - distance / 150
-            ctx.strokeStyle = `rgba(${theme === 'light' ? '192,192,192' : '42,42,106'}, ${opacityValue})`
+            ctx.strokeStyle = `rgba(${strokeColorRgb}, ${opacityValue * 0.8})`
             ctx.lineWidth = 1
             ctx.beginPath()
             ctx.moveTo(particlesArray[i].x, particlesArray[i].y)
@@ -160,9 +173,21 @@ export function BackgroundAnimation() {
 
     return () => {
       window.removeEventListener("resize", resizeCanvas)
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseout", handleMouseOut)
       cancelAnimationFrame(animationFrameId)
     }
   }, [theme, level])
 
-  return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full -z-10 bg-transparent" style={{ willChange: "transform" }} />
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="fixed top-0 left-0 w-full h-full -z-10" 
+      style={{ 
+        willChange: "transform",
+        // Color de fondo base estricto para el canvas según el tema
+        backgroundColor: theme === "dark" ? "#01130d" : "#f5f5f0" 
+      }} 
+    />
+  )
 }

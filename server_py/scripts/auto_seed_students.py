@@ -149,14 +149,135 @@ def parse_ods_native(file_path):
         return None
 
 
+def parse_json_if_needed(val):
+    if isinstance(val, str) and (val.startswith("{") or val.startswith("[")):
+        try:
+            return json.loads(val)
+        except Exception:
+            return val
+    return val
+
+
+def parse_sql_users(file_path):
+    """Parsea el archivo SQL (users_rows.sql) cargando la lista completa de usuarios."""
+    try:
+        import json
+        import re
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read().strip()
+
+        cols_match = re.search(r'INSERT INTO [^\(]+\((.*?)\)\s+VALUES', content, re.IGNORECASE | re.DOTALL)
+        if not cols_match:
+            return None
+
+        cols_str = cols_match.group(1)
+        cols = [c.strip().strip('"').strip("'") for c in cols_str.split(",")]
+        values_str = content[cols_match.end():].strip()
+        if values_str.endswith(";"):
+            values_str = values_str[:-1].strip()
+
+        parsed_tuples = []
+        in_string = False
+        escape = False
+        quote_char = None
+        depth = 0
+        curr_val = []
+        curr_tuple = []
+
+        i = 0
+        n = len(values_str)
+        while i < n:
+            char = values_str[i]
+            if in_string:
+                curr_val.append(char)
+                if escape:
+                    escape = False
+                elif char == '\\':
+                    escape = True
+                elif char == quote_char:
+                    if char == "'" and i + 1 < n and values_str[i + 1] == "'":
+                        curr_val.append("'")
+                        i += 1
+                    else:
+                        in_string = False
+                        quote_char = None
+            else:
+                if char in ("'", '"'):
+                    in_string = True
+                    quote_char = char
+                    curr_val.append(char)
+                elif char == '(':
+                    if depth == 0:
+                        curr_tuple = []
+                    else:
+                        curr_val.append(char)
+                    depth += 1
+                elif char == ')':
+                    depth -= 1
+                    if depth == 0:
+                        val_str = "".join(curr_val).strip()
+                        curr_tuple.append(val_str)
+                        parsed_tuples.append(curr_tuple)
+                        curr_tuple = []
+                        curr_val = []
+                    else:
+                        curr_val.append(char)
+                elif char == ',' and depth == 1:
+                    val_str = "".join(curr_val).strip()
+                    curr_tuple.append(val_str)
+                    curr_val = []
+                else:
+                    if depth > 0:
+                        curr_val.append(char)
+            i += 1
+
+        def clean_val(v):
+            if not v or v.lower() == 'null':
+                return None
+            if (v.startswith("'") and v.endswith("'")) or (v.startswith('"') and v.endswith('"')):
+                inner = v[1:-1]
+                inner = inner.replace("''", "'").replace("\\'", "'").replace('\\"', '"')
+                return inner
+            try:
+                if "." in v:
+                    return float(v)
+                return int(v)
+            except ValueError:
+                return v
+
+        users = []
+        for t in parsed_tuples:
+            if len(t) == len(cols):
+                row_dict = {}
+                for col_name, raw_val in zip(cols, t):
+                    row_dict[col_name] = clean_val(raw_val)
+                users.append(row_dict)
+
+        return users if users else None
+    except Exception as e:
+        logger.warning(f"[AutoSeedStudents] Error al parsear SQL users: {e}")
+        return None
+
+
 def load_students_from_file():
-    """Intenta cargar estudiantes desde un archivo ODS/XLSX en public o usuario_registro si existe."""
+    """Intenta cargar estudiantes desde un archivo SQL, ODS o XLSX en usuario_registro o public si existe."""
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         search_dirs = [
+            os.path.join(base_dir, "usuario_registro"),
             os.path.join(base_dir, "public"),
-            os.path.join(base_dir, "usuario_registro")
+            base_dir
         ]
+
+        # Priorizar archivo SQL de usuarios renovado (users_rows.sql)
+        for d in search_dirs:
+            sql_file = os.path.join(d, "users_rows.sql")
+            if os.path.exists(sql_file):
+                sql_users = parse_sql_users(sql_file)
+                if sql_users:
+                    logger.info(f"[AutoSeedStudents] 📄 Cargados {len(sql_users)} usuarios desde {sql_file}")
+                    return sql_users
+
         excel_files = []
         for d in search_dirs:
             if os.path.exists(d):
@@ -211,15 +332,18 @@ def load_students_from_file():
 
         return students if students else None
     except Exception as e:
-        logger.warning(f"[AutoSeedStudents] No se pudo leer archivo excel: {e}")
+        logger.warning(f"[AutoSeedStudents] No se pudo leer archivo de usuarios: {e}")
         return None
 
 
 def auto_seed_students():
     """
-    Se ejecuta al iniciar el backend. Registra los 48 alumnos en la base de datos si no existen
+    Se ejecuta al iniciar el backend. Registra la lista de usuarios en la base de datos si no existen
     y remueve usuarios anteriores con dominio de correo obsoleto (@ucsm.edu.pe).
+    Funciona tanto para SQLite como para PostgreSQL/Supabase.
     """
+    from server_py.memoria.database import init_db
+    init_db()
     db: Session = SessionLocal()
     try:
         # Purgar usuarios antiguos con dominio obsoleto @ucsm.edu.pe
@@ -232,42 +356,80 @@ def auto_seed_students():
             logger.info(f"[AutoSeedStudents] 🧹 Eliminados {len(old_users)} usuarios antiguos con dominio @ucsm.edu.pe.")
             print(f"[AutoSeedStudents] 🧹 Eliminados {len(old_users)} usuarios antiguos con dominio @ucsm.edu.pe.")
 
-        students = load_students_from_file() or DEFAULT_48_STUDENTS
-        hashed_password = bcrypt.hashpw(DEFAULT_PASSWORD.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        students_data = load_students_from_file() or DEFAULT_48_STUDENTS
+        hashed_default = bcrypt.hashpw(DEFAULT_PASSWORD.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
         created = 0
         skipped = 0
 
-        for s in students:
-            username = s["username"].strip()
-            email = s["email"].strip().lower()
+        for s in students_data:
+            username = str(s.get("username") or "").strip()
+            email = str(s.get("email") or "").strip().lower()
 
-            existing = db.query(User).filter((User.username == username) | (User.email == email)).first()
+            if not username and not email:
+                continue
+
+            existing = db.query(User).filter(
+                (User.username == username) | (User.email == email)
+            ).first()
+
             if existing:
-                if not existing.secure_token:
+                if not existing.secure_token and s.get("secure_token"):
+                    existing.secure_token = s["secure_token"]
+                elif not existing.secure_token:
                     existing.secure_token = f"SKILL-{uuid.uuid4().hex[:12].upper()}"
-                    db.commit()
-                    logger.info(f"[AutoSeedStudents] 🔑 Generado secure_token para usuario existente: {existing.username}")
+                
+                if s.get("role"):
+                    existing.role = s["role"]
+                if s.get("school"):
+                    existing.school = s["school"]
+                if s.get("classroom"):
+                    existing.classroom = s["classroom"]
+                
+                db.commit()
                 skipped += 1
                 continue
 
+            # Crear nuevo usuario con sus propiedades completas si están disponibles
             new_user = User(
+                id=s.get("id"),
                 username=username,
                 email=email,
-                hashed_password=hashed_password,
-                role="student",
+                hashed_password=s.get("hashed_password") or hashed_default,
+                role=s.get("role", "student"),
                 school=s.get("school", "UCSM"),
                 classroom=s.get("classroom", "5º A"),
-                has_onboarded=0,
-                secure_token=f"SKILL-{uuid.uuid4().hex[:12].upper()}"
+                has_onboarded=s.get("has_onboarded", 0),
+                full_name=s.get("full_name"),
+                bio=s.get("bio"),
+                location=s.get("location"),
+                occupation=s.get("occupation"),
+                specialty=s.get("specialty"),
+                phone=s.get("phone"),
+                website=s.get("website"),
+                avatar_url=s.get("avatar_url"),
+                streak_count=s.get("streak_count", 0),
+                global_cognitive_index=s.get("global_cognitive_index", 0.0),
+                global_reasoning_vector=parse_json_if_needed(s.get("global_reasoning_vector")),
+                vocational_profile=parse_json_if_needed(s.get("vocational_profile")),
+                preferences=parse_json_if_needed(s.get("preferences")) or {
+                    "theme": "dark",
+                    "email_notifications": True,
+                    "push_notifications": True,
+                    "language": "es",
+                    "data_density": "comfortable"
+                },
+                secure_token=s.get("secure_token") or f"SKILL-{uuid.uuid4().hex[:12].upper()}"
             )
             db.add(new_user)
             db.commit()
             db.refresh(new_user)
 
-            session = EleonorSession(id=f"sess_{new_user.id}", user_id=new_user.id)
-            db.add(session)
-            db.commit()
+            session = db.query(EleonorSession).filter(EleonorSession.user_id == new_user.id).first()
+            if not session:
+                session = EleonorSession(id=f"sess_{new_user.id}", user_id=new_user.id)
+                db.add(session)
+                db.commit()
 
             created += 1
 
@@ -282,8 +444,18 @@ def auto_seed_students():
             logger.info(f"[AutoSeedStudents] 🔑 Generados {tokens_generated} tokens QR de seguridad para usuarios sin token.")
             print(f"[AutoSeedStudents] 🔑 Generados {tokens_generated} tokens QR de seguridad para usuarios sin token.")
 
-        logger.info(f"[AutoSeedStudents] ✅ Proceso completado — {created} estudiantes registrados nuevos, {skipped} ya existían.")
-        print(f"[AutoSeedStudents] ✅ Proceso completado — {created} estudiantes registrados nuevos, {skipped} ya existían.")
+        # Si el motor de DB es PostgreSQL (ej. Supabase), sincronizar la secuencia autoincremental de 'users'
+        if db.bind.dialect.name == "postgresql":
+            try:
+                from sqlalchemy import text
+                db.execute(text("SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce((SELECT max(id) FROM users), 1));"))
+                db.commit()
+                logger.info("[AutoSeedStudents] 🔄 Secuencia de IDs en PostgreSQL/Supabase sincronizada correctamente.")
+            except Exception as seq_err:
+                logger.warning(f"[AutoSeedStudents] No se pudo sincronizar la secuencia de postgres: {seq_err}")
+
+        logger.info(f"[AutoSeedStudents] ✅ Proceso completado — {created} usuarios registrados nuevos, {skipped} ya existían.")
+        print(f"[AutoSeedStudents] ✅ Proceso completado — {created} usuarios registrados nuevos, {skipped} ya existían.")
 
         from server_py.routers.mentor_agents import seed_base_agents
         seed_base_agents(db)
@@ -291,8 +463,8 @@ def auto_seed_students():
 
     except Exception as e:
         db.rollback()
-        logger.error(f"[AutoSeedStudents] ⚠️ Error al registrar estudiantes: {e}")
-        print(f"[AutoSeedStudents] ⚠️ Error al registrar estudiantes: {e}")
+        logger.error(f"[AutoSeedStudents] ⚠️ Error al registrar usuarios: {e}")
+        print(f"[AutoSeedStudents] ⚠️ Error al registrar usuarios: {e}")
     finally:
         db.close()
 

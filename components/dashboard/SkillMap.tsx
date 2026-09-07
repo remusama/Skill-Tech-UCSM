@@ -23,20 +23,21 @@ import { fetchUserSkills, UserSkill, fetchProgressHistory, fetchBenchmarking } f
 import { StreakFire } from "./StreakFire"
 import { API_URL } from "@/lib/config"
 
-
 // --- SUB-COMPONENTES ESTILIZADOS ---
 
 const CustomTooltip = ({ active, payload, label, theme }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className={`p-4 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl ${theme === 'dark' ? 'bg-black/80' : 'bg-white/80'
-        }`}>
-        <p className="text-xs font-black uppercase tracking-widest text-[#B500D1] mb-2">{label}</p>
+      <div className={`p-4 rounded-2xl border backdrop-blur-xl shadow-2xl ${
+        theme === 'dark' ? 'bg-black/80 border-white/10 text-white' : 'bg-white/95 border-slate-300 text-slate-900 shadow-slate-300/50'
+      }`}>
+        <p className="text-xs font-black uppercase tracking-widest text-[#d0b04d] mb-2">{label}</p>
+        
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
-            <p className="text-xs font-bold text-white/80">
-              {entry.name}: <span className="text-white">{entry.value}</span>
+            <p className={`text-xs font-bold ${theme === 'dark' ? 'text-white/80' : 'text-slate-700'}`}>
+              {entry.name}: <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>{entry.value}</span>
             </p>
           </div>
         ))}
@@ -46,14 +47,18 @@ const CustomTooltip = ({ active, payload, label, theme }: any) => {
   return null
 }
 
-const ChartHeader = ({ title, description, icon: Icon }: any) => (
+const ChartHeader = ({ title, description, icon: Icon, theme }: any) => (
   <div className="flex items-start gap-4 mb-6">
-    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#B500D1]/20 to-cyan-500/20 border border-white/10 shadow-lg">
-      <Icon className="w-6 h-6 text-[#B500D1]" />
+    <div className={`p-3 rounded-2xl border shadow-md ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-[#d0b04d]/20 to-cyan-500/20 border-white/10' 
+        : 'bg-gradient-to-br from-[#0d971f]/15 to-[#0d971f]/5 border-slate-300'
+    }`}>
+      <Icon className={`w-6 h-6 ${theme === 'dark' ? 'text-[#baef00]' : 'text-[#0d971f]'}`} />
     </div>
     <div className="flex flex-col">
-      <h3 className="text-xl font-black text-white tracking-tight uppercase italic">{title}</h3>
-      <p className="text-xs text-white/40 font-medium uppercase tracking-wider mt-1">{description}</p>
+      <h3 className={`text-xl font-black tracking-tight uppercase italic ${theme === 'dark' ? 'text-white' : 'text-[#01130d]'}`}>{title}</h3>
+      <p className={`text-xs font-medium uppercase tracking-wider mt-1 ${theme === 'dark' ? 'text-white/40' : 'text-slate-600'}`}>{description}</p>
     </div>
   </div>
 )
@@ -62,7 +67,6 @@ const ChartHeader = ({ title, description, icon: Icon }: any) => (
 
 export function SkillMap() {
   const [activeTab, setActiveTab] = useState("matrix")
-
   const [mounted, setMounted] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [skills, setSkills] = useState<UserSkill[]>([])
@@ -85,7 +89,6 @@ export function SkillMap() {
       if (historyData.length > 0) setHistory(historyData);
       if (benchmarkingData.length > 0) setBenchmarking(benchmarkingData);
 
-      // Fetch Gamification
       const gResp = await fetch(`${API_URL}/gamification/status`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem("eleonor_token")}` }
       });
@@ -109,8 +112,6 @@ export function SkillMap() {
     return () => window.removeEventListener('skills-updated', handleUpdate);
   }, [loadSkills, refreshKey])
 
-
-  // Utility to normalize strings for comparison (remove accents and casing)
   const normalize = (str: string) => {
     if (!str) return "";
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -122,7 +123,6 @@ export function SkillMap() {
     return softKeywords.some(kw => norm.includes(kw));
   }
 
-  // Mapping DB skills to the Chart format dynamically
   const academicData = useMemo(() => {
     const academicSkills = skills.filter(s => !isSoftSkill(s.area));
     if (academicSkills.length === 0) return [{ subject: "Sin Evaluaciones", A: 0, fullMark: 10 }];
@@ -145,14 +145,13 @@ export function SkillMap() {
     }));
   }, [skills])
 
-
   const colors = useMemo(() => ({
-    primary: "#B500D1",
-    secondary: "#00FFFF",
-    accent: "#8B00FF",
-    grid: "rgba(255, 255, 255, 0.05)",
-    text: "rgba(255, 255, 255, 0.6)",
-  }), [])
+    primary: "#d0b04d",
+    secondary: "#00FFFF", 
+    accent: "#0d971f", 
+    grid: theme === 'dark' ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.08)",
+    text: theme === 'dark' ? "rgba(255, 255, 255, 0.6)" : "rgba(1, 19, 13, 0.8)",
+  }), [theme])
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1)
@@ -161,42 +160,63 @@ export function SkillMap() {
   if (!mounted) return null
 
   return (
-    <div className="min-h-screen p-4 md:p-12 bg-transparent relative overflow-hidden">
-      {/* Fondo Ambientales */}
-      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#B500D1]/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
+    <div className={`min-h-screen p-4 md:p-12 relative overflow-hidden w-full transition-colors duration-500 ${
+      theme === 'dark' ? 'bg-[#02150e] text-white' : 'bg-[#f4f7f5] text-[#01130d]'
+    }`}>
+      {/* Luces de fondo ambientales */}
+      <div className={`absolute top-[-10%] right-[-10%] w-[55%] h-[55%] rounded-full blur-[140px] pointer-events-none transition-colors duration-500 ${
+        theme === 'dark' ? 'bg-[#d0b04d]/10' : 'bg-[#d0b04d]/20'
+      }`} />
+      <div className={`absolute bottom-[-10%] left-[-10%] w-[55%] h-[55%] rounded-full blur-[140px] pointer-events-none transition-colors duration-500 ${
+        theme === 'dark' ? 'bg-[#0d971f]/10' : 'bg-[#0d971f]/15'
+      }`} />
 
-      {/* Header Principal */}
-      <BlurFade delay={0.1} inView>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 relative z-10 pl-20 md:pl-0">
+      <div className="relative z-10 mb-12 w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-8">
           <div className="flex flex-col gap-2">
-            <MagicTitle variant="sparkles" className="text-4xl md:text-7xl tracking-[0.2em] font-black">
-              SKILLMAP
-            </MagicTitle>
-            <div className="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-md">
-              <div className="w-2 h-2 rounded-full bg-[#B500D1] animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Análisis en tiempo real habilitado</span>
+            <BlurFade delay={0.1} inView>
+              <h1 className={`text-4xl md:text-7xl tracking-[0.2em] font-black ${
+                theme === 'dark' ? 'text-white' : 'text-[#01130d]'
+              }`}>
+                SKILLMAP
+              </h1>
+            </BlurFade>
+            
+            <div className="h-[2px] w-48 bg-gradient-to-r from-[#baef00] to-[#032318] mb-4" />
+            
+            <div className={`flex items-center gap-3 px-4 py-1.5 rounded-full self-start backdrop-blur-md shadow-sm border ${
+              theme === 'dark' ? 'bg-white/5 border-white/10 text-white/80' : 'bg-[#e8e8e6] border-slate-300 text-[#01130d]'
+            }`}>
+              <div className="w-2 h-2 rounded-full bg-[#0d971f] animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Análisis en tiempo real habilitado</span>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-4 relative z-10">
+        <div className="flex flex-col md:flex-row items-center gap-4">
           {gamification && <StreakFire count={gamification.streak_count} />}
 
           <Button
-            variant="outline"
+            variant="default"
             onClick={() => window.dispatchEvent(new CustomEvent('restart-onboarding'))}
-            className="group relative overflow-hidden bg-white/5 border-white/10 hover:border-[#B500D1]/50 text-white rounded-2xl h-14 px-8 transition-all duration-500 active:scale-95"
+            style={theme !== 'dark' ? { backgroundColor: '#d0b04d', color: '#01130d' } : undefined}
+            className={`group relative overflow-hidden rounded-2xl h-14 px-8 transition-all duration-500 active:scale-95 shadow-md border ${
+              theme === 'dark' 
+                ? 'bg-white/5 border-white/10 hover:border-[#d0b04d]/50 text-white' 
+                : 'border-[#d0b04d] hover:brightness-105 shadow-slate-300'
+            }`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#B500D1]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Sparkles className="w-4 h-4 mr-3 transition-transform duration-300 group-hover:scale-110" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Sparkles className={`w-4 h-4 mr-3 transition-transform duration-300 group-hover:scale-110 ${theme === 'dark' ? 'text-[#baef00]' : 'text-[#01130d]'}`} />
             <span className="text-[11px] font-black uppercase tracking-[0.2em]">Repetir Onboarding</span>
           </Button>
         </div>
-      </BlurFade>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
-        <TabsList className="mb-12 bg-white/5 border border-white/5 p-1.5 rounded-[2rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full">
+        <TabsList className={`mb-12 p-1.5 rounded-[2rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full shadow-md border ${
+          theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-[#e8e8e6] border-slate-300 shadow-slate-300/60'
+        }`}>
           {[
             { id: 'matrix', icon: Activity, label: 'Matriz de Habilidades' },
             { id: 'comparison', icon: BarChart2, label: 'Benchmarking' }
@@ -204,7 +224,9 @@ export function SkillMap() {
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="data-[state=active]:bg-[#B500D1] data-[state=active]:text-white rounded-[1.5rem] px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all duration-500 gap-3 border border-transparent data-[state=active]:shadow-[0_0_20px_rgba(181,0,209,0.4)]"
+              className={`rounded-[1.5rem] px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all duration-500 gap-3 border border-transparent data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.4)] ${
+                theme === 'dark' ? 'text-white/70' : 'text-[#01130d]'
+              }`}
             >
               <tab.icon size={16} />
               {tab.label}
@@ -221,22 +243,27 @@ export function SkillMap() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            {/* TABS CONTENT: MATRIX */}
             {activeTab === "matrix" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
+                <MagicCard 
+                  style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
+                  className={`backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-hidden group shadow-xl border ${
+                    theme === 'dark' ? 'bg-white/5 border-white/5' : 'border-slate-300 shadow-slate-300/50'
+                  }`}
+                >
                   <ChartHeader
                     title="Académico"
                     description="Distribución de competencias en áreas troncales"
                     icon={GraduationCap}
+                    theme={theme}
                   />
                   <div className="h-[400px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={academicData}>
                         <defs>
                           <linearGradient id="colorRadar" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#B500D1" stopOpacity={0.8} />
-                            <stop offset="100%" stopColor="#00FFFF" stopOpacity={0.4} />
+                            <stop offset="0%" stopColor="#0d971f" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="#baef00" stopOpacity={0.4} />
                           </linearGradient>
                         </defs>
                         <PolarGrid stroke={colors.grid} />
@@ -247,31 +274,36 @@ export function SkillMap() {
                         <Radar
                           name="Nivel"
                           dataKey="A"
-                          stroke="#B500D1"
-                          strokeWidth={2}
+                          stroke="#0d971f"
+                          strokeWidth={2.5}
                           fill="url(#colorRadar)"
-                          fillOpacity={0.6 + (academicData.reduce((acc, curr: any) => acc + (curr.xp || 0), 0) / 1000 * 0.4)}
+                          fillOpacity={0.6}
                         />
                         <Tooltip content={<CustomTooltip theme={theme} />} />
                       </RadarChart>
-
                     </ResponsiveContainer>
                   </div>
                 </MagicCard>
 
-                <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-8 rounded-[2.5rem] relative overflow-hidden group">
+                <MagicCard 
+                  style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
+                  className={`backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-hidden group shadow-xl border ${
+                    theme === 'dark' ? 'bg-white/5 border-white/5' : 'border-slate-300 shadow-slate-300/50'
+                  }`}
+                >
                   <ChartHeader
                     title="Soft Skills"
                     description="Atributos personales y sociales analizados"
                     icon={UserCircle}
+                    theme={theme}
                   />
                   <div className="h-[400px] w-full mt-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart cx="50%" cy="50%" outerRadius="80%" data={softSkillsData}>
                         <defs>
                           <linearGradient id="colorRadarSoft" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#8B00FF" stopOpacity={0.8} />
-                            <stop offset="100%" stopColor="#B500D1" stopOpacity={0.4} />
+                            <stop offset="0%" stopColor="#d0b04d" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="#0d971f" stopOpacity={0.4} />
                           </linearGradient>
                         </defs>
                         <PolarGrid stroke={colors.grid} />
@@ -282,27 +314,31 @@ export function SkillMap() {
                         <Radar
                           name="Nivel"
                           dataKey="A"
-                          stroke="#8B00FF"
-                          strokeWidth={2}
+                          stroke="#d0b04d"
+                          strokeWidth={2.5}
                           fill="url(#colorRadarSoft)"
                           fillOpacity={0.6}
                         />
                         <Tooltip content={<CustomTooltip theme={theme} />} />
                       </RadarChart>
-
                     </ResponsiveContainer>
                   </div>
                 </MagicCard>
               </div>
             )}
 
-            {/* TABS CONTENT: COMPARISON */}
             {activeTab === "comparison" && (
-              <MagicCard className="bg-white/5 backdrop-blur-3xl border-white/5 p-10 rounded-[2.5rem]">
+              <MagicCard 
+                style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
+                className={`backdrop-blur-3xl p-10 rounded-[2.5rem] w-full shadow-xl border ${
+                  theme === 'dark' ? 'bg-white/5 border-white/5' : 'border-slate-300 shadow-slate-300/50'
+                }`}
+              >
                 <ChartHeader
                   title="Análisis Comparativo"
                   description="Posicionamiento relativo frente a la media del sistema"
                   icon={Target}
+                  theme={theme}
                 />
                 <div className="h-[450px] w-full mt-8">
                   <ResponsiveContainer width="100%" height="100%">
@@ -325,14 +361,14 @@ export function SkillMap() {
                       <Bar
                         dataKey="Nivel"
                         name="Tu Rendimiento"
-                        fill="#B500D1"
+                        fill="#0d971f"
                         radius={[20, 20, 0, 0]}
                         barSize={35}
                       />
                       <Bar
                         dataKey="Promedio"
                         name="Media Global"
-                        fill="rgba(255,255,255,0.08)"
+                        fill={theme === 'dark' ? "rgba(255,255,255,0.08)" : "rgba(1, 19, 13, 0.15)"}
                         radius={[20, 20, 0, 0]}
                         barSize={35}
                       />
@@ -345,25 +381,27 @@ export function SkillMap() {
         </AnimatePresence>
       </Tabs>
 
-      {/* Guía de Interpretación Inferior */}
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay: 0.5, duration: 0.8 }}
-        className="mt-20 p-12 bg-white/5 backdrop-blur-[100px] border border-white/10 rounded-[3rem] shadow-2xl relative overflow-hidden"
+        style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
+        className={`mt-20 p-12 backdrop-blur-[100px] rounded-[3rem] shadow-2xl relative overflow-hidden w-full border ${
+          theme === 'dark' ? 'bg-white/5 border-white/10' : 'border-slate-300 shadow-slate-300/50'
+        }`}
       >
-        <div className="absolute top-0 right-0 p-8 text-white/5 pointer-events-none">
+        <div className={`absolute top-0 right-0 p-8 pointer-events-none ${theme === 'dark' ? 'text-white/5' : 'text-[#01130d]/5'}`}>
           <Info size={120} strokeWidth={1} />
         </div>
 
         <div className="flex flex-col md:flex-row gap-12 relative z-10">
           <div className="flex-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#B500D1]/20 rounded-full border border-[#B500D1]/20 mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#B500D1]">Intelligence Insight</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0d971f]/20 rounded-full border border-[#0d971f]/20 mb-6">
+              <span className="text-[9px] font-black uppercase tracking-widest text-[#0d971f]">Intelligence Insight</span>
             </div>
-            <h3 className="text-3xl font-black text-white italic tracking-tighter mb-4 uppercase">Interpretación del SkillMap</h3>
-            <p className="text-sm text-white/60 leading-relaxed font-medium">
+            <h3 className={`text-3xl font-black italic tracking-tighter mb-4 uppercase ${theme === 'dark' ? 'text-white' : 'text-[#01130d]'}`}>Interpretación del SkillMap</h3>
+            <p className={`text-sm leading-relaxed font-medium ${theme === 'dark' ? 'text-white/60' : 'text-slate-700'}`}>
               Tu SkillMap es un ecosistema dinámico que evoluciona con cada interacción. Está diseñado para proporcionarte una ventaja estratégica identificando no solo lo que sabes, sino cómo tu potencial se está expandiendo en múltiples dimensiones.
             </p>
           </div>
@@ -373,19 +411,25 @@ export function SkillMap() {
               {
                 title: "Matriz Radar",
                 txt: "Permite ver el equilibrio entre tus fortalezas técnicas y tu inteligencia emocional.",
-                color: "text-[#B500D1]"
+                color: "text-[#0d971f]"
               },
               {
                 title: "Benchmark",
                 txt: "Comprende tu posición respecto a los niveles globales para optimizar tu especialización.",
-                color: "text-purple-400"
+                color: "text-[#d0b04d]"
               }
             ].map((item, i) => (
-              <div key={i} className="p-6 bg-white/5 border border-white/5 rounded-3xl hover:bg-white/10 transition-colors duration-500 group">
+              <div 
+                key={i} 
+                style={theme !== 'dark' ? { backgroundColor: '#f4f7f5' } : undefined}
+                className={`p-6 rounded-3xl transition-colors duration-500 group shadow-sm border ${
+                  theme === 'dark' ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'border-slate-300 hover:bg-white shadow-slate-200'
+                }`}
+              >
                 <h4 className={`font-black uppercase tracking-widest text-[11px] mb-2 ${item.color} group-hover:scale-105 transition-transform origin-left`}>
                   {item.title}
                 </h4>
-                <p className="text-[11px] text-white/40 leading-relaxed font-bold tracking-tight">
+                <p className={`text-[11px] leading-relaxed font-bold tracking-tight ${theme === 'dark' ? 'text-white/40' : 'text-slate-700'}`}>
                   {item.txt}
                 </p>
               </div>

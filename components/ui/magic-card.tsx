@@ -39,7 +39,7 @@ export function MagicCard({
         <BlurFade delay={delay} inView>
             <Card
                 className={cn(
-                    "relative overflow-hidden bg-gradient-to-br from-purple-900/10 to-pink-900/10 backdrop-blur-sm border-purple-500/20 shadow-lg",
+                    "relative overflow-hidden bg-transparent border-white/5 shadow-lg",
                     enableHover && "hover:scale-[1.02] transition-transform duration-300",
                     className
                 )}

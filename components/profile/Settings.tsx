@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { User, Lock, Save, KeyRound, ShieldCheck, ChevronRight, UserCheck, School, BookOpen } from "lucide-react"
-import { MagicTitle } from "@/components/ui/magic-title"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { MagicCard } from "@/components/ui/magic-card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -97,21 +96,22 @@ export function Settings() {
   const initials = displayName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "ST"
 
   return (
-    <div className="min-h-screen p-4 md:p-12 bg-transparent relative overflow-hidden">
-      {/* Fondos Decorativos */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#B500D1]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-cyan-500/5 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen p-4 md:p-12 bg-[#02140c] relative overflow-hidden text-white">
+      {/* Fondos Decorativos con tonos verdes y dorados */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-[#d0b04d]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#0d971f]/10 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-5xl mx-auto relative z-10">
 
         {/* Encabezado */}
         <BlurFade delay={0.1} inView>
           <div className="flex flex-col gap-2 mb-10 pl-16 md:pl-0">
-            <MagicTitle variant="sparkles" className="text-3xl md:text-6xl tracking-[0.2em] font-black uppercase">
+            <h1 className="text-3xl md:text-6xl tracking-[0.2em] font-black uppercase text-white">
               CONFIGURACIÓN
-            </MagicTitle>
+            </h1>
+            <div className="w-48 sm:w-64 md:w-80 h-[2px] bg-gradient-to-r from-[#baef00] to-[#3c5a21] my-2" />
             <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl">
-              <ShieldCheck size={14} className="text-[#B500D1]" />
+              <ShieldCheck size={14} className="text-[#d0b04d]" />
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Información de la Cuenta y Seguridad</span>
             </div>
           </div>
@@ -119,26 +119,26 @@ export function Settings() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col lg:flex-row gap-8">
 
-          {/* Menú Lateral de Opciones (Solo 2 Opciones) */}
+          {/* Menú Lateral de Opciones */}
           <div className="lg:w-72 flex-shrink-0">
-            <MagicCard className="p-3 rounded-[2rem] bg-white/[0.02] backdrop-blur-3xl border-white/5 shadow-2xl sticky top-8">
+            <MagicCard className="p-3 rounded-[2rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl sticky top-8">
               <TabsList className="flex flex-col h-auto bg-transparent gap-2 w-full">
                 <TabsTrigger
                   value="account"
-                  className="justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent data-[state=active]:bg-[#B500D1] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(181,0,209,0.3)] hover:bg-white/5 group"
+                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-white/5 group"
                 >
-                  <User size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>Información</span>
-                  <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100" />
+                  <User size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span className="text-left truncate">Información</span>
+                  <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100 flex-shrink-0" />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="password"
-                  className="justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent data-[state=active]:bg-[#B500D1] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(181,0,209,0.3)] hover:bg-white/5 group"
+                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-slate-300 data-[state=active]:bg-[#0d971f] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(13,151,31,0.3)] hover:bg-white/5 group"
                 >
-                  <Lock size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>Cambiar Contraseña</span>
-                  <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100" />
+                  <Lock size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <span className="text-left truncate">Cambiar Contraseña</span>
+                  <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100 flex-shrink-0" />
                 </TabsTrigger>
               </TabsList>
             </MagicCard>
@@ -156,10 +156,10 @@ export function Settings() {
               >
                 {/* --- TAB 1: INFORMACIÓN DE LA CUENTA --- */}
                 {activeTab === "account" && (
-                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border-white/5 shadow-2xl overflow-hidden">
+                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl overflow-hidden">
                     <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/5">
-                      <Avatar className="w-16 h-16 border-2 border-[#B500D1]/50 shadow-xl">
-                        <AvatarFallback className="bg-gradient-to-br from-[#B500D1] to-cyan-500 text-white font-black text-xl">
+                      <Avatar className="w-16 h-16 border-2 border-[#0d971f]/50 shadow-xl">
+                        <AvatarFallback className="bg-gradient-to-br from-[#0d971f] to-[#d0b04d] text-white font-black text-xl">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
@@ -175,7 +175,7 @@ export function Settings() {
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Nombre de Usuario</Label>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
-                          <UserCheck size={16} className="text-[#B500D1]" />
+                          <UserCheck size={16} className="text-[#0d971f]" />
                           <span>{userData.username || "No asignado"}</span>
                         </div>
                       </div>
@@ -183,7 +183,7 @@ export function Settings() {
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Correo Electrónico</Label>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold truncate">
-                          <User size={16} className="text-cyan-400" />
+                          <User size={16} className="text-[#d0b04d]" />
                           <span className="truncate">{userData.email || "No registrado"}</span>
                         </div>
                       </div>
@@ -191,7 +191,7 @@ export function Settings() {
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Universidad</Label>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
-                          <School size={16} className="text-purple-400" />
+                          <School size={16} className="text-[#0d971f]" />
                           <span>{userData.school || "UCSM"}</span>
                         </div>
                       </div>
@@ -199,7 +199,7 @@ export function Settings() {
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Grupo</Label>
                         <div className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold">
-                          <BookOpen size={16} className="text-emerald-400" />
+                          <BookOpen size={16} className="text-[#d0b04d]" />
                           <span>{userData.classroom || "No asignada"}</span>
                         </div>
                       </div>
@@ -209,9 +209,9 @@ export function Settings() {
 
                 {/* --- TAB 2: CAMBIAR CONTRASEÑA --- */}
                 {activeTab === "password" && (
-                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border-white/5 shadow-2xl">
+                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-white/[0.02] backdrop-blur-3xl border border-white/5 shadow-2xl">
                     <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/5">
-                      <div className="w-12 h-12 rounded-2xl bg-[#B500D1]/10 border border-[#B500D1]/20 flex items-center justify-center text-[#B500D1]">
+                      <div className="w-12 h-12 rounded-2xl bg-[#0d971f]/10 border border-[#0d971f]/20 flex items-center justify-center text-[#0d971f]">
                         <KeyRound size={24} />
                       </div>
                       <div>
@@ -222,8 +222,11 @@ export function Settings() {
 
                     <form onSubmit={handleChangePassword} className="space-y-6 max-w-md">
                       {passMessage && (
-                        <div className={`p-4 rounded-2xl text-xs font-bold uppercase tracking-wider ${passMessage.type === "success" ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" : "bg-red-500/20 border border-red-500/40 text-red-400"
-                          }`}>
+                        <div className={`p-4 rounded-2xl text-xs font-bold uppercase tracking-wider ${
+                          passMessage.type === "success" 
+                            ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" 
+                            : "bg-red-500/20 border border-red-500/40 text-red-400"
+                        }`}>
                           {passMessage.text}
                         </div>
                       )}
@@ -235,7 +238,7 @@ export function Settings() {
                           placeholder="••••••••"
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#B500D1]"
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#0d971f]"
                         />
                       </div>
 
@@ -246,7 +249,7 @@ export function Settings() {
                           placeholder="••••••••"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#B500D1]"
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#0d971f]"
                         />
                       </div>
 
@@ -257,14 +260,14 @@ export function Settings() {
                           placeholder="••••••••"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#B500D1]"
+                          className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-[#0d971f]"
                         />
                       </div>
 
                       <Button
                         type="submit"
                         disabled={passLoading}
-                        className="w-full h-14 rounded-2xl bg-[#B500D1] hover:bg-[#B500D1]/80 text-white font-black uppercase tracking-widest shadow-[0_0_25px_rgba(181,0,209,0.3)] transition-all active:scale-95"
+                        className="w-full h-14 rounded-2xl bg-[#0d971f] hover:bg-[#0d971f]/80 text-white font-black uppercase tracking-widest shadow-[0_0_25px_rgba(13,151,31,0.3)] transition-all active:scale-95"
                       >
                         {passLoading ? "Guardando..." : "Actualizar Contraseña"}
                       </Button>
@@ -275,6 +278,7 @@ export function Settings() {
               </motion.div>
             </AnimatePresence>
           </div>
+
         </Tabs>
       </div>
     </div>
