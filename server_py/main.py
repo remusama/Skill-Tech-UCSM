@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Add project root to sys.path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_DIR)
 
@@ -10,11 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 from server_py.config import settings  # noqa: E402
 
-# Modular imports
 from server_py.chat import router as chat_router  # noqa: E402
 from server_py.chat import ws_router as ws_chat_router  # noqa: E402
 from server_py.diagnostico import router as diagnosis_router  # noqa: E402
-from server_py.diagnostico import journey_router, leadership_router, neo_router, cepv_router  # noqa: E402
+from server_py.diagnostico import journey_router, leadership_router, neo_router, cepv_router, ccl_router  # noqa: E402
 from server_py.eleonor import api_client as gemini_router  # noqa: E402
 from server_py.auth import router as auth_router  # noqa: E402
 from server_py.user import router as user_router  # noqa: E402
@@ -28,18 +26,12 @@ from server_py.memoria.database import init_db  # noqa: E402
 from server_py.scripts.auto_migrate import run_auto_migrations  # noqa: E402
 from server_py.scripts.auto_seed_students import auto_seed_students  # noqa: E402
 
-# Initialize Database (Create tables if they do not exist)
 init_db()
-
-# Run automatic migrations (safely adds missing columns without dropping data)
 run_auto_migrations()
-
-# Auto-seed student accounts (registers 48 students automatically if not present)
 auto_seed_students()
 
 app = FastAPI(title="Eleonor Backend Modular")
 
-# CORS configuration restricted to ALLOWED_ORIGINS and FRONTEND_URL
 raw_origins = settings.ALLOWED_ORIGINS
 if settings.FRONTEND_URL and settings.FRONTEND_URL not in raw_origins:
     raw_origins = f"{raw_origins},{settings.FRONTEND_URL}"
@@ -55,7 +47,6 @@ for origin in raw_origins.split(","):
 if "https://skill-tech-ucsm.netlify.app" not in allowed_origins:
     allowed_origins.append("https://skill-tech-ucsm.netlify.app")
 
-# VALIDACION PARA PRODUCCION - Activarlo por seguridad para evitar solicitudes X cuando tengan acceso a la web
 if "*" in allowed_origins:
     raise RuntimeError(
         "ALLOWED_ORIGINS no puede ser '*' (o incluir '*') porque el backend usa "
@@ -72,7 +63,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
 app.include_router(chat_router.router)
 app.include_router(ws_chat_router.router)
 app.include_router(diagnosis_router.router)
@@ -80,6 +70,7 @@ app.include_router(journey_router.router)
 app.include_router(leadership_router.router)
 app.include_router(neo_router.router)
 app.include_router(cepv_router.router)
+app.include_router(ccl_router.router)
 app.include_router(gemini_router.router)
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
@@ -93,7 +84,6 @@ app.include_router(mentor_exams.router)
 app.include_router(attendance.router)
 
 
-# Simple Health check
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "2.0.0-modular"}

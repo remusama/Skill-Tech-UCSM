@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { QuizInterface } from "../quiz/QuizInterface"
 import { LewinLeadershipTest } from "../quiz/LewinLeadershipTest"
 import { NeoPiRTest } from "../quiz/NeoPiRTest"
+import { CCLTest } from "../quiz/CCLTest"
 import { CepvSurvey } from "../quiz/CepvSurvey"
 import { getRandomQuestions } from "../quiz/QuizData"
 import { cn } from "@/lib/utils"
@@ -24,7 +25,6 @@ import { academicAreas, personalAreas } from "@/lib/data/courseData"
 
 const allAreas = [...academicAreas, ...personalAreas]
 
-// --- TEMAS ADAPTATIVOS (Contraste corregido para Light / Dark) ---
 const THEMES: Record<string, { color: string, textColor: string, badge: string, tab: string, via: string }> = {
     ciencias: {
         color: "from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-500",
@@ -116,9 +116,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     const [activeCategory, setActiveCategory] = useState<'academica' | 'personal' | 'mentoria'>('mentoria')
     const [mentorExams, setMentorExams] = useState<any[]>([])
     const [loadingMentorExams, setLoadingMentorExams] = useState(false)
-    
     const [selectedTab, setSelectedTab] = useState<'examenes' | 'practicas' | 'escenarios'>("examenes")
-    
     const [selectedArea, setSelectedArea] = useState("ciencias")
     const [showNotification, setShowNotification] = useState(false)
     const [activeExam, setActiveExam] = useState<any>(null)
@@ -210,11 +208,15 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
     const handleStartExam = (exam: any) => {
         if (!currentArea) return;
-        if (currentArea.id === "psicometria" || exam.disabled || exam.status?.includes("trabajando")) {
+        if (exam.disabled || exam.status?.includes("trabajando")) {
             return
         }
         if (currentArea.id === "expectativas" && exam.id === "cepv-20") {
             setActiveExam({ ...exam, areaName: currentArea.name, isCepv: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "ccl-36") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isCCL: true })
             return
         }
         const questions = getRandomQuestions(currentArea.id, exam.title, exam.questions)
@@ -296,6 +298,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 </motion.div>
             )
         }
+        if ((activeExam as any).isCCL) {
+            return (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-slate-50 dark:bg-[#0B0121] overflow-auto">
+                    <CCLTest onExit={handleCancelExam} onComplete={() => {}} />
+                </motion.div>
+            )
+        }
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
@@ -326,7 +335,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         <div ref={practiceContainerRef} id="practice-scroll-container" className="relative min-h-screen text-slate-900 dark:text-white overflow-y-auto overflow-x-hidden font-sans flex flex-col pt-6">
             <div ref={topAnchorRef} className="absolute top-0 left-0 w-0 h-0" aria-hidden />
 
-            {/* TOP HEADER CON CORRECCIÓN DE VISIBILIDAD */}
             <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00] drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
@@ -340,7 +348,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
             </div>
 
             <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
-                {/* BOTONES DE CATEGORÍA CON TEXTO VISIBLE EN MODO CLARO */}
                 <div className="flex gap-2 p-1.5 bg-slate-200/90 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 rounded-2xl w-fit">
                     {(["mentoria", "personal"] as const).map((cat) => (
                         <button
@@ -424,7 +431,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                     </div>
                 )}
 
-                {/* SUBTÍTULO Y LISTADO CON TEXTO CORREGIDO PARA MODO CLARO */}
                 {activeCategory === 'mentoria' && (
                     <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
                         <div className="flex items-center gap-2 mb-2">
@@ -535,13 +541,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                                     Módulo 0{i + 1}
                                                                 </span>
                                                                 <Badge variant="outline" className={cn("border-0 font-bold text-[10px] px-2 py-0.5 backdrop-blur-md rounded-md",
-                                                                    (currentArea?.id === "psicometria" || exam.disabled)
+                                                                    exam.disabled
                                                                         ? 'text-amber-900 bg-amber-200 dark:text-amber-300 dark:bg-amber-500/20 border border-amber-500/30'
                                                                         : exam.status === 'Disponible' 
                                                                             ? 'text-emerald-900 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-400/10' 
                                                                             : 'text-slate-700 bg-slate-200/80 dark:text-gray-500 dark:bg-black/40'
                                                                 )}>
-                                                                    {(currentArea?.id === "psicometria" || exam.disabled) ? '(Ingenieros trabajando)' : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
+                                                                    {exam.disabled ? '(Ingenieros trabajando)' : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
                                                                 </Badge>
                                                             </div>
                                                             <div className="p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors">
@@ -586,7 +592,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                             </div>
                                                         </div>
 
-                                                        {(currentArea?.id === "psicometria" || exam.disabled) ? (
+                                                        {exam.disabled ? (
                                                             <Button
                                                                 disabled
                                                                 className="w-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold tracking-wide py-5 rounded-xl cursor-not-allowed opacity-80"
