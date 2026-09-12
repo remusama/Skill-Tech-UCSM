@@ -20,7 +20,8 @@ import {
   Users,
   Folder,
   Archive,
-  Calendar
+  Calendar,
+  PieChart
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -43,6 +44,7 @@ const navItems = [
 const teacherNavItems = [
   { icon: BarChart2, label: "Dashboard", page: "mentor-dashboard" },
   { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
+  { icon: PieChart, label: "Psicometría", page: "mentor-psicometria" },
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
   { icon: Folder, label: "Grupos", page: "mentor-groups" },
   { icon: FileText, label: "Exámenes", page: "mentor-exams" },
