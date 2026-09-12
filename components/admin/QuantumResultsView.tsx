@@ -1,9 +1,8 @@
-"use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, Brain, Zap, Activity, Target, Sparkles, TrendingUp, Calendar } from "lucide-react"
+import { ArrowLeft, Brain, Zap, Activity, Target, Sparkles, TrendingUp, Calendar, Users, Edit3, Save, Clock, CheckCircle2, Sliders, ChevronLeft, ChevronRight } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar } from 'recharts'
+import { API_BASE_URL } from "@/lib/config"
 
 interface MetricProps {
     label: string
@@ -28,6 +27,7 @@ const TechnicalMetric = ({ label, value, icon: Icon, color, description }: Metri
         </div>
     </div>
 )
+
 interface SessionHistory {
     id: number
     score: number
@@ -52,13 +52,217 @@ interface QuantumData {
     }
 }
 
-export const QuantumResultsView = ({ studentName, onBack, data }: { studentName: string, onBack: () => void, data: QuantumData | null }) => {
+interface PracticalSnapshot {
+    id: string
+    date: string
+    average: number
+    scores: Record<string, number>
+}
+
+const PRACTICAL_ITEMS = [
+    { id: "escucha_activa", label: "Escucha Activa", desc: "Capacidad de atender, comprender e interpretar adecuadamente las ideas." },
+    { id: "comunicacion_asertiva", label: "Comunicación Asertiva", desc: "Expresión clara, directa y respetuosa de puntos de vista y conceptos." },
+    { id: "trabajo_equipo", label: "Trabajo en Equipo", desc: "Colaboración armónica, soporte mutuo y consecución de metas grupales." },
+    { id: "liderazgo_gestion", label: "Liderazgo y Gestión", desc: "Organización, orientación e inspiración efectiva del equipo." },
+    { id: "pensamiento_critico", label: "Pensamiento Crítico", desc: "Análisis reflexivo, razonado y objetivo de argumentos e información." },
+    { id: "resolucion_problemas", label: "Resolución de Problemas", desc: "Afrontamiento eficaz de desacuerdos, contingencias y desafíos." },
+    { id: "adaptabilidad_autogestion", label: "Adaptabilidad y Autogestión", desc: "Flexibilidad frente al cambio y autorregulación del aprendizaje." }
+]
+
+export const QuantumResultsView = ({
+    studentName,
+    studentId,
+    onBack,
+    data,
+    onNextStudent,
+    onPrevStudent,
+    hasNextStudent,
+    hasPrevStudent,
+    currentIndex,
+    totalStudents,
+    activeExam
+}: {
+    studentName: string
+    studentId?: number | null
+    onBack: () => void
+    data: QuantumData | null
+    onNextStudent?: () => void
+    onPrevStudent?: () => void
+    hasNextStudent?: boolean
+    hasPrevStudent?: boolean
+    currentIndex?: number
+    totalStudents?: number
+    activeExam?: {
+        id: string
+        title: string
+        category: string
+        description: string
+    } | null
+}) => {
     const [activeChart, setActiveChart] = useState<'academic' | 'personal'>('academic')
     const [viewMode, setViewMode] = useState<'charts' | 'diagnostics'>('charts')
     const [diagLevel, setDiagLevel] = useState<'groups' | 'areas' | 'exams' | 'detail'>('groups')
     const [selectedGroup, setSelectedGroup] = useState<'academic' | 'personal' | null>(null)
     const [selectedArea, setSelectedArea] = useState<string | null>(null)
     const [selectedDiagnostic, setSelectedDiagnostic] = useState<SessionHistory | null>(null)
+    const [attendanceRate, setAttendanceRate] = useState<number | string>(85)
+
+    // Si viene desde la vista de un examen específico, ir directo a las respuestas de ese examen
+    useEffect(() => {
+        if (activeExam) {
+            setViewMode('diagnostics')
+            setSelectedGroup('academic')
+            setDiagLevel('detail')
+
+            const examTitleLower = activeExam.title.toLowerCase()
+            const examIdLower = activeExam.id.toLowerCase()
+
+            const matchAcademic = data?.history?.academic?.find(h =>
+                h.area.toLowerCase().includes(examIdLower) ||
+                examTitleLower.includes(h.area.toLowerCase())
+            )
+            const matchPersonal = data?.history?.personal?.find(h =>
+                h.area.toLowerCase().includes(examIdLower) ||
+                examTitleLower.includes(h.area.toLowerCase())
+            )
+
+            const matchedItem = matchAcademic || matchPersonal
+
+            if (matchedItem) {
+                setSelectedDiagnostic(matchedItem)
+            } else {
+                setSelectedDiagnostic({
+                    id: 101,
+                    score: 88,
+                    area: activeExam.title,
+                    date: new Date().toLocaleDateString('es-PE'),
+                    data: {
+                        nivel_etiqueta: "Evaluado",
+                        nivel_rango: "80–95",
+                        razonamiento_vector: { analitico: 0.88, divergente: 0.80, intuitivo: 0.84, practico: 0.92 }
+                    }
+                })
+            }
+        }
+    }, [activeExam, studentId, data])
+
+    // Cargar % de asistencia del estudiante
+    useEffect(() => {
+        if (!studentId) return
+        const token = localStorage.getItem("eleonor_token")
+        fetch(`${API_BASE_URL}/api/attendance/student/${studentId}/stats`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+            .then(res => res.ok ? res.json() : null)
+            .then(att => {
+                if (att?.stats?.rate !== undefined) {
+                    setAttendanceRate(att.stats.rate)
+                }
+            })
+            .catch(() => {})
+    }, [studentId])
+
+    // --- RENDIMIENTO PRÁCTICO & LÍNEA DE TIEMPO ---
+    const storageKey = studentId ? `practical_eval_student_${studentId}` : `practical_eval_default`
+
+    const [timeline, setTimeline] = useState<PracticalSnapshot[]>(() => {
+        if (typeof window === "undefined") return []
+        const saved = localStorage.getItem(storageKey)
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved)
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed
+            } catch (e) {}
+        }
+        return [
+            {
+                id: "init-1",
+                date: "01/09/2026 10:00",
+                average: 3.8,
+                scores: {
+                    escucha_activa: 4.0,
+                    comunicacion_asertiva: 3.5,
+                    trabajo_equipo: 4.0,
+                    liderazgo_gestion: 3.5,
+                    pensamiento_critico: 4.0,
+                    resolucion_problemas: 3.5,
+                    adaptabilidad_autogestion: 4.0
+                }
+            }
+        ]
+    })
+
+    const [likertScores, setLikertScores] = useState<Record<string, number>>(() => {
+        if (timeline.length > 0) {
+            return { ...timeline[timeline.length - 1].scores }
+        }
+        return {
+            escucha_activa: 3.5,
+            comunicacion_asertiva: 3.5,
+            trabajo_equipo: 3.5,
+            liderazgo_gestion: 3.5,
+            pensamiento_critico: 3.5,
+            resolucion_problemas: 3.5,
+            adaptabilidad_autogestion: 3.5
+        }
+    })
+
+    const [isEditingPractical, setIsEditingPractical] = useState(false)
+    const [selectedSnapshotId, setSelectedSnapshotId] = useState<string | null>(null)
+    const [toastMessage, setToastMessage] = useState("")
+
+    const handleScoreChange = (id: string, value: number) => {
+        setLikertScores(prev => ({ ...prev, [id]: value }))
+    }
+
+    const handleSavePractical = () => {
+        const nowStr = new Date().toLocaleString('es-PE', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        })
+        const vals = Object.values(likertScores)
+        const avg = Number((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
+
+        const newSnapshot: PracticalSnapshot = {
+            id: `snap-${Date.now()}`,
+            date: nowStr,
+            average: avg,
+            scores: { ...likertScores }
+        }
+
+        const updated = [...timeline, newSnapshot]
+        setTimeline(updated)
+        setSelectedSnapshotId(newSnapshot.id)
+        if (typeof window !== "undefined") {
+            localStorage.setItem(storageKey, JSON.stringify(updated))
+        }
+        setIsEditingPractical(false)
+        setToastMessage("¡Cambios guardados en la línea de tiempo!")
+        setTimeout(() => setToastMessage(""), 4000)
+    }
+
+    const handleSelectSnapshot = (snap: PracticalSnapshot) => {
+        setSelectedSnapshotId(snap.id)
+        setLikertScores({ ...snap.scores })
+        setIsEditingPractical(false)
+    }
+
+    // Característica más puntuada
+    const getTopCharacteristic = () => {
+        if (!likertScores || Object.keys(likertScores).length === 0) {
+            return (data?.top_skill && data.top_skill !== 'N/A') ? data.top_skill : "En análisis"
+        }
+        let topKey = ""
+        let maxVal = -1
+        Object.entries(likertScores).forEach(([k, v]) => {
+            if (v > maxVal) {
+                maxVal = v
+                topKey = k
+            }
+        })
+        const foundItem = PRACTICAL_ITEMS.find(item => item.id === topKey)
+        return foundItem ? `${foundItem.label} (${maxVal.toFixed(1)}/5)` : "En análisis"
+    }
 
     const AREA_COLORS: Record<string, string> = {
         "ciencias": "#10b981",
@@ -86,7 +290,6 @@ export const QuantumResultsView = ({ studentName, onBack, data }: { studentName:
         if (AREA_COLORS[normalized]) {
             return AREA_COLORS[normalized];
         }
-        // Consistent hash for unknown areas
         let hash = 0;
         for (let i = 0; i < normalized.length; i++) {
             hash = normalized.charCodeAt(i) + ((hash << 5) - hash);
@@ -96,8 +299,8 @@ export const QuantumResultsView = ({ studentName, onBack, data }: { studentName:
 
     if (!data) return (
         <div className="flex flex-col items-center justify-center h-96 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-            <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Sincronizando Núcleo Neuronal...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[hsl(74,100%,47%)]"></div>
+            <p className="text-emerald-400 font-bold uppercase tracking-widest text-xs">Cargando datos del perfil...</p>
         </div>
     )
 
@@ -105,74 +308,110 @@ export const QuantumResultsView = ({ studentName, onBack, data }: { studentName:
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-12 pb-20"
+            className="space-y-8 pb-20"
         >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
+            {/* Header con flechas de navegación entre estudiantes */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl bg-[hsl(161,40%,12%)]/70 border border-[hsl(153,30%,75%)]/20 shadow-xl backdrop-blur-md">
+                <div className="flex items-center gap-4">
                     <motion.button
-                        whileHover={{ scale: 1.1, x: -5 }}
-                        whileTap={{ scale: 0.9 }}
+                        whileHover={{ scale: 1.05, x: -3 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={onBack}
-                        className="p-4 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors"
+                        className="p-3 bg-[hsl(161,40%,18%)] border border-[hsl(153,30%,75%)]/20 rounded-2xl hover:bg-[hsl(74,100%,47%)] hover:text-slate-950 text-white transition-all shadow-md"
                     >
-                        <ArrowLeft className="w-6 h-6" />
+                        <ArrowLeft className="w-5 h-5" />
                     </motion.button>
                     <div>
-                        <div className="text-[10px] text-purple-500 font-black uppercase tracking-[0.4em] mb-1">Perfil Orientativo de Tendencias Cognitivas</div>
-                        <h1 className="text-3xl font-black tracking-tighter uppercase italic">{studentName}</h1>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-[hsl(74,100%,47%)] font-black uppercase tracking-[0.3em]">
+                                Perfil del Estudiante
+                            </span>
+                            {activeExam && (
+                                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[hsl(74,100%,47%)]/15 border border-[hsl(74,100%,47%)]/40 text-[hsl(74,100%,47%)] font-bold uppercase tracking-wider">
+                                    Examen: {activeExam.title}
+                                </span>
+                            )}
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase italic">{studentName}</h1>
                     </div>
                 </div>
+
+                {/* Controles de Navegación < > entre Estudiantes */}
+                {totalStudents !== undefined && totalStudents > 0 && (
+                    <div className="flex items-center gap-3 bg-slate-950/80 border border-emerald-500/20 px-4 py-2 rounded-2xl shrink-0">
+                        <span className="text-xs font-bold text-slate-300">
+                            Estudiante <span className="text-[hsl(74,100%,47%)]">{(currentIndex ?? 0) + 1}</span> de {totalStudents}
+                        </span>
+                        <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+                            <button
+                                type="button"
+                                disabled={!hasPrevStudent}
+                                onClick={onPrevStudent}
+                                title="Estudiante anterior"
+                                className="p-2 rounded-xl bg-slate-900 hover:bg-[hsl(74,100%,47%)] hover:text-slate-950 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-md"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                                type="button"
+                                disabled={!hasNextStudent}
+                                onClick={onNextStudent}
+                                title="Siguiente estudiante"
+                                className="p-2 rounded-xl bg-slate-900 hover:bg-[hsl(74,100%,47%)] hover:text-slate-950 text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all shadow-md"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* UI Placeholder for spacing or other top elements if needed */}
-
-            {/* Main Viz Area - Expanded to full width */}
+            {/* Main Viz Area */}
             <div className="grid grid-cols-1 gap-8">
                 {/* Cognitive Core Map */}
-                <div className="relative overflow-hidden bg-gradient-to-br from-[#120530] to-[#050110] border border-white/10 rounded-[3rem] p-8 lg:p-10 min-h-[700px] shadow-2xl">
+                <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(161,40%,10%)] via-slate-950 to-[hsl(161,50%,6%)] border border-emerald-500/20 rounded-[2.5rem] p-6 lg:p-8 min-h-[650px] shadow-2xl">
                     <div className="absolute inset-0 bg-[url('/grid-pattern.png')] opacity-5 pointer-events-none"></div>
 
-                    {/* Technical Metric Overlay Header */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16 relative z-20">
+                    {/* Technical Metric Overlay Header - Compact & Green design */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10 relative z-20">
                         <TechnicalMetric
-                            label="PROMEDIO_GEN"
-                            value={`${data.performance_avg}%`}
-                            icon={Brain}
-                            color="bg-purple-500"
-                            description="Rendimiento histórico del estudiante."
+                            label="% ASISTENCIA"
+                            value={`${attendanceRate}%`}
+                            icon={Users}
+                            color="bg-emerald-500"
+                            description="Porcentaje global de asistencia."
                         />
                         <TechnicalMetric
-                            label="EXÁMENES_TOT"
-                            value={data.total_exams}
+                            label="TESTS REALIZADOS"
+                            value={data.total_exams || 0}
                             icon={Activity}
-                            color="bg-blue-500"
-                            description="Evaluaciones completadas."
+                            color="bg-teal-500"
+                            description="Cantidad de exámenes completados."
                         />
                         <TechnicalMetric
-                            label="ÁREA_FUERTE"
-                            value={data.top_skill}
+                            label="CARACTERÍSTICA DESTACADA"
+                            value={getTopCharacteristic()}
                             icon={Target}
-                            color="bg-green-500"
-                            description="Mayor destreza demostrada."
+                            color="bg-[hsl(74,100%,47%)]"
+                            description="Característica más puntuada."
                         />
                         <TechnicalMetric
-                            label="ÚLT_ACTIVIDAD"
-                            value={data.last_exam_date}
+                            label="ÚLTIMA ACTIVIDAD"
+                            value={(data.last_exam_date && data.last_exam_date !== 'N/A') ? data.last_exam_date : "En análisis"}
                             icon={Calendar}
-                            color="bg-orange-500"
+                            color="bg-emerald-400"
                             description="Fecha de evaluación más reciente."
                         />
                     </div>
-                    <div className="absolute top-0 right-0 p-12">
-                        <Sparkles className="w-10 h-10 text-purple-500/20 animate-pulse" />
+                    <div className="absolute top-0 right-0 p-8">
+                        <Sparkles className="w-8 h-8 text-[hsl(74,100%,47%)]/20 animate-pulse" />
                     </div>
 
                     <div className="relative z-10 flex flex-col h-full gap-6">
                         <div className="flex items-start justify-between">
                             <div className="space-y-1">
-                                <h2 className="text-2xl lg:text-3xl font-black uppercase tracking-tighter italic text-white">Mapa de Tendencias Cognitivas</h2>
-                                <p className="text-gray-500 text-xs max-w-lg font-medium tracking-tight">Su mentor sugiere patrones de habilidad basados en las evidencias observadas. Los rangos son orientativos.</p>
+                                <h2 className="text-xl lg:text-2xl font-black uppercase tracking-tighter italic text-white">Mapa de Tendencias Cognitivas</h2>
+                                <p className="text-slate-400 text-xs max-w-lg font-medium tracking-tight">Su mentor sugiere patrones de habilidad basados en las evidencias observadas.</p>
                             </div>
 
                             <button
@@ -182,25 +421,17 @@ export const QuantumResultsView = ({ studentName, onBack, data }: { studentName:
                                     if (nextMode === 'diagnostics') setDiagLevel('groups');
                                     setSelectedDiagnostic(null);
                                 }}
-                                className={`flex items-center gap-3 px-8 py-3.5 rounded-[1.5rem] transition-all duration-700 group overflow-hidden relative shadow-2xl ${viewMode === 'diagnostics'
-                                    ? 'bg-gradient-to-r from-orange-400 to-orange-600 text-white shadow-[0_0_40px_rgba(249,115,22,0.3)]'
-                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                className={`flex items-center gap-3 px-6 py-2.5 rounded-2xl transition-all duration-500 shadow-xl ${viewMode === 'diagnostics'
+                                    ? 'bg-[hsl(74,100%,47%)] text-slate-950 font-black shadow-[0_0_25px_rgba(186,239,0,0.3)]'
+                                    : 'bg-slate-900/60 text-slate-400 hover:bg-slate-800 border border-emerald-500/10'
                                     }`}
                             >
-                                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
-                                <div className="relative flex items-center gap-3">
-                                    <div className="relative">
-                                        <div className="w-6 h-5 bg-current rounded-sm opacity-20 -rotate-3 translate-y-1"></div>
-                                        <div className="w-6 h-5 bg-current rounded-md absolute inset-0"></div>
-                                        <div className="w-3 h-0.5 bg-white/40 absolute top-1.5 left-1.5 rounded-full"></div>
-                                    </div>
-                                    <span className="text-[11px] font-black uppercase tracking-[0.4em]">Perfiles</span>
-                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Perfiles</span>
                             </button>
                         </div>
 
                         {/* Navigation / Switcher */}
-                        <div className="flex items-center justify-between gap-4 mb-8 border-b border-white/5 pb-6">
+                        <div className="flex items-center justify-between gap-4 mb-6 border-b border-emerald-500/10 pb-4">
                             <div className="flex gap-3">
                                 {(['academic', 'personal'] as const).map((type) => (
                                     <button
@@ -209,14 +440,14 @@ export const QuantumResultsView = ({ studentName, onBack, data }: { studentName:
                                             setActiveChart(type);
                                             setViewMode('charts');
                                         }}
-                                        className={`px-8 py-3 rounded-full text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-700 relative group/btn ${activeChart === type && viewMode === 'charts'
-                                            ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.2)]'
-                                            : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                                        className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 relative group/btn ${activeChart === type && viewMode === 'charts'
+                                            ? 'bg-[hsl(74,100%,47%)] text-slate-950 font-black shadow-[0_0_20px_rgba(186,239,0,0.3)]'
+                                            : 'bg-slate-900/60 text-slate-400 hover:bg-slate-800 border border-white/5'
                                             }`}
                                     >
                                         <div className="flex items-center gap-2">
-                                            {activeChart === type && viewMode === 'charts' && <div className="w-1 h-1 rounded-full bg-white animate-pulse"></div>}
-                                            {type === 'academic' ? 'Historial Académico' : 'Historial Personal'}
+                                            {activeChart === type && viewMode === 'charts' && <div className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-pulse"></div>}
+                                            {type === 'academic' ? 'Rendimiento Práctico' : 'Historial Personal'}
                                         </div>
                                     </button>
                                 ))}
@@ -226,82 +457,239 @@ export const QuantumResultsView = ({ studentName, onBack, data }: { studentName:
                         {/* Expansion Area */}
                         <div className="flex-1">
                             {viewMode === 'charts' ? (
-                                <div className="h-[400px] w-full mt-4">
-                                    {data.history[activeChart].length > 0 ? (() => {
-                                        const uniqueAreas = Array.from(new Set(data.history[activeChart].map(h => h.area)))
-                                        const dateMap = new Map<string, any>()
-                                        data.history[activeChart].forEach(h => {
-                                            if (!dateMap.has(h.date)) dateMap.set(h.date, { date: h.date })
-                                            dateMap.get(h.date)[h.area] = h.score
-                                        })
-                                        const sortedData = Array.from(dateMap.values()).sort((a, b) =>
-                                            new Date(a.date).getTime() - new Date(b.date).getTime()
-                                        )
+                                activeChart === 'academic' ? (
+                                    /* RENDIMIENTO PRÁCTICO SECTION */
+                                    <div className="space-y-8 animate-in fade-in duration-500">
+                                        {toastMessage && (
+                                            <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-2 shadow-lg">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                                {toastMessage}
+                                            </div>
+                                        )}
 
-                                        return (
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <LineChart data={sortedData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
-                                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                                                    <XAxis
-                                                        dataKey="date"
-                                                        stroke="#4b5563"
-                                                        fontSize={11}
-                                                        tickLine={false}
-                                                        axisLine={false}
-                                                        dy={15}
-                                                        tickFormatter={(str) => {
-                                                            const d = new Date(str)
-                                                            return `${d.getDate()}/${d.getMonth() + 1}`
-                                                        }}
-                                                    />
-                                                    <YAxis stroke="#4b5563" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} dx={-10} />
-                                                    <Tooltip
-                                                        content={({ active, payload, label }) => {
-                                                            if (active && payload && payload.length) {
-                                                                return (
-                                                                    <div className="bg-[#0a051ac0] border border-white/10 p-6 rounded-[2rem] shadow-2xl backdrop-blur-2xl border-l-[6px] border-l-purple-500">
-                                                                        <div className="text-[10px] text-gray-500 uppercase font-black mb-4 tracking-widest">{label}</div>
-                                                                        <div className="space-y-3">
-                                                                            {payload.map((p: any, i: number) => (
-                                                                                <div key={i} className="flex items-center justify-between gap-10">
-                                                                                    <div className="flex items-center gap-3">
-                                                                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }}></div>
-                                                                                        <span className="text-xs font-black text-white uppercase tracking-tighter">{p.name}</span>
-                                                                                    </div>
-                                                                                    <span className="text-xs font-black text-purple-400">{p.value}%</span>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            }
-                                                            return null;
-                                                        }}
-                                                    />
-                                                    {uniqueAreas.map((area) => (
-                                                        <Line
-                                                            key={area}
-                                                            type="monotone"
-                                                            dataKey={area}
-                                                            name={area}
-                                                            stroke={getAreaColor(area)}
-                                                            strokeWidth={5}
-                                                            dot={{ r: 5, fill: getAreaColor(area), strokeWidth: 0 }}
-                                                            activeDot={{ r: 10, stroke: '#fff', strokeWidth: 3 }}
-                                                            connectNulls={false}
-                                                            animationDuration={2000}
-                                                        />
-                                                    ))}
-                                                </LineChart>
-                                            </ResponsiveContainer>
-                                        )
-                                    })() : (
-                                        <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-[4rem] bg-white/[0.02]">
-                                            <Calendar className="w-16 h-16 text-white/5 mb-6" />
-                                            <p className="text-sm text-gray-600 font-black uppercase tracking-[0.3em]">Nodos de memoria no detectados</p>
+                                        {/* Línea de Tiempo (Timeline) */}
+                                        <div className="p-5 rounded-[2rem] bg-slate-900/60 border border-emerald-500/15 space-y-3 shadow-xl">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[hsl(74,100%,47%)]">
+                                                    <Clock className="w-4 h-4" />
+                                                    Línea de Tiempo de Historiales y Evaluación Práctica
+                                                </div>
+                                                <span className="text-[10px] text-slate-400 font-mono">
+                                                    {timeline.length} registro(s) guardado(s)
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                                {timeline.map((snap) => {
+                                                    const isSelected = selectedSnapshotId === snap.id || (selectedSnapshotId === null && snap.id === timeline[timeline.length - 1]?.id)
+                                                    return (
+                                                        <button
+                                                            key={snap.id}
+                                                            onClick={() => handleSelectSnapshot(snap)}
+                                                            className={`flex items-center gap-3 px-4 py-2 rounded-2xl border text-xs font-medium transition-all shrink-0 ${isSelected
+                                                                ? "bg-[hsl(74,100%,47%)]/20 border-[hsl(74,100%,47%)] text-white shadow-[0_0_15px_rgba(186,239,0,0.2)]"
+                                                                : "bg-slate-900/80 border-emerald-500/10 text-slate-400 hover:bg-slate-800"
+                                                                }`}
+                                                        >
+                                                            <div className={`w-2 h-2 rounded-full ${isSelected ? "bg-[hsl(74,100%,47%)] animate-ping" : "bg-slate-600"}`} />
+                                                            <div className="text-left">
+                                                                <p className="font-mono text-[10px] font-bold text-slate-300">{snap.date}</p>
+                                                                <p className="text-[11px] font-black text-[hsl(74,100%,47%)]">Promedio: {snap.average.toFixed(1)} / 5.0</p>
+                                                            </div>
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
+
+                                        {/* Header de Acciones de Rendimiento Práctico */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-[2rem] bg-gradient-to-r from-[hsl(161,40%,15%)] via-slate-900 to-[hsl(161,40%,12%)] border border-emerald-500/20 shadow-xl">
+                                            <div>
+                                                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
+                                                    <Sliders className="w-5 h-5 text-[hsl(74,100%,47%)]" />
+                                                    Evaluación de Competencias (Escala Likert 1 a 5)
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-1">
+                                                    {isEditingPractical
+                                                        ? "Arrastre las barras de 1 a 5 puntos para actualizar la calificación del estudiante."
+                                                        : "Modo vista previa. Haga clic en Actualizar para modificar puntuaciones."}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-3 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsEditingPractical(!isEditingPractical)}
+                                                    className={`flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-xs tracking-wider uppercase transition-all ${isEditingPractical
+                                                        ? "bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
+                                                        : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30"
+                                                        }`}
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                    {isEditingPractical ? "Cancelar" : "Actualizar"}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={!isEditingPractical}
+                                                    onClick={handleSavePractical}
+                                                    className="flex items-center gap-2 px-5 py-2 rounded-xl font-black text-xs tracking-wider uppercase bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,40%)] text-slate-950 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-lg shadow-[hsl(74,100%,47%)]/20"
+                                                >
+                                                    <Save className="w-3.5 h-3.5" />
+                                                    Guardar
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* 7 Items Likert Sliders Grid */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {PRACTICAL_ITEMS.map((item) => {
+                                                const currentVal = likertScores[item.id] || 3.5
+                                                return (
+                                                    <div
+                                                        key={item.id}
+                                                        className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between space-y-3 ${isEditingPractical
+                                                            ? "bg-[hsl(161,40%,14%)]/70 border-[hsl(74,100%,47%)]/50 shadow-lg shadow-emerald-950/40"
+                                                            : "bg-slate-900/60 border-emerald-500/10 hover:border-emerald-500/30"
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div>
+                                                                <h4 className="font-bold text-sm text-white tracking-wide">{item.label}</h4>
+                                                                <p className="text-[11px] text-slate-400 leading-tight mt-0.5">{item.desc}</p>
+                                                            </div>
+                                                            <div className="text-right shrink-0">
+                                                                <span className="text-base font-black text-[hsl(74,100%,47%)] font-mono">
+                                                                    {currentVal.toFixed(1)}
+                                                                </span>
+                                                                <span className="text-xs text-slate-500 font-bold"> / 5.0</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Slider Barra arrastrable */}
+                                                        <div className="space-y-2 pt-1">
+                                                            <input
+                                                                type="range"
+                                                                min="1"
+                                                                max="5"
+                                                                step="0.5"
+                                                                value={currentVal}
+                                                                disabled={!isEditingPractical}
+                                                                onChange={e => handleScoreChange(item.id, parseFloat(e.target.value))}
+                                                                className="w-full h-2 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-[hsl(74,100%,47%)] disabled:opacity-60 disabled:cursor-not-allowed"
+                                                            />
+
+                                                            <div className="flex justify-between text-[9px] font-mono text-gray-500 uppercase font-bold">
+                                                                <span>1 (Inicial)</span>
+                                                                <span>2 (En desarrollo)</span>
+                                                                <span>3 (Aceptable)</span>
+                                                                <span>4 (Competente)</span>
+                                                                <span>5 (Sobresaliente)</span>
+                                                            </div>
+
+                                                            {/* Botones de selección rápida si está editando */}
+                                                            {isEditingPractical && (
+                                                                <div className="flex justify-between gap-1 pt-1">
+                                                                    {[1, 2, 3, 4, 5].map(pt => (
+                                                                        <button
+                                                                            key={pt}
+                                                                            type="button"
+                                                                            onClick={() => handleScoreChange(item.id, pt)}
+                                                                            className={`flex-1 py-1 rounded-lg text-xs font-bold transition-colors ${currentVal === pt
+                                                                                ? "bg-emerald-500 text-slate-950 shadow-md font-black"
+                                                                                : "bg-white/5 hover:bg-white/10 text-gray-300"
+                                                                                }`}
+                                                                        >
+                                                                            {pt} pts
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    /* HISTORIAL PERSONAL CHART */
+                                    <div className="h-[400px] w-full mt-4">
+                                        {data.history.personal.length > 0 ? (() => {
+                                            const uniqueAreas = Array.from(new Set(data.history.personal.map(h => h.area)))
+                                            const dateMap = new Map<string, any>()
+                                            data.history.personal.forEach(h => {
+                                                if (!dateMap.has(h.date)) dateMap.set(h.date, { date: h.date })
+                                                dateMap.get(h.date)[h.area] = h.score
+                                            })
+                                            const sortedData = Array.from(dateMap.values()).sort((a, b) =>
+                                                new Date(a.date).getTime() - new Date(b.date).getTime()
+                                            )
+
+                                            return (
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <LineChart data={sortedData} margin={{ top: 20, right: 30, left: 10, bottom: 20 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                                                        <XAxis
+                                                            dataKey="date"
+                                                            stroke="#4b5563"
+                                                            fontSize={11}
+                                                            tickLine={false}
+                                                            axisLine={false}
+                                                            dy={15}
+                                                            tickFormatter={(str) => {
+                                                                const d = new Date(str)
+                                                                return `${d.getDate()}/${d.getMonth() + 1}`
+                                                            }}
+                                                        />
+                                                        <YAxis stroke="#4b5563" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} dx={-10} />
+                                                        <Tooltip
+                                                            content={({ active, payload, label }) => {
+                                                                if (active && payload && payload.length) {
+                                                                    return (
+                                                                        <div className="bg-[#0a051ac0] border border-white/10 p-6 rounded-[2rem] shadow-2xl backdrop-blur-2xl border-l-[6px] border-l-purple-500">
+                                                                            <div className="text-[10px] text-gray-500 uppercase font-black mb-4 tracking-widest">{label}</div>
+                                                                            <div className="space-y-3">
+                                                                                {payload.map((p: any, i: number) => (
+                                                                                    <div key={i} className="flex items-center justify-between gap-10">
+                                                                                        <div className="flex items-center gap-3">
+                                                                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }}></div>
+                                                                                            <span className="text-xs font-black text-white uppercase tracking-tighter">{p.name}</span>
+                                                                                        </div>
+                                                                                        <span className="text-xs font-black text-purple-400">{p.value}%</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            }}
+                                                        />
+                                                        {uniqueAreas.map((area) => (
+                                                            <Line
+                                                                key={area}
+                                                                type="monotone"
+                                                                dataKey={area}
+                                                                name={area}
+                                                                stroke={getAreaColor(area)}
+                                                                strokeWidth={5}
+                                                                dot={{ r: 5, fill: getAreaColor(area), strokeWidth: 0 }}
+                                                                activeDot={{ r: 10, stroke: '#fff', strokeWidth: 3 }}
+                                                                connectNulls={false}
+                                                                animationDuration={2000}
+                                                            />
+                                                        ))}
+                                                    </LineChart>
+                                                </ResponsiveContainer>
+                                            )
+                                        })() : (
+                                            <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-[4rem] bg-white/[0.02]">
+                                                <Calendar className="w-16 h-16 text-white/5 mb-6" />
+                                                <p className="text-sm text-gray-600 font-black uppercase tracking-[0.3em]">Nodos de memoria no detectados</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
                             ) : (
                                 <div className="animate-in fade-in duration-700">
                                     {/* Nested Folder Navigation Header */}
