@@ -211,6 +211,14 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         if (exam.disabled || exam.status?.includes("trabajando")) {
             return
         }
+        if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "neo-240") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isNeo: true })
+            return
+        }
         if (currentArea.id === "expectativas" && exam.id === "cepv-20") {
             setActiveExam({ ...exam, areaName: currentArea.name, isCepv: true })
             return
