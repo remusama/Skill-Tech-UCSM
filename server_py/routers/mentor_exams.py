@@ -2,8 +2,9 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from server_py.memoria.database import get_db, User # Aqui se arreglo el import de User para que funcione correctamente
-from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorGroup, GroupStudent # Aqui se agregan algunos mas por si acaso (no me fije si los usa o no xd)
+from server_py.memoria.database import get_db, User, ExamResult # Aqui se arreglo el import de User para que funcione correctamente
+from server_py.mentoria.models import Agent, MentorExam, MentorExamQuestion, MentorExamAssignment, MentorGroup, GroupStudent, MentorExamAnswer
+from sqlalchemy.orm.attributes import flag_modified
 from server_py.routers.mentor import check_is_mentor
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic
@@ -443,3 +444,130 @@ async def get_exam_results(
         "dimensions": dimensions_result,
         "open_questions": open_questions_result,
     }
+
+
+# Apreciación de la Psicóloga ───────────────────────────────────
+
+class PsychFeedbackRequest(BaseModel):
+    psych_suggestion: str
+
+
+@router.patch("/api/mentor/students/{student_id}/sessions/{session_id}/psych-feedback")
+async def save_psych_feedback(
+    student_id: int,
+    session_id: int,
+    req: PsychFeedbackRequest,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Permite a un mentor/psicólogo guardar una apreciación manual sobre una sesión
+    de diagnóstico de un estudiante, persistida dentro de ExamResult.data (JSON)."""
+    check_is_mentor(current_user_id, db)
+
+    # session_id corresponde al id de ExamResult; se valida que pertenezca al student_id
+    # indicado para evitar que un mentor edite/lea la sesión de un estudiante equivocado.
+    exam_result = db.query(ExamResult).filter(
+        ExamResult.id == session_id,
+        ExamResult.user_id == student_id,
+    ).first()
+    if not exam_result:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada para este estudiante.")
+
+    if exam_result.data is None:
+        exam_result.data = {}
+
+    exam_result.data["psych_suggestion"] = req.psych_suggestion
+    flag_modified(exam_result, "data")
+    db.commit()
+    db.refresh(exam_result)
+
+    return {
+        "message": "Apreciación guardada correctamente.",
+        "student_id": student_id,
+        "session_id": session_id,
+        "psych_suggestion": exam_result.data.get("psych_suggestion"),
+    }
+
+
+# Examenes de un estudiante (vista del mentor) ─────────────────
+
+@router.get("/api/mentor/students/{student_id}/exams")
+async def get_exams_for_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Devuelve todos los exámenes de mentor asignados a un estudiante (directos o
+    por grupo), junto con sus respuestas si ya los completó."""
+    check_is_mentor(current_user_id, db)
+
+    student = db.query(User).filter(User.id == student_id, User.role == "student").first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Estudiante no encontrado.")
+
+    # Asignaciones directas
+    direct = db.query(MentorExamAssignment).filter(
+        MentorExamAssignment.student_id == student_id,
+    ).all()
+
+    # Asignaciones por grupo (a través de los grupos a los que pertenece el estudiante)
+    student_groups = db.query(GroupStudent).filter(GroupStudent.student_id == student_id).all()
+    group_ids = [gs.group_id for gs in student_groups]
+    group_assignments = db.query(MentorExamAssignment).filter(
+        MentorExamAssignment.group_id.in_(group_ids),
+        MentorExamAssignment.student_id.is_(None),
+    ).all() if group_ids else []
+
+    seen_exam_ids = set()
+    result = []
+
+    for assignment in direct + group_assignments:
+        if assignment.exam_id in seen_exam_ids:
+            continue
+        seen_exam_ids.add(assignment.exam_id)
+
+        exam = db.query(MentorExam).filter(MentorExam.id == assignment.exam_id).first()
+        if not exam:
+            continue
+        agent = db.query(Agent).filter(Agent.id == exam.agent_id).first()
+        questions = db.query(MentorExamQuestion).filter(
+            MentorExamQuestion.exam_id == exam.id
+        ).order_by(MentorExamQuestion.order).all()
+
+        answers_list = []
+        completed = assignment.status == "completed"
+        if completed:
+            # Solo tiene sentido buscar respuestas si esta asignación puntual (student_id
+            # directo) fue la que se completó; si vino por grupo, buscamos la asignación
+            # individual real del estudiante para este examen.
+            real_assignment = assignment
+            if assignment.student_id is None:
+                real_assignment = db.query(MentorExamAssignment).filter(
+                    MentorExamAssignment.exam_id == exam.id,
+                    MentorExamAssignment.student_id == student_id,
+                ).first() or assignment
+
+            answers = db.query(MentorExamAnswer).filter(
+                MentorExamAnswer.assignment_id == real_assignment.id
+            ).all()
+            answers_by_question = {a.question_id: a for a in answers}
+            for q in questions:
+                a = answers_by_question.get(q.id)
+                if a is None:
+                    continue
+                answers_list.append({
+                    "question": q.question,
+                    "question_type": q.question_type,
+                    "answer": a.value_text if q.question_type == "text" else a.value_numeric,
+                })
+
+        result.append({
+            "exam_id": exam.id,
+            "title": exam.title,
+            "agent_name": agent.name if agent else "Desconocido",
+            "status": assignment.status,
+            "completed": completed,
+            "answers": answers_list,
+        })
+
+    return result

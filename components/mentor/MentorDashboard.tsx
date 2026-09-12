@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    Users, Search, Folder, ChevronRight, BarChart3,
+    Users, Search, Folder, ChevronRight, ChevronDown, BarChart3,
     Plus, X, ArrowLeft, CheckCircle, Archive, Copy, FileText,
     BookOpen, Loader2, Trash2, Edit, ExternalLink
 } from "lucide-react"
@@ -23,6 +23,21 @@ interface Group {
     name: string
     description: string
     student_count: number
+}
+
+interface StudentExamAnswer {
+    question: string
+    question_type: string
+    answer: string | number | null
+}
+
+interface StudentExam {
+    exam_id: number
+    title: string
+    agent_name: string
+    status: string
+    completed: boolean
+    answers: StudentExamAnswer[]
 }
 
 interface MentorDashboardProps {
@@ -325,6 +340,149 @@ const ArchivesView = () => {
     )
 }
 
+// Tarea 6B — Vista de perfil de estudiante con pestañas: Perfil Cognitivo / Exámenes
+const StudentProfileView = ({
+    studentId,
+    studentName,
+    quantumData,
+    quantumLoading,
+    onBack,
+}: {
+    studentId: number
+    studentName: string
+    quantumData: any
+    quantumLoading: boolean
+    onBack: () => void
+}) => {
+    const [activeTab, setActiveTab] = useState<'cognitive' | 'exams'>('cognitive')
+    const [exams, setExams] = useState<StudentExam[]>([])
+    const [examsLoading, setExamsLoading] = useState(false)
+    const [examsError, setExamsError] = useState<string | null>(null)
+    const [expandedExamId, setExpandedExamId] = useState<number | null>(null)
+
+    useEffect(() => {
+        if (activeTab !== 'exams' || exams.length > 0) return
+        const fetchExams = async () => {
+            setExamsLoading(true)
+            setExamsError(null)
+            const token = localStorage.getItem("eleonor_token")
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/exams`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}))
+                    throw new Error(err.detail || "No se pudieron cargar los exámenes.")
+                }
+                setExams(await res.json())
+            } catch (e: any) {
+                setExamsError(e.message || "Error al cargar los exámenes.")
+            } finally {
+                setExamsLoading(false)
+            }
+        }
+        fetchExams()
+    }, [activeTab, studentId])
+
+    return (
+        <div className="space-y-6">
+            <button onClick={onBack}
+                className="flex items-center gap-2 text-[hsl(150,10%,80%)] hover:text-[hsl(74,100%,47%)] transition-colors text-sm font-medium">
+                <ArrowLeft className="w-4 h-4" /> Volver
+            </button>
+
+            {/* Pestañas */}
+            <div className="flex gap-2 border-b border-white/5">
+                <button
+                    onClick={() => setActiveTab('cognitive')}
+                    className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'cognitive' ? 'border-[hsl(74,100%,47%)] text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                >
+                    📊 Perfil Cognitivo
+                </button>
+                <button
+                    onClick={() => setActiveTab('exams')}
+                    className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'exams' ? 'border-[hsl(74,100%,47%)] text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                >
+                    📝 Exámenes
+                </button>
+            </div>
+
+            {activeTab === 'cognitive' && (
+                quantumLoading ? (
+                    <div className="flex items-center justify-center py-32">
+                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(74,100%,47%)]" />
+                    </div>
+                ) : (
+                    <QuantumResultsView
+                        studentId={studentId}
+                        studentName={studentName}
+                        onBack={onBack}
+                        data={quantumData}
+                    />
+                )
+            )}
+
+            {activeTab === 'exams' && (
+                <div className="space-y-3">
+                    {examsLoading ? (
+                        <div className="flex items-center justify-center py-32">
+                            <Loader2 className="w-8 h-8 text-gray-500 animate-spin" />
+                        </div>
+                    ) : examsError ? (
+                        <div className="p-8 border border-red-500/20 bg-red-500/5 rounded-3xl text-center">
+                            <p className="text-sm text-red-400 font-bold">{examsError}</p>
+                        </div>
+                    ) : exams.length === 0 ? (
+                        <div className="p-10 border border-dashed border-white/10 rounded-3xl text-center">
+                            <p className="text-xs text-gray-600 font-black uppercase tracking-widest italic">Este estudiante no tiene exámenes asignados.</p>
+                        </div>
+                    ) : (
+                        exams.map(exam => {
+                            const isExpanded = expandedExamId === exam.exam_id
+                            return (
+                                <div key={exam.exam_id} className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
+                                    <button
+                                        onClick={() => setExpandedExamId(isExpanded ? null : exam.exam_id)}
+                                        className="w-full flex items-center justify-between p-5 hover:bg-white/[0.03] transition-colors"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <FileText className="w-4 h-4 text-gray-500" />
+                                            <div className="text-left">
+                                                <div className="text-sm font-bold text-white">{exam.title}</div>
+                                                <div className="text-[10px] text-gray-500 uppercase tracking-widest">{exam.agent_name}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${exam.completed ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-gray-500'}`}>
+                                                {exam.completed ? 'Completado' : exam.status}
+                                            </span>
+                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
+                                        </div>
+                                    </button>
+                                    {isExpanded && (
+                                        <div className="border-t border-white/5 p-5 space-y-4">
+                                            {exam.answers.length === 0 ? (
+                                                <p className="text-xs text-gray-600 italic">Este estudiante aún no ha respondido este examen.</p>
+                                            ) : (
+                                                exam.answers.map((a, i) => (
+                                                    <div key={i} className="p-4 bg-black/20 rounded-2xl border border-white/5">
+                                                        <div className="text-xs font-bold text-white mb-2">{a.question}</div>
+                                                        <div className="text-xs text-gray-400">{a.answer ?? "—"}</div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
 export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) => {
     const [students, setStudents] = useState<Student[]>([])
     const [groups, setGroups] = useState<Group[]>([])
@@ -432,23 +590,13 @@ const SearchBar = () => (
 
     if (viewingStudentId) {
         return (
-            <div className="space-y-6">
-                <button onClick={() => { setViewingStudentId(null); setQuantumData(null) }}
-                    className="flex items-center gap-2 text-[hsl(150,10%,80%)] hover:text-[hsl(74,100%,47%)] transition-colors text-sm font-medium">
-                    <ArrowLeft className="w-4 h-4" /> Volver
-                </button>
-                {quantumLoading ? (
-                    <div className="flex items-center justify-center py-32">
-                        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(74,100%,47%)]" />
-                    </div>
-                ) : (
-                    <QuantumResultsView
-                        studentName={viewingStudentName}
-                        onBack={() => { setViewingStudentId(null); setQuantumData(null) }}
-                        data={quantumData}
-                    />
-                )}
-            </div>
+            <StudentProfileView
+                studentId={viewingStudentId}
+                studentName={viewingStudentName}
+                quantumData={quantumData}
+                quantumLoading={quantumLoading}
+                onBack={() => { setViewingStudentId(null); setQuantumData(null) }}
+            />
         )
     }
 

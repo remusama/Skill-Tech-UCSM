@@ -18,6 +18,7 @@ const MentorDashboard = dynamic(() => import("@/components/mentor/MentorDashboar
 const AgentCreator = dynamic(() => import("@/components/mentor/AgentCreator").then(mod => mod.AgentCreator), { ssr: false })
 const ExamCreator = dynamic(() => import("@/components/mentor/ExamCreator").then(mod => mod.ExamCreator), { ssr: false })
 const MentorAttendance = dynamic(() => import("@/components/mentor/MentorAttendance").then(mod => mod.MentorAttendance), { ssr: false })
+const PsicometriaDashboard = dynamic(() => import("@/components/mentor/PsicometriaDashboard").then(mod => mod.PsicometriaDashboard), { ssr: false })
 const AvatarDisplay = dynamic(() => import("@/components/avatar/AvatarDisplay"), { ssr: false })
 
 import { useEleonor } from "@/contexts/eleonor-context"
@@ -188,6 +189,7 @@ export default function Home() {
         <>
             {(currentPage === "mentor-dashboard" || currentPage === "skillmap") && <MentorDashboard view="dashboard" />}
             {currentPage === "mentor-attendance" && <MentorAttendance />}
+            {currentPage === "mentor-psicometria" && <PsicometriaDashboard />}
             {currentPage === "mentor-students" && <MentorDashboard view="students" />}
             {currentPage === "mentor-groups" && <MentorDashboard view="groups" />}
             {currentPage === "mentor-agents" && <AgentCreator />}

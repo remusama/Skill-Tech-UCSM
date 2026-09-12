@@ -119,6 +119,11 @@ async def get_mentor_exams(db: Session = Depends(get_db), current_user_id: int =
 
 @router.get("/students/{student_id}/history")
 async def get_student_history(student_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    # El estudiante puede ver su propio historial; cualquier otro caso requiere rol de mentor
+    # (antes no había ninguna verificación acá: cualquier usuario logueado podía leer el
+    # historial completo de exámenes de cualquier otro estudiante con solo cambiar el id).
+    if current_user_id != student_id:
+        check_is_mentor(current_user_id, db)
     history = db.query(ExamResult).filter(ExamResult.user_id == student_id).order_by(ExamResult.timestamp.desc()).all()
     return [{"id": h.id, "area": h.area, "score": h.score, "timestamp": h.timestamp.isoformat(), "details": h.data} for h in history]
 
@@ -162,3 +167,73 @@ async def get_group_students(group_id: int, db: Session = Depends(get_db), curre
             "average_level": avg_level
         })
     return result
+
+
+# ── Tarea 5A: Dashboard psicométrico ─────────────────────────────────────────
+
+VALID_PSICOMETRIA_AREAS = {"liderazgo", "liderazgo_ccl", "personalidad_neo"}
+
+
+@router.get("/dashboard/psicometria")
+async def get_psicometria_dashboard(
+    area: str,
+    group_id: int = None,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    """Devuelve, para el área psicométrica indicada, el último resultado de cada
+    estudiante (opcionalmente filtrado por grupo) junto con el promedio grupal."""
+    check_is_mentor(current_user_id, db)
+
+    if area not in VALID_PSICOMETRIA_AREAS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Área inválida. Debe ser una de: {', '.join(sorted(VALID_PSICOMETRIA_AREAS))}"
+        )
+
+    if group_id is not None:
+        group = db.query(MentorGroup).filter(MentorGroup.id == group_id).first()
+        if not group:
+            raise HTTPException(status_code=404, detail="Grupo no encontrado")
+        student_ids = [gs.student_id for gs in group.students]
+    else:
+        student_ids = [s.id for s in db.query(User).filter(User.role == "student").all()]
+
+    if not student_ids:
+        return {"area": area, "total": 0, "group_avg_score": 0, "students": []}
+
+    students_by_id = {s.id: s for s in db.query(User).filter(User.id.in_(student_ids)).all()}
+
+    # Último ExamResult por estudiante para el área dada
+    results = db.query(ExamResult).filter(
+        ExamResult.user_id.in_(student_ids),
+        ExamResult.area == area,
+    ).order_by(ExamResult.timestamp.desc()).all()
+
+    latest_by_student = {}
+    for r in results:
+        if r.user_id not in latest_by_student:
+            latest_by_student[r.user_id] = r
+
+    students_out = []
+    for student_id, result in latest_by_student.items():
+        student = students_by_id.get(student_id)
+        if not student:
+            continue
+        students_out.append({
+            "student_id": student.id,
+            "student_name": student.full_name or student.username,
+            "score": result.score,
+            "data": result.data,
+            "date": result.timestamp.isoformat() if result.timestamp else None,
+        })
+
+    total = len(students_out)
+    group_avg_score = round(sum(s["score"] or 0 for s in students_out) / total, 2) if total > 0 else 0
+
+    return {
+        "area": area,
+        "total": total,
+        "group_avg_score": group_avg_score,
+        "students": students_out,
+    }
