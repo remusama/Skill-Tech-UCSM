@@ -20,7 +20,6 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-
 # Rutas base.
 MEMORIA_DIR = os.path.dirname(os.path.abspath(__file__))
 SERVER_PY_DIR = os.path.dirname(MEMORIA_DIR)

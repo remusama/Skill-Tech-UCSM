@@ -56,6 +56,8 @@ tsconfig.tsbuildinfo
 # ─── Modelos de IA (archivos grandes) ─────────────────────────────
 Models Eleonor AI/
 # Google OAuth credentials
-client_secret_*.jsonusuario_registro/*.ods
+client_secret_*.json
+usuario_registro/*.ods
 usuario_registro/*.xlsx
 usuario_registro/reporte_registro_*.csv
+public/*.ods
