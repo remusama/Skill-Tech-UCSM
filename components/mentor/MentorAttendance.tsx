@@ -364,6 +364,20 @@ export function MentorAttendance() {
                 scan_type: scanMethod
             })
 
+            if (res.message.includes("ya había registrado")) {
+                setScannerStatus("error")
+
+                setScanFeedback({
+                    message: res.message,
+                    student: res.student_name,
+                    status: "already_registered"
+                })
+
+                playFeedbackSound("error")
+
+                return
+            }
+
             setScannerStatus("success")
 
             setScanFeedback({
@@ -400,18 +414,6 @@ export function MentorAttendance() {
             })
 
             playFeedbackSound("error")
-
-            setScanHistory(prev => [
-                {
-                    time: new Date().toLocaleTimeString(),
-                    student: "Desconocido",
-                    status: "error",
-                    method: scanMethod,
-                    success: false,
-                    errorMsg: message
-                },
-                ...prev.slice(0, 19)
-            ])
 
         } finally {
             scanInProgressRef.current = false

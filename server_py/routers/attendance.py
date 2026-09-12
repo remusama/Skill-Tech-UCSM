@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 import uuid
 from typing import List, Optional
 
@@ -267,11 +268,66 @@ async def scan_attendance(
                 detail=f"El estudiante {student.full_name or student.username} no está autorizado en esta clase/grupo."
             )
 
-    # Determinar si el registro ocurre dentro del tiempo límite
-    now = datetime.datetime.now()
-    current_time_str = now.strftime("%H:%M")
-    status_attendance = "tardanza" if current_time_str > c.late_time else "presente"
+    # Determinar fecha y hora actual usando explícitamente la zona horaria de Perú
+    peru_tz = ZoneInfo("America/Lima")
+    now = datetime.datetime.now(peru_tz)
 
+    # Convertir la fecha configurada de la clase
+    try:
+        class_date = datetime.datetime.strptime(
+            c.date,
+            "%Y-%m-%d"
+        ).date()
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="La fecha configurada para la clase no tiene un formato válido."
+        )
+
+    # Validar que la asistencia corresponda al mismo día de la clase
+    if now.date() != class_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"La asistencia solo puede registrarse el día de la clase "
+                f"({c.date})."
+            )
+        )
+
+    # Convertir las horas almacenadas en objetos time
+    try:
+        start_time = datetime.datetime.strptime(
+            c.start_time,
+            "%H:%M"
+        ).time()
+
+        late_time = datetime.datetime.strptime(
+            c.late_time,
+            "%H:%M"
+        ).time()
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="La hora de inicio o límite de tardanza no tiene un formato válido."
+        )
+
+    current_time = now.time().replace(second=0, microsecond=0)
+
+    # Antes del inicio de la clase todavía no corresponde registrar asistencia
+    if current_time < start_time:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"La asistencia todavía no está habilitada. "
+                f"La clase inicia a las {c.start_time}."
+            )
+        )
+
+    # Desde la hora de inicio hasta la hora límite: presente
+    if current_time <= late_time:
+        status_attendance = "presente"
+    else:
+        status_attendance = "tardanza"
     # Buscar registro existente o crear uno nuevo
     record = db.query(AttendanceRecord).filter(
         AttendanceRecord.class_id == c.id,
