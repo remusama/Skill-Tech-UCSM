@@ -226,18 +226,22 @@ export function JourneyVisualizer({ areaId, areaName, theme }: VisualizerProps) 
                 </div>
             </div>
 
-            {/* Skill Tree Visualizer */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 relative py-10 overflow-x-auto min-h-[400px]">
-                {/* SVG de conexiones */}
-                <div className="absolute inset-0 pointer-events-none z-0">
+{/--------------------------------------/}
+
+            {/* Skill Tree Visualizer (Horizontal)*/}
+            <div className="relative w-full h-[400px] py-10 overflow-x-auto">
+                
+                {/*1. El camino (SVG) */}
+                <div className="absolute inset-0 pointer-events-none z-0 min-w-[800px]">
                     <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                         <path
-                            d="M 120 150 Q 250 150, 400 150 T 680 150"
+                            d="M 5% 50% Q 15% 10%, 25% 50% T 45% 50% T 65% 50% T 85% 50% T 95% 50%"
                             stroke={`url(#grad-${areaId})`}
-                            strokeWidth="2"
+                            strokeWidth="6"
                             fill="none"
-                            className="opacity-20 hidden md:block"
-                            strokeDasharray="10 5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="opacity-20"
                         />
                         <defs>
                             <linearGradient id={`grad-${areaId}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -248,88 +252,80 @@ export function JourneyVisualizer({ areaId, areaName, theme }: VisualizerProps) 
                     </svg>
                 </div>
 
-                {sessions.map((session, index) => {
-                    const isLocked = session.session_number > journey.current_session
-                    const isActive = session.session_number === journey.current_session
-                    const isCompleted = session.is_completed === 1
+                {/* 2. Los Nodos (Sesiones) en distribución horizontal */}
+                <div className="relative z-10 flex justify-between items-center w-full min-w-[800px] h-full px-4">
 
-                    return (
-                        <div
-                            key={session.id}
-                            className="flex flex-col items-center relative z-10 group"
-                        >
-                            {/* Nodo Rhombus */}
-                            <motion.div
-                                onClick={() => {
-                                    if (isActive) {
-                                        setActiveSession(session)
-                                        setShowPlayer(true)
-                                    }
-                                }}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.1 }}
-                                className={cn(
-                                    "w-32 h-32 relative mb-6 transition-all duration-500",
-                                    isActive && "scale-110 cursor-pointer hover:scale-[1.15]"
-                                )}
+                    {sessions.map((session, index) => {
+                        const isLocked = session.session_number > journey.current_session
+                        const isActive = session.session_number === journey.current_session
+                        const isCompleted = session.is_completed === 1
+                    
+                        // Efecto de ondulación (Sube y Baja)
+                        const yOffset = index % 2 === 0 ? '-50px' : '50px'
+
+                        return (
+                            <div
+                                key={session.id}
+                                className="flex flex-col items-center relative group"
+                                style={{ transform: `translateY(${yOffset})` }}
                             >
-                                {/* Rhombus Shape */}
-                                <div className={cn(
-                                    "absolute inset-0 rotate-45 border-2 rounded-xl transition-all duration-500 flex items-center justify-center overflow-hidden",
-                                    isCompleted ? cn("bg-white/10 border-white/20", theme.textColor) :
-                                        isActive ? cn("bg-black/40 shadow-2xl animate-pulse border-2", theme.textColor.replace('text-', 'border-')) :
-                                            "bg-white/5 border-white/10 opacity-40"
-                                )}>
-                                    {/* Glow effect for active node */}
-                                    {isActive && (
-                                        <div className={cn("absolute inset-0 opacity-20 blur-xl", theme.tab)} />
+                                {/* Nodo Circular */}
+                                <motion.div
+                                    onClick={() => {
+                                        if (isActive) {
+                                            setActiveSession(session)
+                                            setShowPlayer(true)
+                                        }
+                                    }}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className={cn(
+                                        "w-20 h-20 rounded-full flex items-center justify-center border-4 shadow-xl transition-all duration-500 relative",
+                                        isCompleted ? "bg-[#baef00] border-[#0d971f] text-black" :
+                                        isActive ? "bg-[#f59e0b] border-[#d97706] text-white animate-pulse cursor-pointer hover:scale-110" :
+                                        "bg-gray-800 border-gray-600 text-gray-400 opacity-60"
                                     )}
+                                >
 
-                                    {/* Contenido del Nodo */}
-                                    <div className="-rotate-45 flex flex-col items-center gap-1 z-10">
-                                        {isCompleted ? (
-                                            <CheckCircle2 className={cn("w-8 h-8", theme.textColor)} />
-                                        ) : isLocked ? (
-                                            <Lock className="w-8 h-8 text-gray-500" />
-                                        ) : (
-                                            <div className="flex flex-col items-center">
-                                                <PlayCircle className={cn("w-10 h-10 mb-1", theme.textColor)} />
-                                                <span className={cn("text-[10px] font-black", theme.textColor)}>START</span>
-                                            </div>
-                                        )}
+                                    {isCompleted && <CheckCircle2 size={32} />}
+                                    {isActive && <PlayCircle size={32} />}
+                                    {isLocked && <Lock size={28} />}
+
+
+                                    {/* Número de Sesión */}
+                                    <div className={cn(
+                                        "absolute -top-3 -right-3 w-7 h-7 rounded-full border-2 bg-[#0B0121] flex items-center justify-center z-20 shadow-lg text-[10px] font-black",
+                                        isActive ? "border-orange-500 text-white" : "border-white/10 text-white/40"
+                                    )}>
+                                        {session.session_number}
                                     </div>
-                                </div>
+                                </motion.div>
 
-                                {/* Número de Sesión con Badge flotante */}
+                                {/* Información de la Sesión */}
                                 <div className={cn(
-                                    "absolute -top-2 -right-2 w-8 h-8 rounded-full border-2 bg-[#0B0121] flex items-center justify-center z-20 transition-colors shadow-lg",
-                                    isActive ? theme.textColor.replace('text-', 'border-') : "border-white/10 text-white/40"
+                                    "flex flex-col items-center text-center mt-4 w-32",
+                                    isLocked ? "opacity-40" : "opacity-100"
                                 )}>
-                                    <span className={cn("text-xs font-black", isActive ? "text-white" : "")}>{session.session_number}</span>
+                                    <h3 className="text-[10px] font-black uppercase tracking-widest text-white mb-1 line-clamp-2">
+                                        {session.title}
+                                    </h3>
+                                    <Badge variant="outline" className={cn(
+                                        "text-[8px] font-bold border-0 px-2 py-0.5 rounded-sm",
+                                        isActive ? theme.textColor + " bg-white/10" : "text-gray-500 bg-white/5"
+                                    )}>
+                                        {session.type}
+                                    </Badge>
+
                                 </div>
-                            </motion.div>
-
-                            {/* Información de la Sesión */}
-                            <div className={cn(
-                                "flex flex-col items-center text-center px-4 transition-opacity",
-                                isLocked ? "opacity-30" : "opacity-100"
-                            )}>
-                                <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2 line-clamp-2 min-h-[2em]">
-                                    {session.title}
-                                </h3>
-                                <Badge variant="outline" className={cn(
-                                    "text-[8px] font-bold border-0 px-2 py-0.5 rounded-sm mb-4 bg-white/5",
-                                    isActive ? theme.textColor : "text-gray-500"
-                                )}>
-                                    {session.type}
-                                </Badge>
-
                             </div>
-                        </div>
-                    )
-                })}
+                        )
+                    })}
+                </div>    
             </div>
+             
+
+{/-------------------------------------------------/}
 
             {/* Footer Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white/5 rounded-3xl p-6 border border-white/5 backdrop-blur-md">
