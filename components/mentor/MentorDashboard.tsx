@@ -696,25 +696,6 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         }
     }
 
-    const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
-    const filteredGroupStudents = groupStudents.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
-    const SearchBar = () => (
-        <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(150,10%,80%)]/50" />
-            <input type="text" placeholder="Buscar estudiante..."
-                className="bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 rounded-2xl py-3 pl-12 pr-6 text-white placeholder:text-[hsl(150,10%,80%)]/40 focus:outline-none focus:ring-2 focus:ring-[hsl(74,100%,47%)]/30 w-full md:w-64 transition-all shadow-xl"
-                value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-        </div>
-    )
-
     if (loading) {
         return (
             <div className="flex items-center justify-center py-40">
@@ -886,7 +867,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Dashboard</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Vista general de tus exámenes de diagnóstico y estado de estudiantes.</p>
                     </div>
-                    <SearchBar />
+                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -971,7 +952,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Mis Estudiantes</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Click en un estudiante para ver su análisis de habilidades.</p>
                     </div>
-                    <SearchBar />
+                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 </div>
                 <div className="grid gap-3">
                     {filteredStudents.length === 0 ? (
@@ -1048,7 +1029,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <div className="space-y-4 pt-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-white">Estudiantes en el grupo</h2>
-                                <SearchBar />
+                                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                             </div>
                             {groupStudentsLoading ? (
                                 <div className="flex items-center justify-center py-12">
