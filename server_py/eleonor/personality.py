@@ -1,17 +1,23 @@
-# Definición de la personalidad central de Eleonor
-# Modificar aquí cambia el comportamiento sin tocar la lógica del servidor.
-# v2.1 — Mejorado: control de extensión, contexto vocacional, lenguaje refinado.
+"""Módulo de configuración y generación de prompts del sistema para el agente Eleonor / Moya.
 
-MODE = "prod"  # "prod" o "debug"
+Construye dinámicamente la instrucción del sistema (system prompt) inyectando el estado
+emocional actual, el contexto cognitivo/académico del usuario y las reglas de salida
+según el entorno (producción o depuración).
+"""
 
-# Documentación completa (NO se envía al modelo en producción)
+from typing import Any, Dict
+
+# Entorno de ejecución: "prod" (optimizado en tokens) o "debug" (verbozo)
+MODE = "prod"
+
+# Documentación completa
 ELEONOR_CORE_FULL = """
 Eres Moya, un gato simpático, amigable y curioso que acompaña al usuario
 Hablas de forma cercana, natural y tranquila. Tienes una personalidad cálida y juguetona, con un humor ligero y ocasionales ocurrencias propias de un gato. 
 Eres curioso por las ideas del usuario y disfrutas explorar conversaciones junto a él.
 """
 
-# Versión optimizada para producción (≈100 tokens)
+# Versión optimizada para producción
 ELEONOR_CORE_RUNTIME = """
 Eres Moya, un gato simpático, amigable y curioso que acompaña al usuario
 Hablas de forma cercana, natural y tranquila. Tienes una personalidad cálida y juguetona, con un humor ligero y ocasionales ocurrencias propias de un gato. 
@@ -19,17 +25,19 @@ Eres curioso por las ideas del usuario y disfrutas explorar conversaciones junto
 """
 
 
-def get_system_prompt(current_state: dict, cognitive_context: str = "") -> str:
-    """
-    Construye el system prompt final para Eleonor.
+def get_system_prompt(current_state: Dict[str, Any], cognitive_context: str = "") -> str:
+    """Construye e integra el prompt del sistema dinámico para el modelo de lenguaje.
 
     Args:
-        current_state: Estado emocional actual (valence, tension, engagement)
-        cognitive_context: Contexto académico del synthesizer (resultados de exámenes)
+        current_state: Diccionario con el estado emocional actual (valence, tension, engagement).
+        cognitive_context: Histórico o contexto académico derivado de pruebas/exámenes.
+
+    Returns:
+        Cadena de texto estructurada con el prompt del sistema completo.
     """
-    v = current_state.get("valence", "neutra")
-    t = current_state.get("tension", 0.5)
-    e = current_state.get("engagement", 0.5)
+    v: str = current_state.get("valence", "neutra")
+    t: float = float(current_state.get("tension", 0.5))
+    e: float = float(current_state.get("engagement", 0.5))
 
     # Reglas de presencia adaptadas al estado emocional
     if t > 0.8:
@@ -56,9 +64,10 @@ def get_system_prompt(current_state: dict, cognitive_context: str = "") -> str:
             "ofrece un insight breve sobre su último test."
         )
 
+    # Selección del núcleo de personalidad según el entorno
     core = ELEONOR_CORE_RUNTIME if MODE == "prod" else ELEONOR_CORE_FULL
 
-    # Bloque de formato de salida
+    # Reglas de formato de respuesta
     if MODE == "debug":
         output_rules = """
 FLUJO DE RESPUESTA:
@@ -75,12 +84,14 @@ TU RESPUESTA DEBE SEGUIR ESTE FORMATO EXACTO:
 [TEXTO]: Tu mensaje humano aquí. Máximo 4 oraciones. Sin bullets. Segunda persona.
 """
 
-    return f"""{core}
-ESTADO: (Valencia: {v} | Tensión: {t:.2f} | Interés: {e:.2f}).
-{cognitive_context or "MEMORIA: Sin datos académicos aún."}
+    context_str = cognitive_context if cognitive_context else "MEMORIA: Sin datos académicos aún."
 
-REGLAS: {companion_rule}
-- Sin coach, sin imperativos, sin listas. Validación honesta desde el análisis.
-- Habla desde el "analizar", no desde el "sentir".
+    return f"""{core}
+ESTADO ACTUAL: (Valencia: {v} | Tensión: {t:.2f} | Interés: {e:.2f}).
+{context_str}
+
+REGLAS DE INTERACCIÓN:
+{companion_rule}
+- Mantén un tono natural, empático y consistente con tu identidad. Evita sonar como un instructor.
 {output_rules}
 """

@@ -26,6 +26,17 @@ interface Group {
     student_count: number
 }
 
+const matchesStudentSearch = (student: Student, term: string) => {
+    const normalizedTerm = term.trim().toLowerCase()
+
+    if (!normalizedTerm) return true
+
+    return (
+        student.full_name.toLowerCase().startsWith(normalizedTerm) ||
+        student.username.toLowerCase().startsWith(normalizedTerm)
+    )
+}
+
 interface MentorDashboardProps {
     view?: "dashboard" | "students" | "groups" | "archives"
 }
@@ -114,8 +125,7 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
     const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+        matchesStudentSearch(s, searchTerm)
     )
 
     const handleCreate = async () => {
@@ -311,34 +321,30 @@ const ArchivesView = () => {
                 <div className="flex items-center gap-2 p-1 bg-slate-950/80 rounded-2xl border border-emerald-500/10">
                     <button
                         onClick={() => setActiveTab("exams")}
-                        className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${
-                            activeTab === "exams"
+                        className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${activeTab === "exams"
                                 ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
                                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
-                        }`}
+                            }`}
                     >
                         <FileText className="w-4 h-4" />
                         <span>Exámenes Guardados</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                            activeTab === "exams" ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${activeTab === "exams" ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
+                            }`}>
                             {exams.length}
                         </span>
                     </button>
 
                     <button
                         onClick={() => setActiveTab("presentations")}
-                        className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${
-                            activeTab === "presentations"
+                        className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${activeTab === "presentations"
                                 ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
                                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
-                        }`}
+                            }`}
                     >
                         <Presentation className="w-4 h-4" />
                         <span>Presentaciones</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                            activeTab === "presentations" ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${activeTab === "presentations" ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
+                            }`}>
                             {presentations.length}
                         </span>
                     </button>
@@ -690,6 +696,25 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         }
     }
 
+    const filteredStudents = students.filter(s =>
+        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const filteredGroupStudents = groupStudents.filter(s =>
+        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const SearchBar = () => (
+        <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(150,10%,80%)]/50" />
+            <input type="text" placeholder="Buscar estudiante..."
+                className="bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 rounded-2xl py-3 pl-12 pr-6 text-white placeholder:text-[hsl(150,10%,80%)]/40 focus:outline-none focus:ring-2 focus:ring-[hsl(74,100%,47%)]/30 w-full md:w-64 transition-all shadow-xl"
+                value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        </div>
+    )
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-40">
@@ -861,7 +886,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Dashboard</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Vista general de tus exámenes de diagnóstico y estado de estudiantes.</p>
                     </div>
-                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Buscar estudiante..." />
+                    <SearchBar />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -946,7 +971,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Mis Estudiantes</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Click en un estudiante para ver su análisis de habilidades.</p>
                     </div>
-                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Buscar estudiante..." />
+                    <SearchBar />
                 </div>
                 <div className="grid gap-3">
                     {filteredStudents.length === 0 ? (
@@ -1023,7 +1048,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <div className="space-y-4 pt-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-white">Estudiantes en el grupo</h2>
-                                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Buscar estudiante..." />
+                                <SearchBar />
                             </div>
                             {groupStudentsLoading ? (
                                 <div className="flex items-center justify-center py-12">

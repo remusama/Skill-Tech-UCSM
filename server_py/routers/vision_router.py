@@ -1,6 +1,10 @@
 import time
-from fastapi import APIRouter, HTTPException, Body
+from typing import Dict, Any
+
+from fastapi import APIRouter, HTTPException, status
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
+
 from server_py.config import settings
 from server_py.core.structured_logger import get_logger
 
@@ -9,17 +13,31 @@ logger = get_logger("vision")
 router = APIRouter(prefix="/api/vision", tags=["vision"])
 client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
+# ============================================================================
+# ESQUEMAS DE PETICIÓN (PYDANTIC)
+# ============================================================================
+
+class AnalyzeFrameRequest(BaseModel):
+    image_base64: str = Field(
+        ..., 
+        description="Imagen codificada en Base64 para análisis visual."
+    )
+
+# ============================================================================
+# ENDPOINTS DE VISIÓN
+# ============================================================================
 
 @router.post("/analyze")
-async def analyze_frame(payload: dict = Body(...)):
-    """
-    Recibe una imagen en Base64 y devuelve un análisis visual usando GPT-4o.
-    """
+async def analyze_frame(payload: AnalyzeFrameRequest) -> Dict[str, Any]:
+    """Recibe una imagen en Base64 y devuelve un análisis visual breve utilizando GPT-4o-mini."""
     try:
-        image_base64 = payload.get("image_base64")
+        image_base64 = payload.image_base64
         if not image_base64:
             logger.error("Error: No se recibió image_base64 en el body")
-            raise HTTPException(status_code=400, detail="Falta image_base64")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Falta image_base64"
+            )
 
         logger.info(f"Procesando frame ({len(image_base64)} caracteres)...")
 
@@ -27,7 +45,7 @@ async def analyze_frame(payload: dict = Body(...)):
         if "," in image_base64:
             image_base64 = image_base64.split(",")[1]
 
-        start_time = time.time()
+        start_time = time.perf_counter()
 
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
@@ -51,15 +69,21 @@ async def analyze_frame(payload: dict = Body(...)):
         )
 
         content = response.choices[0].message.content
-        latency = time.time() - start_time
+        latency = time.perf_counter() - start_time
 
-        # Log de tokens sin emojis
+        # Log de uso de tokens y latencia
         if response.usage:
             u = response.usage
             logger.info(
                 f"Prompt: {u.prompt_tokens} | Completion: {u.completion_tokens} | Total: {u.total_tokens} | Latency: {latency:.2f}s",
-                extra={"extra_fields": {"prompt_tokens": u.prompt_tokens,
-                                        "completion_tokens": u.completion_tokens, "total_tokens": u.total_tokens, "latency": latency}}
+                extra={
+                    "extra_fields": {
+                        "prompt_tokens": u.prompt_tokens,
+                        "completion_tokens": u.completion_tokens,
+                        "total_tokens": u.total_tokens,
+                        "latency": latency
+                    }
+                }
             )
 
         return {
@@ -67,6 +91,11 @@ async def analyze_frame(payload: dict = Body(...)):
             "status": "success"
         }
 
-    except Exception as e:
-        logger.error(f"Error procesando visión: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as error:
+        logger.error(f"Error procesando visión: {str(error)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=str(error)
+        )

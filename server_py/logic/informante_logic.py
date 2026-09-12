@@ -1,21 +1,57 @@
-import time
+"""Módulo de análisis y agregación de métricas educativas para Eleonor AI (Skill-Tech).
+Proporciona estadísticas globales y perfiles individuales para docentes.
+"""
+
+import logging
 import os
-from sqlalchemy.orm import Session
-from server_py.memoria.database import User, UserSkill
+import time
+import unicodedata
+from typing import Any, Dict, List, Optional, Tuple
+
 import openai
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
-# Configuración de OpenAI (asumiendo que ya está configurada en el proyecto)
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+from server_py.memoria.database import (
+    EleonorSession,
+    ExamResult,
+    User,
+    UserSkill,
+)
 
-ANALYSIS_CACHE = {}
-CACHE_TTL = 300  # 5 minutes
+# Configuración de Logging
+logger = logging.getLogger(__name__)
+
+# Configuración del Cliente OpenAI (Versión Asíncrona)
+async_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Cache simple en memoria para análisis grupales
+ANALYSIS_CACHE: Dict[str, Dict[str, Any]] = {}
+CACHE_TTL: int = 300
+
+ACADEMIC_AREAS: set[str] = {
+    "ciencia",
+    "ciencias",
+    "matematicas",
+    "matematica",
+    "humanidades",
+    "ingenieria",
+    "medicina",
+    "logica",
+    "comprension lectora",
+}
 
 
-def get_stats_data(db: Session, classroom: str = None, school: str = None):
-    """
-    Utility function to aggregate global student statistics.
-    If classroom or school is provided, filter students accordingly.
+def _normalize_text(text: str) -> str:
+    """Normaliza texto removiendo acentos y convirtiéndolo a minúsculas."""
+    return unicodedata.normalize("NFD", text.lower()).encode("ascii", "ignore").decode("utf-8")
+
+
+def get_stats_data(
+    db: Session, classroom: Optional[str] = None, school: Optional[str] = None
+) -> Dict[str, Any]:
+    """Agrega las estadísticas globales de los estudiantes.
+    Soporta filtrado por escuela y/o aula.
     """
     query = db.query(User.id).filter(User.role == "student")
     if school:
@@ -25,38 +61,64 @@ def get_stats_data(db: Session, classroom: str = None, school: str = None):
 
     student_ids = [s[0] for s in query.all()]
 
-    global_bloom = {"recordar": 0, "comprender": 0, "aplicar": 0, "analizar": 0, "evaluar": 0, "crear": 0}
-    global_vector = {"analitico": 0, "divergente": 0, "intuitivo": 0, "mecanico": 0, "estrategico": 0}
+    student_ids: List[int] = [user_id for (user_id,) in query.all()]
+
+    global_bloom = {
+        "recordar": 0.0,
+        "comprender": 0.0,
+        "aplicar": 0.0,
+        "analizar": 0.0,
+        "evaluar": 0.0,
+        "crear": 0.0,
+    }
+    global_vector = {
+        "analitico": 0.0,
+        "divergente": 0.0,
+        "intuitivo": 0.0,
+        "mecanico": 0.0,
+        "estrategico": 0.0,
+    }
+
+    if not student_ids:
+        return {
+            "averages": {},
+            "total_students": 0,
+            "system_health": "stable",
+            "global_bloom": None,
+            "global_vector": None,
+        }
+
+    # Obtener promedios generales por área
+    avg_skills = (
+        db.query(UserSkill.area, func.avg(UserSkill.level).label("average"))
+        .filter(UserSkill.user_id.in_(student_ids))
+        .group_by(UserSkill.area)
+        .all()
+    )
+
+    # Cargar habilidades para matrices específicas
+    all_skills = db.query(UserSkill).filter(UserSkill.user_id.in_(student_ids)).all()
     bloom_count = 0
     vector_count = 0
 
-    if student_ids:
-        avg_skills = db.query(UserSkill.area, func.avg(UserSkill.level).label("average")).filter(
-            UserSkill.user_id.in_(student_ids)).group_by(UserSkill.area).all()
-        total_students = len(student_ids)
+    for sk in all_skills:
+        if sk.bloom_matrix and isinstance(sk.bloom_matrix, dict):
+            bloom_count += 1
+            for k, v in sk.bloom_matrix.items():
+                if k in global_bloom and v is not None:
+                    global_bloom[k] += float(v)
 
-        all_skills = db.query(UserSkill).filter(UserSkill.user_id.in_(student_ids)).all()
-        for sk in all_skills:
-            if sk.bloom_matrix and isinstance(sk.bloom_matrix, dict):
-                bloom_count += 1
-                for k, v in sk.bloom_matrix.items():
-                    if k in global_bloom and v is not None:
-                        global_bloom[k] += float(v)
-            if sk.razonamiento_vector and isinstance(sk.razonamiento_vector, dict):
-                vector_count += 1
-                for k, v in sk.razonamiento_vector.items():
-                    if k in global_vector and v is not None:
-                        global_vector[k] += float(v)
+        if sk.razonamiento_vector and isinstance(sk.razonamiento_vector, dict):
+            vector_count += 1
+            for k, v in sk.razonamiento_vector.items():
+                if k in global_vector and v is not None:
+                    global_vector[k] += float(v)
 
-        if bloom_count > 0:
-            for k in global_bloom:
-                global_bloom[k] = round(global_bloom[k] / bloom_count, 2)
-        if vector_count > 0:
-            for k in global_vector:
-                global_vector[k] = round(global_vector[k] / vector_count, 2)
-    else:
-        avg_skills = []
-        total_students = 0
+    # Promediar matrices
+    if bloom_count > 0:
+        global_bloom = {k: round(v / bloom_count, 2) for k, v in global_bloom.items()}
+    if vector_count > 0:
+        global_vector = {k: round(v / vector_count, 2) for k, v in global_vector.items()}
 
     return {
         "averages": {area: round(float(avg), 1) for area, avg in avg_skills},
@@ -69,56 +131,47 @@ def get_stats_data(db: Session, classroom: str = None, school: str = None):
 
 def get_student_quantum_data(db: Session, student_id: int):
     """
-    Retrieves and humanizes student data for the teacher dashboard.
-    Translates raw metrics (valence, tension, etc.) into teacher-friendly terms.
+    Recupera y traduce las métricas cuantitativas de un estudiante en 
+    indicadores pedagógicos para el panel del docente.
     """
-    from server_py.memoria.database import EleonorSession, UserSkill, ExamResult
-
-    # Get the Eleonor session for raw metrics
     session = db.query(EleonorSession).filter(EleonorSession.user_id == student_id).first()
-    # Get current skills
     skills = db.query(UserSkill).filter(UserSkill.user_id == student_id).all()
-    # Get recent exam results - Increased to 50 for more comprehensive multi-line charts
-    exams = db.query(ExamResult).filter(ExamResult.user_id == student_id).order_by(
-        ExamResult.timestamp.desc()).limit(50).all()
+    exams = (
+        db.query(ExamResult)
+        .filter(ExamResult.user_id == student_id)
+        .order_by(ExamResult.timestamp.desc())
+        .limit(50)
+        .all()
+    )
 
-    # 1. Energy & Learning Level (from Recent Performance Trends)
+    # 1. Energía y Nivel de Aprendizaje
     recent_scores = [e.score for e in exams]
-    avg_score = sum(recent_scores) / len(recent_scores) if recent_scores else 50
+    avg_score = sum(recent_scores) / len(recent_scores) if recent_scores else 50.0
 
-    # Energy level based on consistency and recent engagement if available
     energy_val = (session.engagement if session else 0.5) * 100
-    learning_energy = "Estable"
     if energy_val > 80:
         learning_energy = "Elevada"
     elif energy_val < 40:
         learning_energy = "Baja / Requiere Estímulo"
+    else:
+        learning_energy = "Estable"
 
-    # 2. Academic Risk (grounded in actual performance)
-    risk_level = "Bajo"
+    # 2. Riesgo Académico
     if avg_score < 45:
         risk_level = "Alto"
     elif avg_score < 70:
         risk_level = "Medio"
+    else:
+        risk_level = "Bajo"
 
-    # 3. Actionable Recommendation
-    # Determine the weak area
+    # 3. Recomendación Pedagógica
     weak_skill = min(skills, key=lambda x: x.level) if skills else None
-    recommendation = "Continuar con el flujo actual de aprendizaje."
     if weak_skill and weak_skill.level < 40:
         recommendation = f"Reforzar el área de {weak_skill.area} con ejercicios prácticos de nivel inicial."
     elif risk_level == "Alto":
         recommendation = "Se sugiere una tutoría individual para revisar conceptos base."
-
-    # 4. History Categorization
-    import unicodedata
-
-    def normalize_area(a: str):
-        return unicodedata.normalize('NFD', a.lower()).encode('ascii', 'ignore').decode('utf-8')
-
-    academic_areas = ["ciencia", "ciencias", "matematicas", "matematica",
-                      "humanidades", "ingenieria", "medicina", "logica", "comprension lectora"]
-    # Everything else is personal or as per courseData
+    else:
+        recommendation = "Continuar con el flujo actual de aprendizaje."
 
     academic_history = []
     personal_history = []
@@ -132,12 +185,13 @@ def get_student_quantum_data(db: Session, student_id: int):
             "data": e.data
         }
 
-        normalized_db_area = normalize_area(e.area)
-
-        if normalized_db_area in academic_areas:
+        if _normalize_text(e.area) in ACADEMIC_AREAS:
             academic_history.append(item)
         else:
             personal_history.append(item)
+
+    top_skill_name = max(skills, key=lambda x: x.level).area if skills else "N/A"
+    last_exam_date = exams[0].timestamp.strftime("%Y-%m-%d") if exams else "N/A"
 
     return {
         "learning_energy": learning_energy,
@@ -147,23 +201,25 @@ def get_student_quantum_data(db: Session, student_id: int):
         "topography": {sk.area: sk.level for sk in skills},
         "performance_avg": round(avg_score),
         "total_exams": len(exams),
-        "last_exam_date": exams[0].timestamp.strftime("%Y-%m-%d") if exams else "N/A",
-        "top_skill": max(skills, key=lambda x: x.level).area if skills else "N/A",
+        "last_exam_date": last_exam_date,
+        "top_skill": top_skill_name,
         "history": {
-            "academic": academic_history[::-1],  # Oldest first for chart
+            "academic": academic_history[::-1],
             "personal": personal_history[::-1]
         }
     }
 
 
-async def generate_group_analysis(db: Session, classroom: str = None, school: str = None):
-    """
-    Genera un análisis narrativo del grupo basado en las estadísticas globales.
+async def generate_group_analysis(
+    db: Session, classroom: Optional[str] = None, school: Optional[str] = None
+) -> str:
+    """Genera o recupera del caché un análisis narrativo ejecutivo del grupo
+    utilizando el modelo de lenguaje de OpenAI.
     """
     cache_key = f"{school}_{classroom}"
     now = time.time()
 
-    # Check cache first
+    # Verificar caché
     if cache_key in ANALYSIS_CACHE:
         cached_data = ANALYSIS_CACHE[cache_key]
         if now - cached_data["timestamp"] < CACHE_TTL:
@@ -190,7 +246,7 @@ async def generate_group_analysis(db: Session, classroom: str = None, school: st
     """
 
     try:
-        response = client.chat.completions.create(
+        response = await async_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "Eres Eleonor, la analista de Skill-Tech."},
@@ -203,6 +259,10 @@ async def generate_group_analysis(db: Session, classroom: str = None, school: st
         # Save to cache
         ANALYSIS_CACHE[cache_key] = {"timestamp": now, "text": analysis_text}
         return analysis_text
-    except Exception as e:
-        print(f"Error generating AI analysis: {e}")
-        return "El sistema de análisis de Eleonor está procesando nuevos datos. En breve tendré listo el reporte detallado para tu grupo."
+
+    except Exception as error:
+        logger.error("Error al generar análisis de IA con OpenAI: %s", error)
+        return (
+            "El sistema de análisis de Eleonor está procesando nuevos datos. "
+            "En breve tendré listo el reporte detallado para tu grupo."
+        )

@@ -65,6 +65,19 @@ export function MentorAttendance() {
     // QR scanner instance and status tracker refs
     const qrScannerRef = useRef<any>(null)
     const scannerStatusRef = useRef(scannerStatus)
+
+    const scanInProgressRef = useRef(false)
+
+    const simulationInProgressRef = useRef(false)
+
+    const lastScanRef = useRef<{
+        token: string
+        timestamp: number
+    }>({
+        token: "",
+        timestamp: 0
+    })
+
     const [cameraError, setCameraError] = useState<string | null>(null)
 
     useEffect(() => {
@@ -105,9 +118,7 @@ export function MentorAttendance() {
                         }
                     },
                     (decodedText) => {
-                        if (scannerStatusRef.current === "scanning" || scannerStatusRef.current === "idle") {
-                            handleScanToken(decodedText);
-                        }
+                        handleScanToken(decodedText)
                     },
                     (errorMessage) => {
                         // Silent scanning noise
@@ -190,15 +201,23 @@ export function MentorAttendance() {
 
     // Load Class Details when selected
     useEffect(() => {
-        if (!selectedClassId) return
+        if (!selectedClassId || activeTab !== "classes") {
+            return
+        }
+
         const loadDetails = async () => {
             setLoadingDetail(true)
-            const details = await fetchClassDetails(selectedClassId)
-            setClassDetail(details)
-            setLoadingDetail(false)
+
+            try {
+                const details = await fetchClassDetails(selectedClassId)
+                setClassDetail(details)
+            } finally {
+                setLoadingDetail(false)
+            }
         }
+
         loadDetails()
-    }, [selectedClassId])
+    }, [selectedClassId, activeTab])
 
     // Load Student Attendance Stats for Benchmarking
     useEffect(() => {
@@ -297,6 +316,12 @@ export function MentorAttendance() {
 
     // Handle Scan Submission
     const handleScanToken = async (tokenToScan: string) => {
+        const cleanToken = tokenToScan.trim()
+
+        if (!cleanToken) {
+            return
+        }
+
         if (!scannedClassCode) {
             setScannerStatus("error")
             setScanFeedback({
@@ -308,23 +333,47 @@ export function MentorAttendance() {
             return
         }
 
+        // Evita que dos lecturas se procesen al mismo tiempo
+        if (scanInProgressRef.current) {
+            return
+        }
+
+        const now = Date.now()
+
+        // Evita procesar repetidamente el mismo QR durante 2.5 segundos
+        if (
+            lastScanRef.current.token === cleanToken &&
+            now - lastScanRef.current.timestamp < 2500
+        ) {
+            return
+        }
+
+        scanInProgressRef.current = true
+
+        lastScanRef.current = {
+            token: cleanToken,
+            timestamp: now
+        }
+
         setScannerStatus("scanning")
+
         try {
             const res = await scanAttendance({
                 class_code: scannedClassCode,
-                secure_token: tokenToScan,
+                secure_token: cleanToken,
                 scan_type: scanMethod
             })
 
             setScannerStatus("success")
+
             setScanFeedback({
                 message: res.message,
                 student: res.student_name,
                 status: res.status
             })
+
             playFeedbackSound("success")
 
-            // Add to scan log
             setScanHistory(prev => [
                 {
                     time: new Date().toLocaleTimeString(),
@@ -336,18 +385,20 @@ export function MentorAttendance() {
                 ...prev.slice(0, 19)
             ])
 
-            // If we are currently viewing this class detail, reload details
-            if (selectedClassId) {
-                const details = await fetchClassDetails(selectedClassId)
-                setClassDetail(details)
-            }
         } catch (err) {
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : "Error registrando asistencia"
+
             setScannerStatus("error")
+
             setScanFeedback({
-                message: (err as Error).message,
+                message,
                 student: "",
                 status: "error"
             })
+
             playFeedbackSound("error")
 
             setScanHistory(prev => [
@@ -357,16 +408,19 @@ export function MentorAttendance() {
                     status: "error",
                     method: scanMethod,
                     success: false,
-                    errorMsg: (err as Error).message
+                    errorMsg: message
                 },
                 ...prev.slice(0, 19)
             ])
+
+        } finally {
+            scanInProgressRef.current = false
         }
 
-        // Reset status to idle after 4 seconds
+        // Vuelve a estado normal después del feedback visual
         setTimeout(() => {
-            setScannerStatus(prev => prev === "scanning" ? prev : "idle")
-        }, 4000)
+            setScannerStatus("idle")
+        }, 1500)
     }
 
     // NFC Keyboard emulation listener handler
@@ -380,23 +434,49 @@ export function MentorAttendance() {
 
     // Simulator triggers
     const triggerSimulatedScan = async () => {
-        if (!simulatedStudentId) return
+        if (!simulatedStudentId || !scannedClassCode) {
+            return
+        }
+
+        // Evita doble clic o múltiples simulaciones simultáneas
+        if (simulationInProgressRef.current) {
+            return
+        }
+
+        simulationInProgressRef.current = true
+
         try {
-            const tokRes = await fetch(`${API_URL}/attendance/student/${simulatedStudentId}/token`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem("eleonor_token")}` }
-            })
+            const tokRes = await fetch(
+                `${API_URL}/attendance/student/${simulatedStudentId}/token`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("eleonor_token")}`
+                    }
+                }
+            )
+
             if (tokRes.ok) {
                 const data = await tokRes.json()
-                handleScanToken(data.token)
+
+                await handleScanToken(data.token)
+
             } else {
-                // Fallback to username-based token if endpoint not fully ready
-                const selectedStudent = students.find(s => s.id === parseInt(simulatedStudentId))
+                const selectedStudent = students.find(
+                    s => s.id === parseInt(simulatedStudentId)
+                )
+
                 if (selectedStudent) {
-                    handleScanToken(`SKILL-${selectedStudent.username.toUpperCase()}`)
+                    await handleScanToken(
+                        `SKILL-${selectedStudent.username.toUpperCase()}`
+                    )
                 }
             }
+
         } catch (err) {
             console.error("Simulation token error:", err)
+
+        } finally {
+            simulationInProgressRef.current = false
         }
     }
 
