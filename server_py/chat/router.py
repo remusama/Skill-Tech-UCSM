@@ -5,10 +5,21 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from server_py.config.app_config import client
-from server_py.eleonor.brain import update_eleonor_state, get_behavioral_mode, map_expression, get_ssml_voice_mode
+from server_py.eleonor.brain import (
+    update_eleonor_state,
+    get_behavioral_mode,
+    map_expression,
+    get_ssml_voice_mode,
+)
 from server_py.eleonor.personality import get_system_prompt
 from server_py.funciones.tts import generate_ssml_tts_base64
-from server_py.memoria.database import SessionLocal, ExamResult, EleonorHistory, ChatMessage, EleonorSession
+from server_py.memoria.database import (
+    SessionLocal,
+    ExamResult,
+    EleonorHistory,
+    ChatMessage,
+    EleonorSession,
+)
 from server_py.memoria.skills import get_skill_snapshot, get_trends
 from server_py.diagnostico.agents import generate_unified_prompt
 from server_py.diagnostico.agents.game_generator import GAME_GENERATOR
@@ -18,13 +29,28 @@ router = APIRouter()
 
 
 class ChatRequest(BaseModel):
+    """Modelo de entrada para solicitudes de chat."""
     text: str
 
 
 async def generate_response_stream(user_text: str, user_id: int):
+    """Genera un flujo de respuesta para el chat del usuario.
+
+    Pasos:
+        1. Recupera o inicializa la sesión en DB.
+        2. Guarda el mensaje del usuario.
+        3. Recupera historial y contexto cognitivo.
+        4. Construye mensajes para el modelo LLM.
+        5. Procesa streaming de respuesta, decisiones, juegos y análisis.
+        6. Genera audio SSML y actualiza estado en DB.
+
+    Args:
+        user_text (str): Texto enviado por el usuario.
+        user_id (int): Identificador del usuario autenticado.
+    """
     db = SessionLocal()
 
-    # 1. Fetch or initialize session state from DB (Filtered by user_id)
+    # 1. Recuperar o inicializar sesión
     session = db.query(EleonorSession).filter(EleonorSession.user_id == user_id).first()
     if not session:
         session = EleonorSession(id=f"sess_{user_id}", user_id=user_id)
@@ -33,28 +59,34 @@ async def generate_response_stream(user_text: str, user_id: int):
 
     session_id = session.id
 
-    # Simple state dict for prompt generation compatibility
     db_state = {
         "valence": session.valence,
         "tension": session.tension,
         "engagement": session.engagement
     }
 
-    # 2. Add user message to DB
+    # 2. Guardar mensaje del usuario
     new_user_msg = ChatMessage(role="user", content=user_text, session_id=session_id, user_id=user_id)
     db.add(new_user_msg)
     db.commit()
 
-    # 3. Load last 4 messages for context
-    past_messages = db.query(ChatMessage).filter(ChatMessage.user_id == user_id).order_by(
-        ChatMessage.timestamp.desc()).limit(4).all()
+    # 3. Recuperar últimos mensajes
+    past_messages = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.user_id == user_id)
+        .order_by(ChatMessage.timestamp.desc())
+        .limit(4)
+        .all()
+    )
     past_messages.reverse()
 
-    # Simple HILO Logic: Use the summary from EleonorHistory as context
     hilo_context = ""
-    last_hito = db.query(EleonorHistory).filter(
-        EleonorHistory.user_id == user_id
-    ).order_by(EleonorHistory.timestamp.desc()).first()
+    last_hito = (
+        db.query(EleonorHistory)
+        .filter(EleonorHistory.user_id == user_id)
+        .order_by(EleonorHistory.timestamp.desc())
+        .first()
+    )
     if last_hito:
         hilo_context = f"HILO: {last_hito.summary}"
 
@@ -62,42 +94,50 @@ async def generate_response_stream(user_text: str, user_id: int):
     if hilo_context:
         formatted_history.insert(0, {"role": "system", "content": hilo_context})
 
-    # 4. Fetch cognitive context from DB
+    # 4. Contexto cognitivo
     cognitive_context = ""
     try:
-        latest_exam = db.query(ExamResult).filter(
-            ExamResult.user_id == user_id
-        ).order_by(ExamResult.timestamp.desc()).first()
+        latest_exam = (
+            db.query(ExamResult)
+            .filter(ExamResult.user_id == user_id)
+            .order_by(ExamResult.timestamp.desc())
+            .first()
+        )
         if latest_exam:
             snapshot = get_skill_snapshot(db, user_id)
             trends = get_trends(db, user_id)
-            # Fetch last 5 episodic milestones
-            history_milestones = db.query(EleonorHistory).filter(
-                EleonorHistory.user_id == user_id
-            ).order_by(EleonorHistory.timestamp.desc()).limit(5).all()
+            history_milestones = (
+                db.query(EleonorHistory)
+                .filter(EleonorHistory.user_id == user_id)
+                .order_by(EleonorHistory.timestamp.desc())
+                .limit(5)
+                .all()
+            )
             history_list = [{"summary": h.summary, "signals": h.signals} for h in history_milestones]
 
-            cognitive_context = await generate_unified_prompt(latest_exam.data, snapshot, trends, history_list, session_state=db_state)
-            print(f"📊 [DB] Datos de examen encontrados para el usuario {user_id}")
+            cognitive_context = await generate_unified_prompt(
+                latest_exam.data, snapshot, trends, history_list, session_state=db_state
+            )
+            print(f"[DB] Datos de examen encontrados para el usuario {user_id}")
         else:
-            print(f"ℹ️ [DB] Sin datos de examen previo para el usuario {user_id}")
-    except Exception as db_e:
-        print(f"⚠️ Error al obtener contexto cognitivo de DB: {db_e}")
+            print(f"ℹ[DB] Sin datos de examen previo para el usuario {user_id}")
+
+    except Exception as db_error:
+        print(f"⚠️ Error al obtener contexto cognitivo de DB: {db_error}")
 
     system_prompt = get_system_prompt(db_state, cognitive_context)
     print(f"DEBUG: Cognitive Context applied: {cognitive_context[:100]}...")
 
-    # Construct total messages for LLM (System + History)
     llm_messages = [{"role": "system", "content": system_prompt}] + formatted_history
 
-    # 5. Forzar activación de juego si el usuario lo pide explícitamente (Control de testing)
+    # Activación de juego explícita
     if "quiero jugar un juego" in user_text.lower():
         llm_messages.append(
-            {"role": "system", "content": "ADVERTENCIA: El usuario ha pedido jugar. DEBES iniciar tu respuesta con el tag [GAME] y luego comentar algo sobre el desafío."})
-
-    # NO GLOBAL SYNC NEEDED ANYMORE
+            {"role": "system", "content": "ADVERTENCIA: El usuario ha pedido jugar. DEBES iniciar tu respuesta con el tag [GAME] y luego comentar algo sobre el desafío."}
+        )
 
     print(f"\n[CLIENTE] > {user_text}")
+
     try:
         stream = await client.chat.completions.create(
             model="gpt-4o-mini",
@@ -282,4 +322,13 @@ async def generate_response_stream(user_text: str, user_id: int):
 
 @router.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest, user_id: int = Depends(get_current_user_id)):
+    """Endpoint de streaming de chat.
+
+    Args:
+        request (ChatRequest): Texto enviado por el usuario.
+        user_id (int): ID del usuario autenticado.
+
+    Returns:
+        StreamingResponse: Flujo de eventos SSE con texto, estado y audio.
+    """
     return StreamingResponse(generate_response_stream(request.text, user_id), media_type="text/event-stream")

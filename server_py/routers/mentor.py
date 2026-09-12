@@ -1,42 +1,56 @@
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from pydantic import BaseModel
+
 from server_py.memoria.database import get_db, User, ExamResult, UserSkill
 from server_py.mentoria.models import MentorGroup, GroupStudent, MentorExam
 from server_py.auth.router import get_current_user_id
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/mentor", tags=["Mentor"])
 
+# ============================================================================
+# FUNCIONES AUXILIARES DE VERIFICACIÓN
+# ============================================================================
 
 def check_is_mentor(user_id: int, db: Session):
+    """Verifica si el usuario existe y si posee un rol con permisos de mentoría.
+    """
     user = db.query(User).filter(User.id == user_id).first()
     if not user or user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(status_code=403, detail="Acceso denegado: Se requiere rol de mentor.")
+        raise HTTPException(
+            status_code=403, 
+            detail="Acceso denegado: Se requiere rol de mentor."
+        )
     return user
 
+# ============================================================================
+# ESQUEMAS DE PETICIÓN (PYDANTIC)
+# ============================================================================
 
 class CreateGroupRequest(BaseModel):
     name: str
     description: str = None
     student_ids: List[int] = []
 
+# ============================================================================
+# ENDPOINTS DE GESTIÓN DE MENTORÍA
+# ============================================================================
 
 @router.get("/students")
-async def get_mentor_students(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
-    """
-    Returns a list of students assigned to the mentor (via groups or direct assignment).
-    For now, returns all students if admin/mentor, but logically should filter by mentor's groups.
+async def get_mentor_students(
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Devuelve la lista de estudiantes asignados al mentor (vía grupos o asignación directa).
+    Actualmente devuelve todos los estudiantes para la versión MVP del dashboard de mentor.
     """
     check_is_mentor(current_user_id, db)
 
-    # In a full implementation, we'd filter by students in groups owned by this mentor.
-    # For now, returning all students for the mentor dashboard MVP
     students = db.query(User).filter(User.role == "student").all()
-
     student_ids = [s.id for s in students]
 
-    # Pre-fetch all skills for these students
+    # Precarga de todas las habilidades para los estudiantes seleccionados
     all_skills = db.query(UserSkill).filter(UserSkill.user_id.in_(student_ids)).all()
     skills_by_student = {}
     for sk in all_skills:
@@ -61,9 +75,12 @@ async def get_mentor_students(db: Session = Depends(get_db), current_user_id: in
 
 
 @router.get("/groups")
-async def get_mentor_groups(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+async def get_mentor_groups(
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Todos los mentores comparten la misma base de datos de grupos de estudiantes."""
     check_is_mentor(current_user_id, db)
-    # Todos los mentores comparten la misma base de datos de grupos de estudiantes
     groups = db.query(MentorGroup).all()
 
     return [
@@ -78,29 +95,41 @@ async def get_mentor_groups(db: Session = Depends(get_db), current_user_id: int 
 
 
 @router.post("/groups")
-async def create_mentor_group(req: CreateGroupRequest, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+async def create_mentor_group(
+    req: CreateGroupRequest, 
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Crea un nuevo grupo de mentoría y le asocia los estudiantes proporcionados."""
     check_is_mentor(current_user_id, db)
 
-    group = MentorGroup(
-        mentor_id=current_user_id,
-        name=req.name,
-        description=req.description
-    )
-    db.add(group)
-    db.commit()
-    db.refresh(group)
+    try:
+        group = MentorGroup(
+            mentor_id=current_user_id,
+            name=req.name,
+            description=req.description
+        )
+        db.add(group)
+        db.commit()
+        db.refresh(group)
 
-    for sid in req.student_ids:
-        gs = GroupStudent(group_id=group.id, student_id=sid)
-        db.add(gs)
+        for sid in req.student_ids:
+            gs = GroupStudent(group_id=group.id, student_id=sid)
+            db.add(gs)
 
-    db.commit()
-
-    return {"message": "Group created", "group_id": group.id}
+        db.commit()
+        return {"message": "Group created", "group_id": group.id}
+    except Exception:
+        db.rollback()
+        raise
 
 
 @router.get("/exams")
-async def get_mentor_exams(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+async def get_mentor_exams(
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Obtiene los exámenes creados por el mentor autenticado."""
     check_is_mentor(current_user_id, db)
     exams = db.query(MentorExam).filter(MentorExam.mentor_id == current_user_id).all()
 
@@ -114,18 +143,37 @@ async def get_mentor_exams(db: Session = Depends(get_db), current_user_id: int =
         } for e in exams
     ]
 
-# Compatibility endpoints for existing dashboard components
-
+# ============================================================================
+# ENDPOINTS DE COMPATIBILIDAD CON COMPONENTES EXISTENTES DEL DASHBOARD
+# ============================================================================
 
 @router.get("/students/{student_id}/history")
-async def get_student_history(student_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+async def get_student_history(
+    student_id: int, 
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Obtiene el historial de exámenes de un estudiante por su ID."""
+    check_is_mentor(current_user_id, db)
     history = db.query(ExamResult).filter(ExamResult.user_id == student_id).order_by(ExamResult.timestamp.desc()).all()
-    return [{"id": h.id, "area": h.area, "score": h.score, "timestamp": h.timestamp.isoformat(), "details": h.data} for h in history]
+    return [
+        {
+            "id": h.id, 
+            "area": h.area, 
+            "score": h.score, 
+            "timestamp": h.timestamp.isoformat(), 
+            "details": h.data
+        } for h in history
+    ]
 
 
 @router.get("/stats/global")
-async def get_global_stats(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
-    # Minimal stub for Mentor dashboard stats
+async def get_global_stats(
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Respuesta stub para métricas globales en el dashboard de mentores."""
+    check_is_mentor(current_user_id, db)
     return {
         "averages": {},
         "total_students": db.query(User).filter(User.role == "student").count(),
@@ -134,8 +182,12 @@ async def get_global_stats(db: Session = Depends(get_db), current_user_id: int =
 
 
 @router.get("/groups/{group_id}/students")
-async def get_group_students(group_id: int, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
-    """Returns students belonging to a specific group with their skill data."""
+async def get_group_students(
+    group_id: int, 
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Devuelve los estudiantes pertenecientes a un grupo específico con sus datos de habilidad."""
     check_is_mentor(current_user_id, db)
     group = db.query(MentorGroup).filter(MentorGroup.id == group_id).first()
     if not group:

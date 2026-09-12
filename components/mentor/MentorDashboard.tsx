@@ -25,6 +25,17 @@ interface Group {
     student_count: number
 }
 
+const matchesStudentSearch = (student: Student, term: string) => {
+    const normalizedTerm = term.trim().toLowerCase()
+
+    if (!normalizedTerm) return true
+
+    return (
+        student.full_name.toLowerCase().startsWith(normalizedTerm) ||
+        student.username.toLowerCase().startsWith(normalizedTerm)
+    )
+}
+
 interface MentorDashboardProps {
     view?: "dashboard" | "students" | "groups" | "archives"
 }
@@ -113,8 +124,7 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
     const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+        matchesStudentSearch(s, searchTerm)
     )
 
     const handleCreate = async () => {
@@ -404,21 +414,24 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     }
 
     const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+        matchesStudentSearch(s, searchTerm)
     )
 
     const filteredGroupStudents = groupStudents.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+        matchesStudentSearch(s, searchTerm)
     )
 
-const SearchBar = () => (
+    const renderSearchBar = () => (
         <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(150,10%,80%)]/50" />
-            <input type="text" placeholder="Buscar estudiante..."
+
+            <input
+                type="text"
+                placeholder="Buscar estudiante..."
                 className="bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 rounded-2xl py-3 pl-12 pr-6 text-white placeholder:text-[hsl(150,10%,80%)]/40 focus:outline-none focus:ring-2 focus:ring-[hsl(74,100%,47%)]/30 w-full md:w-64 transition-all shadow-xl"
-                value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+            />
         </div>
     )
 
@@ -476,7 +489,7 @@ const SearchBar = () => (
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Dashboard</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Vista general del estado de tus estudiantes y grupos.</p>
                     </div>
-                    <SearchBar />
+                    {renderSearchBar()}
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -530,7 +543,7 @@ const SearchBar = () => (
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Mis Estudiantes</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Click en un estudiante para ver su análisis de habilidades.</p>
                     </div>
-                    <SearchBar />
+                    {renderSearchBar()}
                 </div>
                 <div className="grid gap-3">
                     {filteredStudents.length === 0 ? (
@@ -605,7 +618,7 @@ const SearchBar = () => (
                         <div className="space-y-4 pt-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-white">Estudiantes en el grupo</h2>
-                                <SearchBar />
+                                {renderSearchBar()}
                             </div>
                             {groupStudentsLoading ? (
                                 <div className="flex items-center justify-center py-12">
