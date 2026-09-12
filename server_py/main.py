@@ -32,20 +32,25 @@ auto_seed_students()
 
 app = FastAPI(title="Eleonor Backend Modular")
 
-raw_origins = settings.ALLOWED_ORIGINS
-if settings.FRONTEND_URL and settings.FRONTEND_URL not in raw_origins:
-    raw_origins = f"{raw_origins},{settings.FRONTEND_URL}"
+default_dev_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "https://skill-tech-ucsm.netlify.app",
+]
+
+raw_origins = settings.ALLOWED_ORIGINS.split(",") if settings.ALLOWED_ORIGINS else []
+if settings.FRONTEND_URL:
+    raw_origins.append(settings.FRONTEND_URL)
 
 allowed_origins = []
-for origin in raw_origins.split(","):
+for origin in default_dev_origins + raw_origins:
     o = origin.strip()
     if o:
         clean_origin = o.rstrip("/")
         if clean_origin not in allowed_origins:
             allowed_origins.append(clean_origin)
-
-if "https://skill-tech-ucsm.netlify.app" not in allowed_origins:
-    allowed_origins.append("https://skill-tech-ucsm.netlify.app")
 
 if "*" in allowed_origins:
     raise RuntimeError(
@@ -57,7 +62,7 @@ if "*" in allowed_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.netlify\.app",
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?|https://.*\.netlify\.app|https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

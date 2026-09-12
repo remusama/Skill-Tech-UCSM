@@ -208,7 +208,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
     const handleStartExam = (exam: any) => {
         if (!currentArea) return;
-        if (exam.disabled || exam.status?.includes("trabajando")) {
+        if (exam.disabled || exam.status?.includes("trabajando") || exam.status?.includes("Chambeando")) {
             return
         }
         if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
@@ -221,6 +221,14 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         }
         if (currentArea.id === "expectativas" && exam.id === "cepv-20") {
             setActiveExam({ ...exam, areaName: currentArea.name, isCepv: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "neo-240") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isNeo: true })
             return
         }
         if (currentArea.id === "psicometria" && exam.id === "ccl-36") {
@@ -555,7 +563,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                                             ? 'text-emerald-900 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-400/10' 
                                                                             : 'text-slate-700 bg-slate-200/80 dark:text-gray-500 dark:bg-black/40'
                                                                 )}>
-                                                                    {exam.disabled ? '(Ingenieros trabajando)' : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
+                                                                    {exam.disabled ? (exam.status || '(Ingenieros Chambeando :V)') : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
                                                                 </Badge>
                                                             </div>
                                                             <div className="p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors">
@@ -605,7 +613,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                                 disabled
                                                                 className="w-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold tracking-wide py-5 rounded-xl cursor-not-allowed opacity-80"
                                                             >
-                                                                (Ingenieros trabajando)
+                                                                {exam.status || "(Ingenieros Chambeando :V)"}
                                                             </Button>
                                                         ) : (
                                                             <Button
