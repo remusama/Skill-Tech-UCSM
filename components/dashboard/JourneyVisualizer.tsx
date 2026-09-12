@@ -226,7 +226,7 @@ export function JourneyVisualizer({ areaId, areaName, theme }: VisualizerProps) 
                 </div>
             </div>
 
-{/--------------------------------------/}
+{/*--------------------------------------*/}
 
             {/* Skill Tree Visualizer (Horizontal)*/}
             <div className="relative w-full h-[400px] py-10 overflow-x-auto">
@@ -325,7 +325,7 @@ export function JourneyVisualizer({ areaId, areaName, theme }: VisualizerProps) 
             </div>
              
 
-{/-------------------------------------------------/}
+{/*-------------------------------------------------*/}
 
             {/* Footer Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white/5 rounded-3xl p-6 border border-white/5 backdrop-blur-md">

@@ -43,7 +43,7 @@ ALGORITHM = "HS256"
 # La configuración por entorno debe utilizarse en producción.
 TEACHER_REGISTRATION_KEY = os.environ.get(
     "TEACHER_REGISTRATION_KEY",
-    "87654321",
+    "liderazgo.ucsm.2026",
 )
 
 # Roles que un usuario puede asignarse durante el autorregistro.
