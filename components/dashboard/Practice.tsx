@@ -97,11 +97,12 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
         via: "via-rose-500 dark:via-rose-400"
     },
     psicometria: {
-        color: "from-[#82610d] to-[#54400c] dark:from-[#d0b04d] dark:to-[#997a23]",
-        textColor: "text-[#694d07] dark:text-[#d0b04d]",
-        badge: "text-[#4a3604] bg-[#b89530]/20 border-[#b89530]/40 dark:text-[#d0b04d] dark:bg-[#d0b04d]/10 dark:border-[#d0b04d]/20",
-        tab: "bg-[#82610d] dark:bg-[#d0b04d]",
-        via: "via-[#82610d] dark:via-[#d0b04d]"
+        // Cambiado el degradado claro de dorado (#82610d) a verde institucional (#15803d)
+        color: "from-[#15803d] to-[#166534] dark:from-[#d0b04d] dark:to-[#997a23]",
+        textColor: "text-[#15803d] dark:text-[#d0b04d]",
+        badge: "text-[#14532d] bg-[#15803d]/20 border-[#15803d]/40 dark:text-[#d0b04d] dark:bg-[#d0b04d]/10 dark:border-[#d0b04d]/20",
+        tab: "bg-[#15803d] dark:bg-[#d0b04d]",
+        via: "via-[#15803d] dark:via-[#d0b04d]"
     },
     expectativas: {
         color: "from-[#444444] to-[#1c2e0e] dark:from-[#c7c7c7] dark:to-[#3c5a21]",
@@ -331,11 +332,12 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         <div ref={practiceContainerRef} id="practice-scroll-container" className="relative min-h-screen text-slate-900 dark:text-white overflow-y-auto overflow-x-hidden font-sans flex flex-col pt-6">
             <div ref={topAnchorRef} className="absolute top-0 left-0 w-0 h-0" aria-hidden />
 
-            {/* TOP HEADER CON CORRECCIÓN DE VISIBILIDAD */}
+            {/* TOP HEADER CORREGIDO */}
             <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00] drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
-                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-slate-900 dark:text-white uppercase leading-none">
+                    <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00] drop-shadow-sm" />
+                    {/* Cambiado a text-slate-900 sin transparencias para que resalte en claro */}
+                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-slate-900 dark:text-white uppercase leading-none opacity-100">
                         Mentoría
                     </h1>
                 </div>
@@ -429,11 +431,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                     </div>
                 )}
 
+                
                 {/* SUBTÍTULO Y LISTADO CON TEXTO CORREGIDO PARA MODO CLARO */}
                 {activeCategory === 'mentoria' && (
                     <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00]" />
+                            {/* Modificado aquí: de dorado a verde en modo claro (#15803d y #166534), conservando los valores oscuros */}
+                            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#15803d] to-[#166534] dark:from-[#d0b04d] dark:to-[#baef00]" />
                             <h2 className="text-lg font-black uppercase tracking-widest text-slate-900 dark:text-white">
                                 Exámenes de Mentoría
                             </h2>
