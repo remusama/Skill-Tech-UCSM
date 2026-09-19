@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
     Mic, MicOff, CheckCircle2, X, Loader2, Search, Sparkles, 
-    Volume2, Shield, Zap, UserCheck, ChevronDown, Award
+    Volume2, VolumeX, Play, RotateCcw, Shield, Zap, UserCheck, ChevronDown, Award
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
 import { getStudentHouseProfile, CASAS_INFO, ALL_48_STUDENTS, playStudentHouseAudio, StudentHouseProfile } from "@/lib/casasData"
@@ -266,6 +266,81 @@ function findBestStudentMatchDynamic(
     }
 }
 
+// ── GUION SINCRONIZADO DEL SALUDO INICIAL OFICIAL (/Presentacion.mp3) ────────
+interface PresentationCue {
+    start: number
+    end: number
+    text: string
+    house: "APEX" | "IGNIS" | "NEXUS" | "VISIO" | "ALL" | null
+    expression: string
+}
+
+const PRESENTATION_GREETING_CUES: PresentationCue[] = [
+    {
+        start: 0,
+        end: 4.8,
+        text: "A ver, a ver... Dicen que los gatos vemos cosas invisibles para los simples mortales.",
+        house: null,
+        expression: "Explicando"
+    },
+    {
+        start: 4.8,
+        end: 12.8,
+        text: "Y tienen razón. Ningún sombrero polvoriento podría leer tan bien el corazón de un líder como estos bigotes afinados.",
+        house: null,
+        expression: "Feliz"
+    },
+    {
+        start: 12.8,
+        end: 17.5,
+        text: "En esta comunidad conviven cuatro esencias poderosas...",
+        house: "ALL",
+        expression: "Explicando"
+    },
+    {
+        start: 17.5,
+        end: 20.8,
+        text: "La claridad para mirar el horizonte.",
+        house: "VISIO",
+        expression: "Explicando"
+    },
+    {
+        start: 20.8,
+        end: 23.3,
+        text: "La magia de unir voluntades.",
+        house: "NEXUS",
+        expression: "Feliz"
+    },
+    {
+        start: 23.3,
+        end: 26.3,
+        text: "La chispa viva que enciende la acción...",
+        house: "IGNIS",
+        expression: "Explicando"
+    },
+    {
+        start: 26.3,
+        end: 29.5,
+        text: "...y la sed insaciable de superarse a uno mismo.",
+        house: "APEX",
+        expression: "Explicando"
+    },
+    {
+        start: 29.5,
+        end: 34.5,
+        text: "¡Silencio! Que mis patitas ya sienten el llamado de cada clan.",
+        house: "ALL",
+        expression: "Sorprendida"
+    }
+]
+
+const HOUSE_ESSENCE_LABELS: Record<string, string> = {
+    APEX: "Superación y Liderazgo",
+    IGNIS: "Chispa viva de acción",
+    NEXUS: "Magia de unir voluntades",
+    VISIO: "Claridad y Visión de Futuro"
+}
+
 export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClose, presentationTitle }: MoyaPresentationAssistantProps) => {
     const [mounted, setMounted] = useState(false)
     const [localStudents, setLocalStudents] = useState<Student[]>(students || [])
@@ -278,6 +353,9 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
     // ESTADOS PARA ANIMACIONES DE PRESENTACIÓN DE INTEGRANTE Y LOGO DE CASA
     const [activePresentation, setActivePresentation] = useState<StudentHouseProfile | null>(null)
     const [isPlayingHouseAudio, setIsPlayingHouseAudio] = useState(false)
+    const [isPlayingIntro, setIsPlayingIntro] = useState(false)
+    const [highlightedHouse, setHighlightedHouse] = useState<"APEX" | "IGNIS" | "NEXUS" | "VISIO" | "ALL" | null>(null)
+    const [autoplayBlocked, setAutoplayBlocked] = useState(false)
     const [showSearchDrawer, setShowSearchDrawer] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
 
@@ -504,36 +582,103 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
         }, charInterval)
     }
 
-    // Reproducción del audio de introducción oficial (/CASAS/Presentacion.mpeg) conectando a Moya
-    const playIntroductionAudio = () => {
-        setStatus("speaking")
-        triggerTypewriter("¡Bienvenidos a la presentación oficial de las Casas de Liderazgo UCSM! Menciona el nombre de un integrante para comenzar.")
+    // Detener la reproducción del saludo oficial de Moya
+    const stopIntroductionAudio = () => {
+        if (currentAudioRef.current && isPlayingIntro) {
+            try {
+                currentAudioRef.current.pause()
+                currentAudioRef.current.currentTime = 0
+            } catch (e) {}
+            currentAudioRef.current = null
+        }
+        setIsPlayingIntro(false)
+        setHighlightedHouse(null)
+        setStatus("idle")
+        stopMoyaLipSync()
+        setDisplayedSubtitleText("")
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: 'Atenta' } }))
+        }
+    }
 
-        const audio = new Audio("/CASAS/Presentacion.mpeg")
+    // Reproducción del audio de introducción oficial (/Presentacion.mp3) conectando a Moya
+    const playIntroductionAudio = () => {
+        if (currentAudioRef.current) {
+            try {
+                currentAudioRef.current.pause()
+            } catch (e) {}
+            currentAudioRef.current = null
+        }
+        stopMoyaLipSync()
+        if (typingTimerRef.current) {
+            clearInterval(typingTimerRef.current)
+            typingTimerRef.current = null
+        }
+        setIsTyping(false)
+
+        setStatus("speaking")
+        setIsPlayingIntro(true)
+        setAutoplayBlocked(false)
+        setDisplayedSubtitleText(PRESENTATION_GREETING_CUES[0].text)
+
+        const audio = new Audio("/Presentacion.mp3")
         currentAudioRef.current = audio
+
+        let lastCueIndex = 0
+
+        audio.ontimeupdate = () => {
+            const t = audio.currentTime
+            const cueIndex = PRESENTATION_GREETING_CUES.findIndex(c => t >= c.start && t < c.end)
+            if (cueIndex !== -1 && cueIndex !== lastCueIndex) {
+                lastCueIndex = cueIndex
+                const cue = PRESENTATION_GREETING_CUES[cueIndex]
+                setDisplayedSubtitleText(cue.text)
+                setHighlightedHouse(cue.house)
+                if (typeof window !== "undefined" && cue.expression) {
+                    window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: cue.expression } }))
+                }
+            }
+        }
 
         audio.onended = () => {
             setStatus("idle")
+            setIsPlayingIntro(false)
+            setHighlightedHouse(null)
             stopMoyaLipSync()
+            setDisplayedSubtitleText("¡El llamado ha comenzado! Menciona el nombre de un integrante o presiona el micrófono.")
             if (typeof window !== "undefined") {
                 window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: 'Atenta' } }))
             }
         }
 
         audio.onerror = (err) => {
-            console.warn("Error cargando audio /CASAS/Presentacion.mpeg:", err)
-            setStatus("idle")
-            stopMoyaLipSync()
+            console.warn("Error cargando /Presentacion.mp3, intentando fallback a /CASAS/Presentacion.mpeg:", err)
+            const fallbackAudio = new Audio("/CASAS/Presentacion.mpeg")
+            currentAudioRef.current = fallbackAudio
+            fallbackAudio.ontimeupdate = audio.ontimeupdate
+            fallbackAudio.onended = audio.onended
+            fallbackAudio.play()
+                .then(() => startMoyaLipSyncFromAudioElement(fallbackAudio))
+                .catch(() => {
+                    setStatus("idle")
+                    setIsPlayingIntro(false)
+                    setHighlightedHouse(null)
+                    stopMoyaLipSync()
+                })
         }
 
         const handleSuccess = () => {
+            setAutoplayBlocked(false)
             startMoyaLipSyncFromAudioElement(audio)
         }
 
         audio.play()
             .then(handleSuccess)
             .catch(err => {
-                console.warn("Autoplay bloqueado por navegador, esperando interacción:", err)
+                console.warn("Autoplay bloqueado por navegador para /Presentacion.mp3:", err)
+                setAutoplayBlocked(true)
+                setIsPlayingIntro(false)
+                setStatus("idle")
                 const unlock = () => {
                     audio.play().then(handleSuccess).catch(() => {})
                 }
@@ -542,13 +687,13 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
             })
     }
 
-    // Reproducir audio de presentación oficial al abrir (/CASAS/Presentacion.mpeg)
+    // Reproducir audio de presentación oficial al abrir (/Presentacion.mp3)
     useEffect(() => {
         if (!initialGreetingDone.current) {
             initialGreetingDone.current = true
             const timer = setTimeout(() => {
                 playIntroductionAudio()
-            }, 500)
+            }, 300)
             return () => clearTimeout(timer)
         }
     }, [])
@@ -648,6 +793,9 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
 
     // DISPARAR ANIMACIÓN Y PRESENTACIÓN DE UN ESTUDIANTE DIRECTAMENTE CON SU AUDIO OFICIAL
     const executeStudentPresentationAnimation = async (studentName: string) => {
+        if (isPlayingIntro) {
+            stopIntroductionAudio()
+        }
         const houseProfile = getStudentHouseProfile(studentName)
         if (!houseProfile) return
 
@@ -814,7 +962,15 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
 
     // Alternar escucha al presionar el botón de micrófono
     const toggleListening = () => {
-        if (status === "speaking" || status === "processing") return
+        if (status === "processing") return
+
+        if (isPlayingIntro) {
+            stopIntroductionAudio()
+            startRecording()
+            return
+        }
+
+        if (status === "speaking") return
 
         if (status === "listening") {
             stopRecording()
@@ -904,7 +1060,7 @@ const INITIAL_HOUSE_LOGOS = [
                 </button>
             )}
 
-            {/* BARRA SUPERIOR IZQUIERDA: BÚSQUEDA RÁPIDA DE INTEGRANTES */}
+            {/* BARRA SUPERIOR IZQUIERDA: BÚSQUEDA RÁPIDA DE INTEGRANTES Y SALUDO MOYA */}
             <div className="fixed top-4 left-6 z-[600] flex items-center gap-2 pointer-events-auto">
                 <button
                     onClick={() => setShowSearchDrawer(!showSearchDrawer)}
@@ -913,9 +1069,51 @@ const INITIAL_HOUSE_LOGOS = [
                     <Search className="w-4 h-4 text-[hsl(74,100%,47%)]" />
                     <span>Buscar Integrante (48)</span>
                 </button>
+
+                <button
+                    onClick={isPlayingIntro ? stopIntroductionAudio : playIntroductionAudio}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shadow-2xl backdrop-blur-md border cursor-pointer ${
+                        isPlayingIntro
+                            ? "bg-amber-950/90 hover:bg-amber-900 text-amber-200 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.4)]"
+                            : "bg-slate-950/90 hover:bg-slate-900 text-slate-200 border-emerald-500/30 hover:border-emerald-500/60"
+                    }`}
+                    title={isPlayingIntro ? "Pausar saludo de presentación" : "Reproducir saludo oficial de Moya (/Presentacion.mp3)"}
+                >
+                    {isPlayingIntro ? (
+                        <>
+                            <VolumeX className="w-4 h-4 text-amber-400 animate-pulse" />
+                            <span>Pausar Saludo Moya</span>
+                        </>
+                    ) : (
+                        <>
+                            <Volume2 className="w-4 h-4 text-amber-400" />
+                            <span>Saludo Oficial Moya</span>
+                        </>
+                    )}
+                </button>
             </div>
 
-            {/* LOGOS INICIALES DE LAS CASAS CON '1' EN SU NOMBRE (SOLO LOS LOGOS HASTA QUE SE DIGA UN NOMBRE A MOYA) */}
+            {/* BANNER EN CASO DE AUTOPLAY BLOQUEADO */}
+            <AnimatePresence>
+                {autoplayBlocked && !isPlayingIntro && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className="fixed top-16 left-1/2 -translate-x-1/2 z-[620] pointer-events-auto"
+                    >
+                        <button
+                            onClick={playIntroductionAudio}
+                            className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-slate-950 font-black rounded-2xl text-xs shadow-[0_0_35px_rgba(245,158,11,0.6)] border border-amber-300 animate-bounce cursor-pointer hover:scale-105 transition-transform"
+                        >
+                            <Volume2 className="w-4 h-4 fill-current" />
+                            <span>🔊 Haz clic aquí para escuchar el Saludo Oficial de Moya</span>
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* LOGOS INICIALES DE LAS CASAS CON '1' EN SU NOMBRE (SINCRONIZADOS CON EL AUDIO DE PRESENTACIÓN) */}
             <AnimatePresence>
                 {!activePresentation && (
                     <>
@@ -927,30 +1125,49 @@ const INITIAL_HOUSE_LOGOS = [
                             transition={{ type: "spring", stiffness: 180, damping: 20 }}
                             className="fixed top-1/2 -translate-y-1/2 left-6 sm:left-10 md:left-14 z-[540] pointer-events-auto flex flex-col gap-6 items-center"
                         >
-                            {INITIAL_HOUSE_LOGOS.filter(h => h.side === "left").map((house, idx) => (
-                                <motion.div
-                                    key={house.id}
-                                    animate={{ 
-                                        y: [0, -8, 0],
-                                        rotate: [0, 1.5, -1.5, 0]
-                                    }}
-                                    transition={{ 
-                                        repeat: Infinity, 
-                                        duration: 3.5 + idx * 0.6, 
-                                        ease: "easeInOut" 
-                                    }}
-                                    className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 p-2.5 rounded-3xl bg-slate-950/40 border border-white/10 backdrop-blur-md shadow-2xl flex items-center justify-center group hover:scale-105 transition-all duration-300"
-                                    style={{
-                                        boxShadow: `0 0 35px ${house.glow}`
-                                    }}
-                                >
-                                    <img 
-                                        src={house.file} 
-                                        alt={`Logo ${house.name}`} 
-                                        className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] transition-all"
-                                    />
-                                </motion.div>
-                            ))}
+                            {INITIAL_HOUSE_LOGOS.filter(h => h.side === "left").map((house, idx) => {
+                                const isHighlighted = highlightedHouse === house.id || highlightedHouse === "ALL"
+                                return (
+                                    <div key={house.id} className="flex flex-col items-center">
+                                        <motion.div
+                                            animate={{ 
+                                                y: isHighlighted ? [0, -12, 0] : [0, -8, 0],
+                                                rotate: [0, 1.5, -1.5, 0],
+                                                scale: isHighlighted ? 1.15 : 1
+                                            }}
+                                            transition={{ 
+                                                repeat: Infinity, 
+                                                duration: isHighlighted ? 2.2 : 3.5 + idx * 0.6, 
+                                                ease: "easeInOut" 
+                                            }}
+                                            className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 p-2.5 rounded-3xl bg-slate-950/40 border backdrop-blur-md shadow-2xl flex items-center justify-center group hover:scale-105 transition-all duration-300 relative"
+                                            style={{
+                                                boxShadow: isHighlighted 
+                                                    ? `0 0 50px ${house.glow.replace('0.55', '0.95')}, inset 0 0 20px ${house.glow.replace('0.55', '0.4')}` 
+                                                    : `0 0 35px ${house.glow}`,
+                                                borderColor: isHighlighted ? "rgba(255, 255, 255, 0.75)" : "rgba(255, 255, 255, 0.1)"
+                                            }}
+                                        >
+                                            <img 
+                                                src={house.file} 
+                                                alt={`Logo ${house.name}`} 
+                                                className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] transition-all"
+                                            />
+                                        </motion.div>
+                                        {isHighlighted && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.8, y: 4 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                className="px-2.5 py-1 rounded-full bg-slate-950/95 border text-[10px] font-mono font-bold text-white shadow-xl flex items-center gap-1 mt-2 text-center"
+                                                style={{ borderColor: house.glow }}
+                                            >
+                                                <Sparkles className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                                <span>{HOUSE_ESSENCE_LABELS[house.id]}</span>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </motion.div>
 
                         {/* 2 Casas a la derecha: NEXUS 1 y VISIO 1 */}
@@ -961,30 +1178,49 @@ const INITIAL_HOUSE_LOGOS = [
                             transition={{ type: "spring", stiffness: 180, damping: 20 }}
                             className="fixed top-1/2 -translate-y-1/2 right-6 sm:right-10 md:right-14 z-[540] pointer-events-auto flex flex-col gap-6 items-center"
                         >
-                            {INITIAL_HOUSE_LOGOS.filter(h => h.side === "right").map((house, idx) => (
-                                <motion.div
-                                    key={house.id}
-                                    animate={{ 
-                                        y: [0, -8, 0],
-                                        rotate: [0, -1.5, 1.5, 0]
-                                    }}
-                                    transition={{ 
-                                        repeat: Infinity, 
-                                        duration: 3.8 + idx * 0.6, 
-                                        ease: "easeInOut" 
-                                    }}
-                                    className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 p-2.5 rounded-3xl bg-slate-950/40 border border-white/10 backdrop-blur-md shadow-2xl flex items-center justify-center group hover:scale-105 transition-all duration-300"
-                                    style={{
-                                        boxShadow: `0 0 35px ${house.glow}`
-                                    }}
-                                >
-                                    <img 
-                                        src={house.file} 
-                                        alt={`Logo ${house.name}`} 
-                                        className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] transition-all"
-                                    />
-                                </motion.div>
-                            ))}
+                            {INITIAL_HOUSE_LOGOS.filter(h => h.side === "right").map((house, idx) => {
+                                const isHighlighted = highlightedHouse === house.id || highlightedHouse === "ALL"
+                                return (
+                                    <div key={house.id} className="flex flex-col items-center">
+                                        <motion.div
+                                            animate={{ 
+                                                y: isHighlighted ? [0, -12, 0] : [0, -8, 0],
+                                                rotate: [0, -1.5, 1.5, 0],
+                                                scale: isHighlighted ? 1.15 : 1
+                                            }}
+                                            transition={{ 
+                                                repeat: Infinity, 
+                                                duration: isHighlighted ? 2.2 : 3.8 + idx * 0.6, 
+                                                ease: "easeInOut" 
+                                            }}
+                                            className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 p-2.5 rounded-3xl bg-slate-950/40 border backdrop-blur-md shadow-2xl flex items-center justify-center group hover:scale-105 transition-all duration-300 relative"
+                                            style={{
+                                                boxShadow: isHighlighted 
+                                                    ? `0 0 50px ${house.glow.replace('0.55', '0.95')}, inset 0 0 20px ${house.glow.replace('0.55', '0.4')}` 
+                                                    : `0 0 35px ${house.glow}`,
+                                                borderColor: isHighlighted ? "rgba(255, 255, 255, 0.75)" : "rgba(255, 255, 255, 0.1)"
+                                            }}
+                                        >
+                                            <img 
+                                                src={house.file} 
+                                                alt={`Logo ${house.name}`} 
+                                                className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] transition-all"
+                                            />
+                                        </motion.div>
+                                        {isHighlighted && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.8, y: 4 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                className="px-2.5 py-1 rounded-full bg-slate-950/95 border text-[10px] font-mono font-bold text-white shadow-xl flex items-center gap-1 mt-2 text-center"
+                                                style={{ borderColor: house.glow }}
+                                            >
+                                                <Sparkles className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                                                <span>{HOUSE_ESSENCE_LABELS[house.id]}</span>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )
+                            })}
                         </motion.div>
                     </>
                 )}
@@ -1293,9 +1529,9 @@ const INITIAL_HOUSE_LOGOS = [
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         onClick={toggleListening}
-                        disabled={status === "speaking" || status === "processing"}
-                        title={status === "listening" ? "Detener y procesar audio" : "Presiona para hablar"}
-                        className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-white transition-all shadow-2xl ${
+                        disabled={status === "processing" || (status === "speaking" && !isPlayingIntro)}
+                        title={isPlayingIntro ? "Detener saludo para hablar" : status === "listening" ? "Detener y procesar audio" : "Presiona para hablar"}
+                        className={`w-20 h-20 rounded-full flex items-center justify-center font-bold text-white transition-all shadow-2xl cursor-pointer ${
                             status === "listening"
                                 ? "bg-red-600 shadow-[0_0_50px_rgba(239,68,68,1)] border-4 border-red-300 animate-pulse ring-4 ring-red-500/40"
                                 : status === "processing"
@@ -1315,7 +1551,7 @@ const INITIAL_HOUSE_LOGOS = [
                         {status === "idle" && "Presiona para hablar y buscar integrante"}
                         {status === "listening" && "Escuchando... Di un nombre (Presiona para enviar)"}
                         {status === "processing" && "Buscando integrante en la base de datos..."}
-                        {status === "speaking" && "Moya presentando integrante..."}
+                        {status === "speaking" && (isPlayingIntro ? "Moya presentando las Casas de Liderazgo UCSM..." : "Moya presentando integrante...")}
                     </span>
                 </div>
             </div>
