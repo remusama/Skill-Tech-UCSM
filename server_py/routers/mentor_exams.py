@@ -18,7 +18,7 @@ from server_py.mentoria.models import (
     MentorGroup,
 )
 
-router = APIRouter(tags=["Mentor Exams"])
+router = APIRouter(prefix="/api", tags=["Mentor Exams"])
 
 # ============================================================================
 # FUNCIONES AUXILIARES Y AUTORIZACIÓN
