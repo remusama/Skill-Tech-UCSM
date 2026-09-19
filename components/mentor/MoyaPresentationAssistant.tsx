@@ -69,16 +69,130 @@ function levenshteinDistance(a: string, b: string): number {
     return matrix[b.length][a.length]
 }
 
-// Coincidencia Inteligente de Nombres (STT -> Database 48 Estudiantes)
-function findBestStudentMatch(transcript: string, students: Student[]): { student: Student | null; score: number } {
-    if (!transcript.trim()) {
-        return { student: null, score: 0 }
+// ── CANVAS DE PORTAL MÁGICO CON POLVO DE ESTRELLAS Y PARTÍCULAS ─────────────
+const MagicPortalCanvas = () => {
+    const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+    useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const ctx = canvas.getContext("2d")
+        if (!ctx) return
+
+        let animationFrameId: number
+        let width = (canvas.width = window.innerWidth)
+        let height = (canvas.height = window.innerHeight)
+
+        const handleResize = () => {
+            if (!canvas) return
+            width = canvas.width = window.innerWidth
+            height = canvas.height = window.innerHeight
+        }
+        window.addEventListener("resize", handleResize)
+
+        const particles: Array<{
+            x: number
+            y: number
+            size: number
+            color: string
+            alpha: number
+            vx: number
+            vy: number
+            life: number
+            maxLife: number
+        }> = []
+
+        const colors = [
+            "rgba(16, 185, 129, ", // Emerald APEX
+            "rgba(249, 115, 22, ", // Ignis Orange
+            "rgba(168, 85, 247, ", // Nexus Purple
+            "rgba(6, 182, 212, ",  // Visio Cyan
+            "rgba(234, 179, 8, "   // Magic Gold
+        ]
+
+        for (let i = 0; i < 75; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 2.8 + 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: Math.random() * 0.8 + 0.2,
+                vx: (Math.random() - 0.5) * 0.8,
+                vy: (Math.random() - 0.5) * 0.8,
+                life: Math.random() * 100,
+                maxLife: 150 + Math.random() * 100
+            })
+        }
+
+        let angle = 0
+
+        const render = () => {
+            ctx.clearRect(0, 0, width, height)
+
+            const centerX = width / 2
+            const centerY = height / 2 + 50
+            const gradient = ctx.createRadialGradient(centerX, centerY, 30, centerX, centerY, width * 0.5)
+            gradient.addColorStop(0, "rgba(59, 130, 246, 0.12)")
+            gradient.addColorStop(0.5, "rgba(168, 85, 247, 0.06)")
+            gradient.addColorStop(1, "rgba(0, 0, 0, 0)")
+            ctx.fillStyle = gradient
+            ctx.fillRect(0, 0, width, height)
+
+            angle += 0.005
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i]
+                p.life++
+                p.x += p.vx + Math.sin(angle + p.y * 0.01) * 0.3
+                p.y += p.vy + Math.cos(angle + p.x * 0.01) * 0.3
+
+                if (p.x < 0) p.x = width
+                if (p.x > width) p.x = 0
+                if (p.y < 0) p.y = height
+                if (p.y > height) p.y = 0
+
+                const currentAlpha = p.alpha * Math.sin((p.life / p.maxLife) * Math.PI)
+
+                ctx.beginPath()
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+                ctx.fillStyle = `${p.color}${Math.max(0, currentAlpha)})`
+                ctx.shadowBlur = 12
+                ctx.shadowColor = p.color + "0.8)"
+                ctx.fill()
+            }
+
+            animationFrameId = requestAnimationFrame(render)
+        }
+
+        render()
+
+        return () => {
+            window.removeEventListener("resize", handleResize)
+            cancelAnimationFrame(animationFrameId)
+        }
+    }, [])
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="fixed inset-0 z-[501] pointer-events-none opacity-80"
+        />
+    )
+}
+
+// ── COINCIDENCIA DINÁMICA DE NOMBRES CON N-GRAM SLIDING WINDOW (SIN HARDCODING) ──
+function findBestStudentMatchDynamic(
+    transcript: string, 
+    students: Student[]
+): { student: Student | null; score: number; extractedSegment: string } {
+    if (!transcript || !transcript.trim()) {
+        return { student: null, score: 0, extractedSegment: "" }
     }
 
     const normTranscript = phoneticNormalize(transcript)
     const transcriptTokens = normTranscript.split(" ").filter(Boolean)
+    const rawTokens = transcript.trim().split(/\s+/).filter(Boolean)
 
-    // Usar tanto la lista entregada como los 48 de casasData
     const pool = (students && students.length > 0) 
         ? students 
         : ALL_48_STUDENTS.map(s => ({
@@ -89,45 +203,67 @@ function findBestStudentMatch(transcript: string, students: Student[]): { studen
             average_level: 100
         }))
 
-    let bestMatch: Student | null = null
+    let bestStudent: Student | null = null
     let highestScore = 0
+    let bestSegment = ""
 
     for (const student of pool) {
         const normFullName = phoneticNormalize(student.full_name)
-        const normUsername = phoneticNormalize(student.username)
-        const nameTokens = normFullName.split(" ").concat(normUsername.split(" ")).filter(Boolean)
+        const studentNameTokens = normFullName.split(" ").filter(Boolean)
 
-        if (normFullName.includes(normTranscript) || normTranscript.includes(normFullName)) {
-            return { student, score: 0.98 }
-        }
-
-        let tokenMatches = 0
-        for (const tToken of transcriptTokens) {
-            for (const nToken of nameTokens) {
-                if (tToken === nToken) {
-                    tokenMatches += 1.0
-                    break
-                }
-                const maxLen = Math.max(tToken.length, nToken.length)
-                if (maxLen > 2) {
-                    const dist = levenshteinDistance(tToken, nToken)
-                    const sim = 1 - dist / maxLen
-                    if (sim >= 0.65) {
-                        tokenMatches += sim
-                        break
-                    }
-                }
+        // 1. Direct Substring Check
+        if (normTranscript.includes(normFullName)) {
+            return {
+                student,
+                score: 1.0,
+                extractedSegment: student.full_name
             }
         }
 
-        const calculatedScore = tokenMatches / Math.max(1, transcriptTokens.length)
-        if (calculatedScore > highestScore && calculatedScore >= 0.40) {
-            highestScore = calculatedScore
-            bestMatch = student
+        // 2. Sliding Window N-gram Matching (Dynamic Token Windowing)
+        for (let windowLen = 1; windowLen <= Math.min(transcriptTokens.length, studentNameTokens.length + 2); windowLen++) {
+            for (let startIdx = 0; startIdx <= transcriptTokens.length - windowLen; startIdx++) {
+                const subWindowTokens = transcriptTokens.slice(startIdx, startIdx + windowLen)
+                const rawSubWindow = rawTokens.slice(startIdx, startIdx + windowLen).join(" ")
+
+                let matchedTokensCount = 0
+                for (const wToken of subWindowTokens) {
+                    for (const sToken of studentNameTokens) {
+                        if (wToken === sToken) {
+                            matchedTokensCount += 1.0
+                            break
+                        }
+                        const maxLen = Math.max(wToken.length, sToken.length)
+                        if (maxLen > 2) {
+                            const dist = levenshteinDistance(wToken, sToken)
+                            const sim = 1 - dist / maxLen
+                            if (sim >= 0.70) {
+                                matchedTokensCount += sim
+                                break
+                            }
+                        }
+                    }
+                }
+
+                const windowPrecision = matchedTokensCount / subWindowTokens.length
+                const studentRecall = matchedTokensCount / Math.min(subWindowTokens.length + 1, studentNameTokens.length)
+                
+                const currentScore = (windowPrecision * 0.4) + (studentRecall * 0.6)
+
+                if (currentScore > highestScore && matchedTokensCount >= 1.0) {
+                    highestScore = currentScore
+                    bestStudent = student
+                    bestSegment = rawSubWindow
+                }
+            }
         }
     }
 
-    return { student: bestMatch, score: highestScore }
+    return {
+        student: bestStudent,
+        score: highestScore,
+        extractedSegment: bestSegment
+    }
 }
 
 export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClose, presentationTitle }: MoyaPresentationAssistantProps) => {
@@ -153,6 +289,132 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
     const currentAudioRef = useRef<HTMLAudioElement | null>(null)
     const typingTimerRef = useRef<any>(null)
     const initialGreetingDone = useRef(false)
+
+    // REFS PARA SINCRONIZACIÓN DE AUDIO Y MOVIMIENTO DE MOYA (LIP-SYNC)
+    const audioCtxRef = useRef<AudioContext | null>(null)
+    const analyserRef = useRef<AnalyserNode | null>(null)
+    const animFrameRef = useRef<number | null>(null)
+
+    // Detener la sincronización labial y movimiento de Moya
+    const stopMoyaLipSync = () => {
+        if (animFrameRef.current) {
+            cancelAnimationFrame(animFrameRef.current)
+            animFrameRef.current = null
+        }
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent('avatar-speaking', { detail: { volume: 0, bass: 0, mid: 0, high: 0 } }))
+        }
+    }
+
+    // Simulación de movimiento rítmico para Moya en caso de contingencia
+    const simulateLipSyncMovement = (audio: HTMLAudioElement) => {
+        stopMoyaLipSync()
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: 'Explicando' } }))
+        }
+        const loop = () => {
+            if (audio.paused || audio.ended) {
+                stopMoyaLipSync()
+                return
+            }
+            const now = Date.now()
+            // Variación rítmica y enérgica que simula cadencia natural de habla
+            const speechPulse = Math.sin(now / 110) * 0.4 + Math.cos(now / 75) * 0.3 + 0.5
+            const vol = Math.min(1.0, Math.max(0.12, speechPulse * 0.95))
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent('avatar-speaking', {
+                    detail: {
+                        volume: vol,
+                        bass: vol * 0.85,
+                        mid: vol * 0.9,
+                        high: vol * 0.65
+                    }
+                }))
+            }
+            animFrameRef.current = requestAnimationFrame(loop)
+        }
+        animFrameRef.current = requestAnimationFrame(loop)
+    }
+
+    // Conectar el audio HTML5 al AnalyserNode de Web Audio API para mover a Moya en tiempo real
+    const startMoyaLipSyncFromAudioElement = (audio: HTMLAudioElement) => {
+        try {
+            stopMoyaLipSync()
+
+            let ctx = audioCtxRef.current
+            if (!ctx || ctx.state === "closed") {
+                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+                ctx = new AudioContextClass()
+                audioCtxRef.current = ctx
+            }
+            if (ctx.state === "suspended") {
+                ctx.resume().catch(() => {})
+            }
+
+            const analyser = ctx.createAnalyser()
+            analyser.fftSize = 256
+            analyserRef.current = analyser
+
+            let source: MediaElementAudioSourceNode
+            if ((audio as any).__mediaSourceNode) {
+                source = (audio as any).__mediaSourceNode
+            } else {
+                source = ctx.createMediaElementSource(audio)
+                ;(audio as any).__mediaSourceNode = source
+            }
+
+            source.connect(analyser)
+            analyser.connect(ctx.destination)
+
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: 'Explicando' } }))
+            }
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount)
+
+            const loop = () => {
+                if (audio.paused || audio.ended) {
+                    stopMoyaLipSync()
+                    return
+                }
+
+                analyser.getByteFrequencyData(dataArray)
+                const binCount = dataArray.length
+
+                let sum = 0
+                for (let i = 0; i < binCount; i++) sum += dataArray[i]
+                const rawAvg = sum / binCount / 255
+
+                // Bandas de frecuencia para forma de boca fonética
+                const bass = (dataArray[2] || 0) / 255
+                const mid = (dataArray[12] || 0) / 255
+                const high = (dataArray[32] || 0) / 255
+
+                // Impulso de volumen dinámico para que los labios de Moya se abran con claridad (0 - 1.0)
+                let volume = Math.min(1.0, rawAvg * 4.8)
+
+                // Fallback de modulación viva en caso de que CORS silencie el FFT del analyser en el navegador
+                if (volume < 0.04 && !audio.paused && audio.currentTime > 0) {
+                    const now = Date.now()
+                    const speechPulse = Math.sin(now / 110) * 0.4 + Math.cos(now / 75) * 0.3 + 0.5
+                    volume = Math.min(1.0, Math.max(0.12, speechPulse * 0.95))
+                }
+
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent('avatar-speaking', {
+                        detail: { volume, bass, mid, high }
+                    }))
+                }
+
+                animFrameRef.current = requestAnimationFrame(loop)
+            }
+
+            animFrameRef.current = requestAnimationFrame(loop)
+        } catch (e) {
+            console.warn("Web Audio API analyser fallback a simulación:", e)
+            simulateLipSyncMovement(audio)
+        }
+    }
 
     useEffect(() => {
         setMounted(true)
@@ -191,9 +453,13 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
     // Limpieza de recursos al desmontar
     useEffect(() => {
         return () => {
+            stopMoyaLipSync()
             if (currentAudioRef.current) {
                 currentAudioRef.current.pause()
                 currentAudioRef.current = null
+            }
+            if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
+                audioCtxRef.current.close().catch(() => {})
             }
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop())
@@ -238,13 +504,51 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
         }, charInterval)
     }
 
-    // Reproducir saludo inicial con Voz de Microsoft Edge Dalia (es-MX-DaliaNeural)
+    // Reproducción del audio de introducción oficial (/CASAS/Presentacion.mpeg) conectando a Moya
+    const playIntroductionAudio = () => {
+        setStatus("speaking")
+        triggerTypewriter("¡Bienvenidos a la presentación oficial de las Casas de Liderazgo UCSM! Menciona el nombre de un integrante para comenzar.")
+
+        const audio = new Audio("/CASAS/Presentacion.mpeg")
+        currentAudioRef.current = audio
+
+        audio.onended = () => {
+            setStatus("idle")
+            stopMoyaLipSync()
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: 'Atenta' } }))
+            }
+        }
+
+        audio.onerror = (err) => {
+            console.warn("Error cargando audio /CASAS/Presentacion.mpeg:", err)
+            setStatus("idle")
+            stopMoyaLipSync()
+        }
+
+        const handleSuccess = () => {
+            startMoyaLipSyncFromAudioElement(audio)
+        }
+
+        audio.play()
+            .then(handleSuccess)
+            .catch(err => {
+                console.warn("Autoplay bloqueado por navegador, esperando interacción:", err)
+                const unlock = () => {
+                    audio.play().then(handleSuccess).catch(() => {})
+                }
+                window.addEventListener("click", unlock, { once: true })
+                window.addEventListener("touchstart", unlock, { once: true })
+            })
+    }
+
+    // Reproducir audio de presentación oficial al abrir (/CASAS/Presentacion.mpeg)
     useEffect(() => {
         if (!initialGreetingDone.current) {
             initialGreetingDone.current = true
             const timer = setTimeout(() => {
-                speakTextWithMicrosoftEdge("Búsqueda inteligente activada. Menciona un nombre o selecciona a un integrante para ver su presentación.")
-            }, 600)
+                playIntroductionAudio()
+            }, 500)
             return () => clearTimeout(timer)
         }
     }, [])
@@ -253,6 +557,7 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
     const fallbackWebSpeech = (text: string, onEndCallback?: () => void) => {
         if (typeof window === "undefined" || !("speechSynthesis" in window)) {
             setStatus("idle")
+            stopMoyaLipSync()
             if (onEndCallback) onEndCallback()
             return
         }
@@ -281,11 +586,13 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
 
         utterance.onend = () => {
             setStatus("idle")
+            stopMoyaLipSync()
             if (onEndCallback) onEndCallback()
         }
 
         utterance.onerror = () => {
             setStatus("idle")
+            stopMoyaLipSync()
             if (onEndCallback) onEndCallback()
         }
 
@@ -320,12 +627,15 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
                     currentAudioRef.current = audio
                     audio.onended = () => {
                         setStatus("idle")
+                        stopMoyaLipSync()
                         if (onEndCallback) onEndCallback()
                     }
                     audio.onerror = () => {
+                        stopMoyaLipSync()
                         fallbackWebSpeech(text, onEndCallback)
                     }
                     await audio.play()
+                    startMoyaLipSyncFromAudioElement(audio)
                     return
                 }
             }
@@ -336,36 +646,54 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
         fallbackWebSpeech(text, onEndCallback)
     }
 
-    // DISPARAR ANIMACIÓN Y PRESENTACIÓN DE UN ESTUDIANTE E INTEGRAR SU AUDIO DE CASA
+    // DISPARAR ANIMACIÓN Y PRESENTACIÓN DE UN ESTUDIANTE DIRECTAMENTE CON SU AUDIO OFICIAL
     const executeStudentPresentationAnimation = async (studentName: string) => {
         const houseProfile = getStudentHouseProfile(studentName)
         if (!houseProfile) return
 
         setActivePresentation(houseProfile)
         setIsPlayingHouseAudio(true)
+        setStatus("speaking")
+        if (typingTimerRef.current) {
+            clearInterval(typingTimerRef.current)
+            typingTimerRef.current = null
+        }
+        setIsTyping(false)
+        setDisplayedSubtitleText("") // Quitar cualquier subtítulo previo
 
-        const houseInfo = CASAS_INFO[houseProfile.house]
-        const announcementText = `¡Presentando a ${houseProfile.full_name}! Perteneciente a la Casa ${houseInfo.name}.`
+        // Detener cualquier audio previo
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause()
+            currentAudioRef.current = null
+        }
+        stopMoyaLipSync()
 
-        // 1. Hablar la presentación inicial
-        speakTextWithMicrosoftEdge(announcementText, async () => {
-            // 2. Reproducir el audio MP3 personalizado del estudiante desde /audio/Sombrero/
-            const audioObj = await playStudentHouseAudio(
-                houseProfile,
-                () => {
-                    setIsPlayingHouseAudio(false)
-                },
-                () => {
-                    setIsPlayingHouseAudio(false)
-                }
-            )
-
-            if (audioObj) {
-                currentAudioRef.current = audioObj
-            } else {
+        // Reproducir DIRECTAMENTE el archivo de audio MP3 oficial del estudiante
+        const audioObj = await playStudentHouseAudio(
+            houseProfile,
+            () => {
                 setIsPlayingHouseAudio(false)
+                setStatus("idle")
+                stopMoyaLipSync()
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new CustomEvent('avatar-expression', { detail: { expression: 'Atenta' } }))
+                }
+            },
+            () => {
+                setIsPlayingHouseAudio(false)
+                setStatus("idle")
+                stopMoyaLipSync()
             }
-        })
+        )
+
+        if (audioObj) {
+            currentAudioRef.current = audioObj
+            startMoyaLipSyncFromAudioElement(audioObj)
+        } else {
+            setIsPlayingHouseAudio(false)
+            setStatus("idle")
+            stopMoyaLipSync()
+        }
     }
 
     // Envío de archivo de audio al backend STT (OpenAI Whisper /api/stt)
@@ -506,9 +834,9 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
             return
         }
 
-        const { student, score } = findBestStudentMatch(trimmed, localStudents)
+        const { student, score, extractedSegment } = findBestStudentMatchDynamic(trimmed, localStudents)
 
-        if (student && score >= 0.40) {
+        if (student && score >= 0.35) {
             setIdentifiedStudent(student)
             setMatchConfidence(Math.round(score * 100))
             if (onStudentIdentified) onStudentIdentified(student)
@@ -518,12 +846,31 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
         } else {
             setIdentifiedStudent(null)
             setMatchConfidence(0)
-            const fallbackMessage = `Participante "${trimmed}" no encontrado. Menciona tu nombre de nuevo o usa el buscador.`
+            const queryName = extractedSegment || trimmed
+            const fallbackMessage = `No encontré al integrante "${queryName}". Menciona tu nombre de nuevo o selecciona de las mini ventanas.`
             speakTextWithMicrosoftEdge(fallbackMessage)
         }
     }
 
-    // Filtrar lista de 48 para la búsqueda rápida en Moya
+// LOGOS OFICIALES DE LAS 4 CASAS CON '1' EN SU NOMBRE (SOLO LOGOS AL INICIO)
+const INITIAL_HOUSE_LOGOS = [
+    { id: "APEX", name: "APEX", file: "/CASAS/APEX 1.png", glow: "rgba(16,185,129,0.55)", side: "left" },
+    { id: "IGNIS", name: "IGNIS", file: "/CASAS/IGNIS 1.png", glow: "rgba(249,115,22,0.55)", side: "left" },
+    { id: "NEXUS", name: "NEXUS", file: "/CASAS/NEXUS 1.png", glow: "rgba(168,85,247,0.55)", side: "right" },
+    { id: "VISIO", name: "VISIO", file: "/CASAS/VISIO 1.png", glow: "rgba(6,182,212,0.55)", side: "right" },
+]
+
+    // Determinar si la locución ha finalizado para mostrar los flancos laterales
+    const isLocutionFinished = activePresentation !== null && !isPlayingHouseAudio && status !== "speaking" && status !== "processing"
+
+    // Integrantes de la misma Casa divididos: 6 a la izquierda y 6 a la derecha de Moya
+    const sameHouseTeammates = activePresentation 
+        ? ALL_48_STUDENTS.filter(s => s.house === activePresentation.house)
+        : []
+    const leftTeammates = sameHouseTeammates.slice(0, 6)
+    const rightTeammates = sameHouseTeammates.slice(6, 12)
+
+    // Filtrar lista de 48 para el drawer de búsqueda manual
     const filteredQuickStudents = ALL_48_STUDENTS.filter(s => {
         const q = searchQuery.toLowerCase().trim()
         return !q || s.full_name.toLowerCase().includes(q) || s.house.toLowerCase().includes(q) || s.top_skill.toLowerCase().includes(q)
@@ -542,28 +889,242 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
                 className="fixed inset-0 z-[500] bg-slate-950/80 backdrop-blur-md pointer-events-auto"
             />
 
+            {/* CANVAS DE PORTAL MÁGICO (Z-Index 501) */}
+            <MagicPortalCanvas />
+
             {/* BOTÓN SALIR SUPERIOR */}
             {onClose && (
                 <button
                     type="button"
                     onClick={onClose}
-                    className="fixed top-6 right-6 z-[600] flex items-center gap-2 px-4 py-2.5 bg-slate-950/90 hover:bg-slate-900 text-slate-200 hover:text-white border border-emerald-500/30 hover:border-emerald-500/60 rounded-2xl text-xs font-bold transition-all shadow-2xl backdrop-blur-md cursor-pointer"
+                    className="fixed top-4 right-6 z-[600] flex items-center gap-2 px-3.5 py-2 bg-slate-950/90 hover:bg-slate-900 text-slate-200 hover:text-white border border-emerald-500/30 hover:border-emerald-500/60 rounded-2xl text-xs font-bold transition-all shadow-2xl backdrop-blur-md cursor-pointer"
                 >
                     <X className="w-4 h-4" />
                     <span>Finalizar Presentación</span>
                 </button>
             )}
 
-            {/* BOTÓN SUPERIOR IZQUIERDO: BÚSQUEDA RÁPIDA DE LOS 48 INTEGRANTES */}
-            <div className="fixed top-6 left-6 z-[600] flex items-center gap-2 pointer-events-auto">
+            {/* BARRA SUPERIOR IZQUIERDA: BÚSQUEDA RÁPIDA DE INTEGRANTES */}
+            <div className="fixed top-4 left-6 z-[600] flex items-center gap-2 pointer-events-auto">
                 <button
                     onClick={() => setShowSearchDrawer(!showSearchDrawer)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 bg-slate-950/90 hover:bg-slate-900 text-slate-200 border border-emerald-500/30 hover:border-emerald-500/60 rounded-2xl text-xs font-bold transition-all shadow-2xl backdrop-blur-md"
+                    className="flex items-center gap-2 px-3.5 py-2 bg-slate-950/90 hover:bg-slate-900 text-slate-200 border border-emerald-500/30 hover:border-emerald-500/60 rounded-2xl text-xs font-bold transition-all shadow-2xl backdrop-blur-md"
                 >
                     <Search className="w-4 h-4 text-[hsl(74,100%,47%)]" />
                     <span>Buscar Integrante (48)</span>
                 </button>
             </div>
+
+            {/* LOGOS INICIALES DE LAS CASAS CON '1' EN SU NOMBRE (SOLO LOS LOGOS HASTA QUE SE DIGA UN NOMBRE A MOYA) */}
+            <AnimatePresence>
+                {!activePresentation && (
+                    <>
+                        {/* 2 Casas a la izquierda: APEX 1 e IGNIS 1 */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -70 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, x: -70 }}
+                            transition={{ type: "spring", stiffness: 180, damping: 20 }}
+                            className="fixed top-1/2 -translate-y-1/2 left-6 sm:left-10 md:left-14 z-[540] pointer-events-auto flex flex-col gap-6 items-center"
+                        >
+                            {INITIAL_HOUSE_LOGOS.filter(h => h.side === "left").map((house, idx) => (
+                                <motion.div
+                                    key={house.id}
+                                    animate={{ 
+                                        y: [0, -8, 0],
+                                        rotate: [0, 1.5, -1.5, 0]
+                                    }}
+                                    transition={{ 
+                                        repeat: Infinity, 
+                                        duration: 3.5 + idx * 0.6, 
+                                        ease: "easeInOut" 
+                                    }}
+                                    className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 p-2.5 rounded-3xl bg-slate-950/40 border border-white/10 backdrop-blur-md shadow-2xl flex items-center justify-center group hover:scale-105 transition-all duration-300"
+                                    style={{
+                                        boxShadow: `0 0 35px ${house.glow}`
+                                    }}
+                                >
+                                    <img 
+                                        src={house.file} 
+                                        alt={`Logo ${house.name}`} 
+                                        className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] transition-all"
+                                    />
+                                </motion.div>
+                            ))}
+                        </motion.div>
+
+                        {/* 2 Casas a la derecha: NEXUS 1 y VISIO 1 */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 70 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, x: 70 }}
+                            transition={{ type: "spring", stiffness: 180, damping: 20 }}
+                            className="fixed top-1/2 -translate-y-1/2 right-6 sm:right-10 md:right-14 z-[540] pointer-events-auto flex flex-col gap-6 items-center"
+                        >
+                            {INITIAL_HOUSE_LOGOS.filter(h => h.side === "right").map((house, idx) => (
+                                <motion.div
+                                    key={house.id}
+                                    animate={{ 
+                                        y: [0, -8, 0],
+                                        rotate: [0, -1.5, 1.5, 0]
+                                    }}
+                                    transition={{ 
+                                        repeat: Infinity, 
+                                        duration: 3.8 + idx * 0.6, 
+                                        ease: "easeInOut" 
+                                    }}
+                                    className="w-36 h-36 sm:w-40 sm:h-40 md:w-44 md:h-44 p-2.5 rounded-3xl bg-slate-950/40 border border-white/10 backdrop-blur-md shadow-2xl flex items-center justify-center group hover:scale-105 transition-all duration-300"
+                                    style={{
+                                        boxShadow: `0 0 35px ${house.glow}`
+                                    }}
+                                >
+                                    <img 
+                                        src={house.file} 
+                                        alt={`Logo ${house.name}`} 
+                                        className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] group-hover:drop-shadow-[0_0_25px_rgba(255,255,255,0.6)] transition-all"
+                                    />
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* FLANCO IZQUIERDO: 6 INTEGRANTES DE LA CASA A UN COSTADO DE MOYA */}
+            <AnimatePresence>
+                {isLocutionFinished && activePresentation && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -60 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -60 }}
+                        transition={{ type: "spring", stiffness: 180, damping: 20 }}
+                        className="fixed top-12 left-4 md:left-6 lg:left-8 bottom-28 w-60 sm:w-64 md:w-72 z-[540] pointer-events-auto flex flex-col justify-center gap-2"
+                    >
+                        <div className="bg-slate-950/85 border border-white/10 rounded-xl px-3 py-1.5 backdrop-blur-md flex items-center justify-between shadow-lg">
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[hsl(74,100%,47%)] flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-amber-400" />
+                                Casa {activePresentation.house} (1 - 6)
+                            </span>
+                        </div>
+                        <div className="space-y-2 overflow-y-auto pr-1 max-h-[60vh]">
+                            {leftTeammates.map((student, idx) => {
+                                const hInfo = CASAS_INFO[student.house]
+                                const isActive = activePresentation?.full_name === student.full_name
+
+                                return (
+                                    <motion.div
+                                        key={student.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ 
+                                            opacity: 1, 
+                                            x: 0,
+                                            scale: isActive ? 1.04 : 1,
+                                            y: isActive ? [0, -3, 0] : [0, -1.5, 0]
+                                        }}
+                                        transition={{
+                                            duration: 0.25,
+                                            delay: idx * 0.03,
+                                            y: { repeat: Infinity, duration: 3 + (idx % 2), ease: "easeInOut" }
+                                        }}
+                                        onClick={() => executeStudentPresentationAnimation(student.full_name)}
+                                        className={`relative p-2.5 rounded-xl bg-slate-950/85 backdrop-blur-md border cursor-pointer transition-all duration-300 flex items-center gap-2.5 shadow-md group hover:scale-[1.03] ${
+                                            isActive 
+                                                ? "border-amber-400 ring-2 ring-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.6)] z-20 bg-slate-900/95" 
+                                                : `${hInfo.borderColor} hover:border-white/50 hover:shadow-[0_0_12px_${hInfo.glowColor}] z-10`
+                                        }`}
+                                    >
+                                        <div className={`w-8 h-8 rounded-lg bg-slate-950 p-1 border ${hInfo.borderColor} shrink-0 flex items-center justify-center relative overflow-hidden shadow-inner`}>
+                                            <img src={hInfo.logo} alt="" className="w-full h-full object-contain filter drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="text-[11px] font-bold text-slate-100 truncate group-hover:text-amber-300 transition-colors">
+                                                {student.full_name}
+                                            </h4>
+                                            <p className="text-[9px] font-mono text-slate-400 truncate">
+                                                {student.classroom} • {student.top_skill}
+                                            </p>
+                                        </div>
+                                        {isActive && (
+                                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[7px] font-black uppercase px-1.5 py-0.5 rounded-full shadow-md tracking-wider flex items-center gap-0.5 border border-white/40 animate-pulse">
+                                                <Sparkles className="w-2 h-2" />
+                                                PRESENTE
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* FLANCO DERECHO: OTROS 6 INTEGRANTES DE LA CASA AL OTRO COSTADO DE MOYA */}
+            <AnimatePresence>
+                {isLocutionFinished && activePresentation && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 60 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 60 }}
+                        transition={{ type: "spring", stiffness: 180, damping: 20 }}
+                        className="fixed top-12 right-4 md:right-6 lg:right-8 bottom-28 w-60 sm:w-64 md:w-72 z-[540] pointer-events-auto flex flex-col justify-center gap-2"
+                    >
+                        <div className="bg-slate-950/85 border border-white/10 rounded-xl px-3 py-1.5 backdrop-blur-md flex items-center justify-between shadow-lg">
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[hsl(74,100%,47%)] flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3 text-amber-400" />
+                                Casa {activePresentation.house} (7 - 12)
+                            </span>
+                        </div>
+                        <div className="space-y-2 overflow-y-auto pr-1 max-h-[60vh]">
+                            {rightTeammates.map((student, idx) => {
+                                const hInfo = CASAS_INFO[student.house]
+                                const isActive = activePresentation?.full_name === student.full_name
+
+                                return (
+                                    <motion.div
+                                        key={student.id}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ 
+                                            opacity: 1, 
+                                            x: 0,
+                                            scale: isActive ? 1.04 : 1,
+                                            y: isActive ? [0, -3, 0] : [0, -1.5, 0]
+                                        }}
+                                        transition={{
+                                            duration: 0.25,
+                                            delay: idx * 0.03,
+                                            y: { repeat: Infinity, duration: 3 + (idx % 2), ease: "easeInOut" }
+                                        }}
+                                        onClick={() => executeStudentPresentationAnimation(student.full_name)}
+                                        className={`relative p-2.5 rounded-xl bg-slate-950/85 backdrop-blur-md border cursor-pointer transition-all duration-300 flex items-center gap-2.5 shadow-md group hover:scale-[1.03] ${
+                                            isActive 
+                                                ? "border-amber-400 ring-2 ring-amber-400/60 shadow-[0_0_20px_rgba(251,191,36,0.6)] z-20 bg-slate-900/95" 
+                                                : `${hInfo.borderColor} hover:border-white/50 hover:shadow-[0_0_12px_${hInfo.glowColor}] z-10`
+                                        }`}
+                                    >
+                                        <div className={`w-8 h-8 rounded-lg bg-slate-950 p-1 border ${hInfo.borderColor} shrink-0 flex items-center justify-center relative overflow-hidden shadow-inner`}>
+                                            <img src={hInfo.logo} alt="" className="w-full h-full object-contain filter drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="text-[11px] font-bold text-slate-100 truncate group-hover:text-amber-300 transition-colors">
+                                                {student.full_name}
+                                            </h4>
+                                            <p className="text-[9px] font-mono text-slate-400 truncate">
+                                                {student.classroom} • {student.top_skill}
+                                            </p>
+                                        </div>
+                                        {isActive && (
+                                            <div className="absolute -top-2 -right-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[7px] font-black uppercase px-1.5 py-0.5 rounded-full shadow-md tracking-wider flex items-center gap-0.5 border border-white/40 animate-pulse">
+                                                <Sparkles className="w-2 h-2" />
+                                                PRESENTE
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* DRAWER / DESPLEGABLE DE BÚSQUEDA RÁPIDA DE LOS 48 INTEGRANTES */}
             <AnimatePresence>
@@ -572,7 +1133,7 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className="fixed top-20 left-6 z-[650] w-80 max-h-[480px] bg-slate-950/95 border border-emerald-500/30 rounded-3xl p-4 shadow-[0_10px_40px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col gap-3 pointer-events-auto overflow-hidden"
+                        className="fixed top-16 left-6 z-[650] w-80 max-h-[480px] bg-slate-950/95 border border-emerald-500/30 rounded-3xl p-4 shadow-[0_10px_40px_rgba(0,0,0,0.9)] backdrop-blur-2xl flex flex-col gap-3 pointer-events-auto overflow-hidden"
                     >
                         <div className="flex items-center justify-between pb-2 border-b border-white/10">
                             <span className="text-xs font-mono font-bold uppercase tracking-wider text-[hsl(74,100%,47%)] flex items-center gap-2">
@@ -629,7 +1190,7 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
                 )}
             </AnimatePresence>
 
-            {/* ANIMACIÓN PRINCIPAL ESPECTACULAR: LOGO DE CASA Y PRESENTACIÓN EN VIVO */}
+            {/* TARJETITA DE PRESENTACIÓN DIRECTAMENTE ENCIMA DE LA CABEZA DE MOYA */}
             <AnimatePresence>
                 {activePresentation && (() => {
                     const houseInfo = CASAS_INFO[activePresentation.house]
@@ -639,66 +1200,59 @@ export const MoyaPresentationAssistant = ({ students, onStudentIdentified, onClo
                             initial={{ opacity: 0, scale: 0.85, y: -20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.85, y: -20 }}
-                            transition={{ type: "spring", stiffness: 180, damping: 18 }}
-                            className="fixed top-12 left-1/2 -translate-x-1/2 z-[620] w-full max-w-md px-4 pointer-events-auto"
+                            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                            className="fixed top-4 left-1/2 -translate-x-1/2 z-[620] w-full max-w-sm sm:max-w-md px-3 pointer-events-auto"
                         >
-                            <div className={`bg-slate-950/95 border-2 ${houseInfo.borderColor} rounded-3xl p-6 shadow-[0_0_60px_${houseInfo.glowColor}] backdrop-blur-2xl text-center relative overflow-hidden flex flex-col items-center gap-4`}>
+                            <div className={`bg-slate-950/95 border-2 ${houseInfo.borderColor} rounded-2xl p-3 shadow-[0_0_35px_${houseInfo.glowColor}] backdrop-blur-2xl relative overflow-hidden flex items-center gap-3.5`}>
                                 {/* Fondo de Partículas Resplandecientes */}
                                 <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 to-transparent pointer-events-none" />
 
-                                {/* LOGO OFICIAL DE LA CASA EN 3D FLOTANTE */}
+                                {/* LOGO OFICIAL DE LA CASA FLOTANTE */}
                                 <motion.div
                                     animate={{ 
-                                        y: [0, -8, 0],
+                                        y: [0, -3, 0],
                                         rotate: [0, 2, -2, 0]
                                     }}
                                     transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-                                    className="relative w-28 h-28 p-3 rounded-2xl bg-slate-950 border border-white/20 shadow-[0_0_30px_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0 z-10"
+                                    className="relative w-12 h-12 p-1.5 rounded-xl bg-slate-950 border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.2)] flex items-center justify-center shrink-0 z-10"
                                 >
                                     <img
                                         src={houseInfo.logo}
                                         alt={`Logo oficial Casa ${houseInfo.name}`}
-                                        className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                                        className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
                                     />
                                 </motion.div>
 
                                 {/* INFORMACIÓN Y PRESENTACIÓN DEL INTEGRANTE */}
-                                <div className="z-10 space-y-1">
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-widest ${houseInfo.badgeBg} ${houseInfo.badgeText} border border-current/30`}>
-                                        CASA {houseInfo.name} • {houseInfo.element}
-                                    </span>
-                                    <h3 className="text-2xl font-black text-white tracking-tight pt-1">
+                                <div className="z-10 min-w-0 flex-1 space-y-0.5 text-left">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider ${houseInfo.badgeBg} ${houseInfo.badgeText} border border-current/30`}>
+                                            CASA {houseInfo.name} • {houseInfo.element}
+                                        </span>
+                                        <span className="text-[10px] font-mono text-slate-400">
+                                            {activePresentation.classroom}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-base font-black text-white tracking-tight truncate">
                                         {activePresentation.full_name}
                                     </h3>
-                                    <p className="text-xs text-slate-300 font-semibold italic">
-                                        "{houseInfo.motto}"
-                                    </p>
-                                    <div className="flex items-center justify-center gap-2 pt-2 text-[11px] font-mono text-slate-400">
-                                        <span className="px-2 py-0.5 rounded-md bg-slate-900 border border-white/10">{activePresentation.classroom}</span>
-                                        <span>•</span>
-                                        <span className="text-emerald-400 font-bold">{activePresentation.top_skill}</span>
+                                    <div className="flex items-center gap-2 text-[10px] font-mono">
+                                        <span className="text-emerald-400 font-bold truncate">{activePresentation.top_skill}</span>
+                                        {isPlayingHouseAudio && (
+                                            <span className="flex items-center gap-1 text-amber-400 font-bold ml-auto shrink-0">
+                                                <Volume2 className="w-3 h-3 animate-bounce" />
+                                                <span className="text-[9px]">Locución</span>
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
-
-                                {/* ONDA DE SONIDO / INDICADOR DE AUDIO MP3 EN REPRODUCCIÓN */}
-                                {isPlayingHouseAudio && (
-                                    <div className="z-10 flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-emerald-500/30 text-xs font-mono font-bold text-emerald-400">
-                                        <Volume2 className="w-4 h-4 animate-bounce" />
-                                        <span>Locución del Integrante en Vivo</span>
-                                        <div className="flex items-end gap-1 h-3 ml-1">
-                                            <span className="w-1 h-3 bg-emerald-400 animate-pulse rounded-full" />
-                                            <span className="w-1 h-4 bg-emerald-400 animate-pulse delay-75 rounded-full" />
-                                            <span className="w-1 h-2 bg-emerald-400 animate-pulse delay-150 rounded-full" />
-                                        </div>
-                                    </div>
-                                )}
 
                                 {/* BOTÓN PARA CERRAR ANIMACIÓN DE PRESENTACIÓN */}
                                 <button
                                     onClick={() => setActivePresentation(null)}
-                                    className="absolute top-3 right-3 text-slate-500 hover:text-white p-1.5 rounded-xl bg-slate-900 border border-white/10"
+                                    className="z-10 text-slate-500 hover:text-white p-1.5 rounded-xl bg-slate-900 border border-white/10 shrink-0"
                                 >
-                                    <X className="w-4 h-4" />
+                                    <X className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                         </motion.div>

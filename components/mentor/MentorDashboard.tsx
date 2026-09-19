@@ -727,24 +727,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         }
     }
 
-    const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
 
-    const filteredGroupStudents = groupStudents.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
-    const SearchBar = () => (
-        <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(150,10%,80%)]/50" />
-            <input type="text" placeholder="Buscar estudiante..."
-                className="bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 rounded-2xl py-3 pl-12 pr-6 text-white placeholder:text-[hsl(150,10%,80%)]/40 focus:outline-none focus:ring-2 focus:ring-[hsl(74,100%,47%)]/30 w-full md:w-64 transition-all shadow-xl"
-                value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-        </div>
-    )
 
     if (loading) {
         return (
