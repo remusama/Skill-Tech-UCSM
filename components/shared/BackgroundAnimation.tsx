@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useEffect, useRef } from "react"
 import { useTheme } from "@/contexts/theme-context"
@@ -50,9 +50,7 @@ export function BackgroundAnimation() {
     const numberOfParticles = level === 'low' ? 10 : (level === 'medium' ? 30 : (isMobile ? 25 : 80))
     const enableConnections = level !== 'low' && !isMobile
 
-    // Colores adaptados a las nuevas paletas
-    // Tema oscuro: particulas con tonos de verde oscuro (#063924 / #0a6b17)
-    // Tema claro: particulas con tonos de acento (#d0b04d / #cae13c)
+    // Color dinámico según el tema actual dentro del efecto
     const particleColor = theme === "dark" ? "#0a6b17" : "#d0b04d"
 
     class Particle {
@@ -61,7 +59,6 @@ export function BackgroundAnimation() {
       size: number
       speedX: number
       speedY: number
-      color: string
 
       constructor() {
         this.x = Math.random() * (canvas?.width || window.innerWidth)
@@ -69,7 +66,6 @@ export function BackgroundAnimation() {
         this.size = Math.random() * 2 + 1.2
         this.speedX = Math.random() * 0.4 - 0.2
         this.speedY = Math.random() * 0.4 - 0.2
-        this.color = particleColor
       }
 
       update() {
@@ -77,7 +73,6 @@ export function BackgroundAnimation() {
         this.x += this.speedX
         this.y += this.speedY
 
-        // Wrap particles
         if (this.size > 0.2) {
           if (this.x > canvas.width) this.x = 0
           if (this.x < 0) this.x = canvas.width
@@ -88,7 +83,7 @@ export function BackgroundAnimation() {
 
       draw() {
         if (!ctx) return
-        ctx.fillStyle = this.color
+        ctx.fillStyle = particleColor // Lee el color actualizado dinámicamente
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2)
         ctx.fill()
@@ -106,9 +101,6 @@ export function BackgroundAnimation() {
       if (!ctx || !enableConnections) return
       let opacityValue = 1
       
-      // Color de las líneas de conexión según el tema
-      // Oscuro: Usamos tonos verdosos/cian sutiles (#214f3c)
-      // Claro: Usamos grises/dorados suaves (#c0c0ba)
       const strokeColorRgb = theme === 'light' ? '192, 192, 186' : '33, 79, 60'
 
       for (let a = 0; a < particlesArray.length; a++) {
@@ -129,7 +121,6 @@ export function BackgroundAnimation() {
         }
       }
 
-      // Conectar con el ratón
       if (mouse.x !== null && mouse.y !== null) {
         for (let i = 0; i < particlesArray.length; i++) {
           const dx = particlesArray[i].x - mouse.x
@@ -182,10 +173,9 @@ export function BackgroundAnimation() {
   return (
     <canvas 
       ref={canvasRef} 
-      className="fixed top-0 left-0 w-full h-full -z-10" 
+      className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none" 
       style={{ 
         willChange: "transform",
-        // Color de fondo base estricto para el canvas según el tema
         backgroundColor: theme === "dark" ? "#01130d" : "#f5f5f0" 
       }} 
     />

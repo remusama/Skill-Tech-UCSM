@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -76,9 +76,9 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
 
     if (loading) {
         return (
-            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(74,100%,47%)] mb-4" />
-                <p className="text-[10px] uppercase tracking-widest text-[hsl(150,10%,80%)]/50 font-bold">Cargando diagnóstico...</p>
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-slate-900 dark:text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#15803d] dark:border-[hsl(74,100%,47%)] mb-4" />
+                <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-[hsl(150,10%,80%)]/50 font-bold">Cargando diagnóstico...</p>
             </div>
         )
     }
@@ -86,18 +86,18 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
     if (skills.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center flex-1 min-h-[600px] text-center p-8">
-                <AlertCircle className="w-12 h-12 text-[hsl(150,10%,80%)]/30 mb-4" />
-                <h3 className="text-xl text-white font-bold mb-2">Sin datos de diagnóstico</h3>
-                <p className="text-[hsl(150,10%,80%)] mb-8 max-w-md text-sm">
+                <AlertCircle className="w-12 h-12 text-slate-400 dark:text-[hsl(150,10%,80%)]/30 mb-4" />
+                <h3 className="text-xl text-slate-900 dark:text-white font-bold mb-2">Sin datos de diagnóstico</h3>
+                <p className="text-slate-600 dark:text-[hsl(150,10%,80%)] mb-8 max-w-md text-sm">
                     No se han encontrado registros de evaluaciones recientes. Completa un diagnóstico para visualizar tu grafo de competencias.
                 </p>
                 <div className="flex gap-4">
                     <Button
                         onClick={loadData}
                         variant="outline"
-                        className="border-[hsl(153,30%,75%)]/20 text-white bg-[hsl(161,40%,15%)]/60 hover:bg-[hsl(161,40%,15%)]"
+                        className="bg-white hover:bg-slate-100 text-slate-800 border-slate-300 dark:border-[hsl(153,30%,75%)]/20 dark:text-white dark:bg-[hsl(161,40%,15%)]/60 dark:hover:bg-[hsl(161,40%,15%)] shadow-sm dark:shadow-none"
                     >
-                        <RefreshCw className="w-4 h-4 mr-2 text-[hsl(74,100%,47%)]" />
+                        <RefreshCw className="w-4 h-4 mr-2 text-[#15803d] dark:text-[hsl(74,100%,47%)]" />
                         Sincronizar
                     </Button>
                 </div>
@@ -113,12 +113,12 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
         >
             <div className="flex justify-between items-center mb-6 px-4 md:px-0">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter">
+                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white italic uppercase tracking-tighter">
                         Resultados de Diagnóstico
                     </h1>
                     <div className="flex items-center gap-2 mt-2">
-                        <div className="w-2 h-2 rounded-full bg-[hsl(74,100%,47%)] animate-pulse" />
-                        <span className="text-[10px] font-bold text-[hsl(74,100%,47%)] uppercase tracking-widest">
+                        <div className="w-2 h-2 rounded-full bg-[#15803d] dark:bg-[hsl(74,100%,47%)] animate-pulse" />
+                        <span className="text-[10px] font-bold text-[#15803d] dark:text-[hsl(74,100%,47%)] uppercase tracking-widest">
                             Sistema Sincronizado
                         </span>
                     </div>
@@ -126,7 +126,7 @@ export function ResultsPage({ studentId }: { studentId?: number }) {
                 <Button
                     variant="ghost"
                     onClick={loadData}
-                    className="text-[hsl(150,10%,80%)]/60 hover:text-white hover:bg-[hsl(161,40%,15%)]/60"
+                    className="text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:text-[hsl(150,10%,80%)]/60 dark:hover:text-white dark:hover:bg-[hsl(161,40%,15%)]/60"
                 >
                     <RefreshCw className="w-4 h-4" />
                 </Button>
