@@ -97,20 +97,21 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
         via: "via-rose-500 dark:via-rose-400"
     },
     psicometria: {
-        // Cambiado el degradado claro de dorado (#82610d) a verde institucional (#15803d)
-        color: "from-[#15803d] to-[#166534] dark:from-[#d0b04d] dark:to-[#997a23]",
-        textColor: "text-[#15803d] dark:text-[#d0b04d]",
-        badge: "text-[#14532d] bg-[#15803d]/20 border-[#15803d]/40 dark:text-[#d0b04d] dark:bg-[#d0b04d]/10 dark:border-[#d0b04d]/20",
-        tab: "bg-[#15803d] dark:bg-[#d0b04d]",
-        via: "via-[#15803d] dark:via-[#d0b04d]"
-    },
+            // Cambia la primera parte (modo claro) a verde, dejando la parte 'dark:' intacta
+            color: "from-[#15803d] to-[#166534] dark:from-[#d0b04d] dark:to-[#997a23]",
+            textColor: "text-[#15803d] dark:text-[#d0b04d]",
+            badge: "text-[#14532d] bg-[#15803d]/20 border-[#15803d]/40 dark:text-[#d0b04d] dark:bg-[#d0b04d]/10 dark:border-[#d0b04d]/20",
+            tab: "bg-[#15803d] dark:bg-[#d0b04d]",
+            via: "via-[#15803d] dark:via-[#d0b04d]"
+        },
     expectativas: {
-        color: "from-[#444444] to-[#1c2e0e] dark:from-[#c7c7c7] dark:to-[#3c5a21]",
-        textColor: "text-[#111111] dark:text-[#c7c7c7]",
-        badge: "text-[#111e07] bg-[#273d15]/20 border-[#555555]/40 dark:text-[#3c5a21] dark:bg-[#3c5a21]/10 dark:border-[#c7c7c7]/20",
-        tab: "bg-[#333333] dark:bg-[#3c5a21]",
-        via: "via-[#333333] dark:via-[#3c5a21]"
-    }
+            // Haz lo mismo aquí si usas este objeto para otra pestaña en personal
+        color: "from-[#15803d] to-[#14532d] dark:from-[#c7c7c7] dark:to-[#3c5a21]",
+        textColor: "text-[#15803d] dark:text-[#c7c7c7]",
+        badge: "text-[#14532d] bg-[#15803d]/20 border-[#15803d]/40 dark:text-[#3c5a21] dark:bg-[#3c5a21]/10 dark:border-[#c7c7c7]/20",
+        tab: "bg-[#15803d] dark:bg-[#3c5a21]",
+        via: "via-[#15803d] dark:via-[#3c5a21]"
+     }
 };
 
 export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }) {
