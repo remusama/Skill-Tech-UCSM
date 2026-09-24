@@ -41,7 +41,11 @@ export async function fetchUserProfile(): Promise<UserProfile | null> {
             headers: getAuthHeaders()
         });
         if (response.status === 401) {
-            window.location.href = "/login";
+            localStorage.removeItem("eleonor_token");
+            localStorage.removeItem("eleonor_user");
+            if (typeof window !== "undefined") {
+                window.location.href = "/";
+            }
             return null;
         }
         if (!response.ok) throw new Error("Failed to fetch profile");

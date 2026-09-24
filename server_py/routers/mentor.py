@@ -1,13 +1,42 @@
 from typing import List, Optional
+from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from server_py.memoria.database import get_db, User, ExamResult, UserSkill
-from server_py.mentoria.models import MentorGroup, GroupStudent, MentorExam
+from server_py.mentoria.models import MentorGroup, GroupStudent, MentorExam, MentorExamAssignment
 from server_py.auth.router import get_current_user_id
 
 router = APIRouter(prefix="/api/mentor", tags=["Mentor"])
+
+def _get_completed_exams_by_student(db: Session, student_ids: List[int]):
+    completed_map = defaultdict(set)
+    if not student_ids:
+        return completed_map
+
+    exam_results = db.query(ExamResult).filter(ExamResult.user_id.in_(student_ids)).all()
+    for er in exam_results:
+        area_norm = (er.area or "").lower().strip()
+        completed_map[er.user_id].add(area_norm)
+        if "neo" in area_norm or "personalidad" in area_norm:
+            completed_map[er.user_id].add("neo-pi-r")
+        if "cepv" in area_norm or "valores" in area_norm or "estilo" in area_norm:
+            completed_map[er.user_id].add("cepv")
+        if "ccl" in area_norm or "liderazgo" in area_norm:
+            completed_map[er.user_id].add("ccl")
+        if "expectativa" in area_norm:
+            completed_map[er.user_id].add("expectativas")
+
+    assignments = db.query(MentorExamAssignment).filter(
+        MentorExamAssignment.student_id.in_(student_ids),
+        MentorExamAssignment.status == "completed"
+    ).all()
+    for a in assignments:
+        if a.exam_id:
+            completed_map[a.student_id].add(str(a.exam_id))
+
+    return completed_map
 
 # ============================================================================
 # FUNCIONES AUXILIARES DE VERIFICACIÓN
@@ -58,6 +87,9 @@ async def get_mentor_students(
             skills_by_student[sk.user_id] = []
         skills_by_student[sk.user_id].append(sk)
 
+    # Precarga de exámenes completados por estudiante
+    completed_exams_map = _get_completed_exams_by_student(db, student_ids)
+
     result = []
     for s in students:
         s_skills = skills_by_student.get(s.id, [])
@@ -69,7 +101,8 @@ async def get_mentor_students(
             "username": s.username,
             "full_name": s.full_name or s.username,
             "top_skill": top_skill,
-            "average_level": avg_level
+            "average_level": avg_level,
+            "completed_exams": list(completed_exams_map.get(s.id, []))
         })
     return result
 
@@ -201,6 +234,8 @@ async def get_group_students(
     for sk in all_skills:
         skills_by_student.setdefault(sk.user_id, []).append(sk)
 
+    completed_exams_map = _get_completed_exams_by_student(db, student_ids)
+
     result = []
     for s in students:
         s_skills = skills_by_student.get(s.id, [])
@@ -211,6 +246,7 @@ async def get_group_students(
             "username": s.username,
             "full_name": s.full_name or s.username,
             "top_skill": top_skill,
-            "average_level": avg_level
+            "average_level": avg_level,
+            "completed_exams": list(completed_exams_map.get(s.id, []))
         })
     return result

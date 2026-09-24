@@ -14,14 +14,14 @@ export default function LoginRoute() {
 
         const hash = window.location.hash
         if (!hash) {
-            router.push("/")
+            router.replace("/")
             return
         }
 
         const params = new URLSearchParams(hash.substring(1))
         const idToken = params.get("id_token")
         if (!idToken) {
-            router.push("/")
+            router.replace("/")
             return
         }
 

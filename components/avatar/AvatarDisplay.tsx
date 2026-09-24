@@ -718,13 +718,15 @@ const AvatarDisplay = () => {
                 // 350 en DIAGNOSIS (Encima de los overlays de datos z-140)
                 zIndex: isHistoryOpen
                     ? 40
-                    : presence === 'GUIDE_ACTIVE'
-                        ? (isMobile ? 311 : 250)
-                        : presence === 'INTRO_ACTIVE'
-                            ? 250
-                            : presence === 'DIAGNOSIS'
-                                ? 350
-                                : 150,
+                    : presence === 'INTERVENTION'
+                        ? 550
+                        : presence === 'GUIDE_ACTIVE'
+                            ? (isMobile ? 311 : 250)
+                            : presence === 'INTRO_ACTIVE'
+                                ? 250
+                                : presence === 'DIAGNOSIS'
+                                    ? 350
+                                    : 150,
                 display: isModelLoaded ? 'block' : 'none',
                 pointerEvents: 'none' // Importante para no bloquear el scroll del body
             }}
@@ -801,7 +803,7 @@ const AvatarDisplay = () => {
                         justifyContent: 'center'
                     }}
                 >
-                   {/* Partículas (Solo en modo normal y no incrustado) */}
+                    {/* Partículas (Solo en modo normal y no incrustado) */}
                     {!isPip && isVisible && [...Array(window.innerWidth < 1024 ? 5 : 12)].map((_, i) => (
                         <motion.div
                             key={i}
