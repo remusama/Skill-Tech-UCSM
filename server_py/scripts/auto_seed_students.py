@@ -346,6 +346,34 @@ def auto_seed_students():
     init_db()
     db: Session = SessionLocal()
     try:
+        # ── EARLY EXIT: Si ya existen usuarios @liderazgo.ucsm.pe y no hay
+        #    usuarios obsoletos @ucsm.edu.pe, no hay nada que hacer. Evita
+        #    iterar + bcrypt en cada arranque cuando el seed ya se aplicó.
+        liderazgo_count = db.query(User).filter(
+            User.email.like("%@liderazgo.ucsm.pe")
+        ).count()
+        old_count = db.query(User).filter(
+            User.email.like("%@ucsm.edu.pe")
+        ).count()
+
+        students_data = load_students_from_file() or DEFAULT_48_STUDENTS
+        expected_count = len(students_data)
+
+        if liderazgo_count >= expected_count and old_count == 0:
+            logger.info(
+                f"[AutoSeedStudents] ⚡ Early exit — {liderazgo_count} usuarios ya registrados, "
+                "nada que migrar. Verificando agentes..."
+            )
+            print(
+                f"[AutoSeedStudents] ⚡ Early exit — {liderazgo_count}/{expected_count} "
+                "usuarios OK, sin usuarios obsoletos."
+            )
+            from server_py.routers.mentor_agents import seed_base_agents
+            seed_base_agents(db)
+            print("[AutoSeedAgents] ✅ Agentes base de IA verificados.")
+            db.close()
+            return
+
         # Purgar usuarios antiguos con dominio obsoleto @ucsm.edu.pe
         old_users = db.query(User).filter(User.email.like("%@ucsm.edu.pe")).all()
         if old_users:
@@ -358,7 +386,6 @@ def auto_seed_students():
 
         students_data = load_students_from_file() or DEFAULT_48_STUDENTS
         hashed_default = bcrypt.hashpw(DEFAULT_PASSWORD.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
         created = 0
         skipped = 0
 
