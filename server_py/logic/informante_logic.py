@@ -181,7 +181,7 @@ def get_student_quantum_data(db: Session, student_id: int):
             "id": e.id,
             "score": e.score,
             "area": e.area,
-            "date": e.timestamp.strftime("%Y-%m-%d %H:%M"),
+            "date": e.timestamp.strftime("%Y-%m-%d %H:%M") if getattr(e, "timestamp", None) else "",
             "data": e.data
         }
 
@@ -191,7 +191,7 @@ def get_student_quantum_data(db: Session, student_id: int):
             personal_history.append(item)
 
     top_skill_name = max(skills, key=lambda x: x.level).area if skills else "N/A"
-    last_exam_date = exams[0].timestamp.strftime("%Y-%m-%d") if exams else "N/A"
+    last_exam_date = exams[0].timestamp.strftime("%Y-%m-%d") if (exams and getattr(exams[0], "timestamp", None)) else "N/A"
 
     return {
         "learning_energy": learning_energy,

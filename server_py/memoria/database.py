@@ -35,13 +35,11 @@ if not DATABASE_URL:
     DATABASE_URL = f"sqlite:///{db_file}"
     print(f"[DB] Modo desarrollo → SQLite: {db_file}")
 else:
-    # SQLAlchemy requiere el prefijo postgresql://.
+    # SQLAlchemy requiere el dialecto explícito postgresql+psycopg2:// cuando se usa psycopg2.
     if DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace(
-            "postgres://",
-            "postgresql://",
-            1,
-        )
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
     print("[DB] Modo producción -> Supabase/PostgreSQL [OK]")
 
 connect_args = {}

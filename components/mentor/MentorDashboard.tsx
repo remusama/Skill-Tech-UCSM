@@ -736,11 +736,17 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     const fetchQuantumData = async (studentId: number) => {
         setQuantumData(null)
         setQuantumLoading(true)
-        const token = localStorage.getItem("eleonor_token")
+        const token = localStorage.getItem("eleonor_token") || localStorage.getItem("token") || sessionStorage.getItem("eleonor_token") || sessionStorage.getItem("token")
         try {
-            const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/quantum`, {
+            let res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/quantum`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
+            if (res.status === 404) {
+                // Fallback attempt for production backend routing without /api prefix
+                res = await fetch(`${API_BASE_URL}/mentor/students/${studentId}/quantum`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            }
             if (res.ok) setQuantumData(await res.json())
             else console.error("Quantum API error:", res.status, await res.text())
         } catch (err) {
