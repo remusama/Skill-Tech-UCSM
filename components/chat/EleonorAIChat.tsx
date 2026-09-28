@@ -361,7 +361,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
     
     try {
       const token = localStorage.getItem("eleonor_token")
-      const resp = await fetch(`${API_URL}/api/stt`, {
+      const resp = await fetch(`${API_BASE_URL}/api/stt`, {
         method: 'POST',
         headers: token ? { "Authorization": `Bearer ${token}` } : {},
         body: formData
@@ -482,7 +482,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
   const triggerDebugGame = async () => {
     setIsProcessing(true);
     try {
-      const resp = await fetch(`${API_URL}/api/diagnosis/debug-game`, {
+      const resp = await fetch(`${API_BASE_URL}/api/diagnosis/debug-game`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const game = await resp.json();
@@ -581,7 +581,7 @@ export function EleonorAIChat({ variant = "default", initialMessage, onClose }: 
           onComplete={async (results) => {
             console.log("📊 Reporting game results:", results);
             try {
-              await fetch(`${API_URL}/api/diagnosis/game-result`, {
+              await fetch(`${API_BASE_URL}/api/diagnosis/game-result`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",

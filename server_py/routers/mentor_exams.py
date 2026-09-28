@@ -329,6 +329,7 @@ async def get_exam_detail(
 
 
 @router.get("/mentor/students/{student_id}/quantum")
+@router.get("/students/{student_id}/quantum")
 async def get_student_quantum_mentor(
     student_id: int,
     db: Session = Depends(get_db),

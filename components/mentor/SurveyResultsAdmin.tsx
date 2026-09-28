@@ -10,7 +10,7 @@ export function SurveyResultsAdmin({ examId }: { examId: number }) {
   
   useEffect(() => {
     const token = localStorage.getItem("eleonor_token");
-    fetch(`${API_URL}/api/mentor/exams/${examId}/results`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_URL}/mentor/exams/${examId}/results`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then(setData);
   }, [examId]);
