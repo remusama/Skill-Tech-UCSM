@@ -9,6 +9,8 @@ tiktoken
 google-genai
 sqlalchemy
 psycopg2-binary
+psycopg
+psycopg-binary
 PyJWT
 bcrypt
 elevenlabs
