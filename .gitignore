@@ -53,6 +53,10 @@ ffcache*
 # ─── Build artifacts ──────────────────────────────────────────────
 tsconfig.tsbuildinfo
 
+# ─── Datos de ponencias (CSV generados en runtime, no versionar) ───
+server_py/data/*.csv
+server_py/data/*.lock
+
 # ─── Modelos de IA (archivos grandes) ─────────────────────────────
 Models Eleonor AI/
 # Google OAuth credentials
