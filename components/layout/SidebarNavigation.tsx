@@ -8,6 +8,7 @@ import {
   Award,
   BarChart2,
   MessageSquare,
+  MessageSquarePlus,
   User,
   LogOut,
   BookOpen,
@@ -38,6 +39,7 @@ const navItems = [
   { icon: Clock, label: "Level up", page: "practice" },
   { icon: Brain, label: "Liderómetro", page: "diagnosis" },
   { icon: MessageSquare, label: "Moya", page: "assistant" },
+  { icon: MessageSquarePlus, label: "Ponencias", page: "ponencias" },
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
 
@@ -48,6 +50,7 @@ const teacherNavItems = [
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
   { icon: Folder, label: "Grupos", page: "mentor-groups" },
   { icon: FileText, label: "Exámenes", page: "mentor-exams" },
+  { icon: MessageSquarePlus, label: "Ponencias", page: "mentor-ponencias" },
   { icon: Settings, label: "Agentes IA", page: "mentor-agents" },
   { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
@@ -192,6 +195,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     src="/LogoChiquito.png"
                     alt="Logo Liderazgo"
                     fill
+                    sizes="64px"
                     className="object-contain drop-shadow-[0_0_15px_rgba(13,151,31,0.6)]"
                   />
                 </div>
@@ -211,6 +215,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     src="/new-logo.png"
                     alt="SkillTech Logo"
                     fill
+                    sizes="64px"
                     className="object-contain drop-shadow-[0_0_15px_rgba(184,134,11,0.7)]"
                   />
                 </div>
