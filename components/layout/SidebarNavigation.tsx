@@ -20,7 +20,8 @@ import {
   Users,
   Folder,
   Archive,
-  Calendar
+  Calendar,
+  PieChart
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -31,6 +32,7 @@ import { MagicTitle } from "@/components/ui/magic-title"
 import { Meteors } from "@/components/ui/meteors"
 import { useEleonor } from "@/contexts/eleonor-context"
 import { useTheme } from "@/contexts/theme-context"
+import { ThemeToggle } from "@/components/shared/ThemeToggle"
 
 const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
@@ -43,6 +45,7 @@ const navItems = [
 const teacherNavItems = [
   { icon: BarChart2, label: "Dashboard", page: "mentor-dashboard" },
   { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
+  { icon: PieChart, label: "Psicometría", page: "mentor-psicometria" },
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
   { icon: Folder, label: "Grupos", page: "mentor-groups" },
   { icon: FileText, label: "Exámenes", page: "mentor-exams" },
@@ -315,6 +318,9 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
 
               {/* Footer / Logout */}
               <div className={`mt-auto pt-8 border-t ${theme === 'dark' ? 'border-white/5' : 'border-slate-300'}`}>
+                <div className="mb-3">
+                  <ThemeToggle />
+                </div>
                 <Button
                   variant="ghost"
                   style={theme !== 'dark' ? { backgroundColor: '#f4f7f5' } : undefined}

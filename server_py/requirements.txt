@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+openai==3.7.0
+edge-tts==7.2.8
+python-dotenv==1.2.3
+websockets==16.1.1
+python-multipart==0.0.32
+tiktoken==0.14.0
+google-genai==2.22.0
+sqlalchemy==2.0.52
+psycopg2-binary==2.9.12
+PyJWT==2.13.0
+bcrypt==5.0.0
+elevenlabs==2.66.0
+=======
 fastapi
 uvicorn[standard]
 openai
@@ -9,7 +25,9 @@ tiktoken
 google-genai
 sqlalchemy
 psycopg2-binary
+psycopg
+psycopg-binary
 PyJWT
 bcrypt
 elevenlabs
-openpyx1
+>>>>>>> 73d06c4afe0513c1dacc69c0a89801a2b5291007

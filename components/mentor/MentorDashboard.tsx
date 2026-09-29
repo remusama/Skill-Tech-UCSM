@@ -1,15 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, ComponentProps } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    Users, Search, Folder, ChevronRight, BarChart3,
+    Users, Search, Folder, ChevronRight, ChevronDown, BarChart3,
     Plus, X, ArrowLeft, CheckCircle, Archive, Copy, FileText,
     BookOpen, Loader2, Trash2, Edit, ExternalLink, Clock,
-    Presentation, Download
+    Presentation, Download, Play
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
+import { useEleonor } from "@/contexts/eleonor-context"
 import { QuantumResultsView } from "../admin/QuantumResultsView"
+import { MoyaPresentationAssistant } from "./MoyaPresentationAssistant"
 
 interface Student {
     id: number
@@ -17,6 +19,7 @@ interface Student {
     full_name: string
     top_skill: string
     average_level: number
+    completed_exams?: string[]
 }
 
 interface Group {
@@ -24,6 +27,21 @@ interface Group {
     name: string
     description: string
     student_count: number
+}
+
+interface StudentExamAnswer {
+    question: string
+    question_type: string
+    answer: string | number | null
+}
+
+interface StudentExam {
+    exam_id: number
+    title: string
+    agent_name: string
+    status: string
+    completed: boolean
+    answers: StudentExamAnswer[]
 }
 
 const matchesStudentSearch = (student: Student, term: string) => {
@@ -239,12 +257,12 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
 const MOCK_PRESENTATIONS = [
     {
         id: 1,
-        title: "Taller de Inteligencia Emocional y Autogestión",
-        category: "Taller Académico",
+        title: "Sombrero seleccionador",
+        category: "Dinámica de Diagnóstico",
         slides: 18,
         format: "PPTX",
         date: "08/09/2026",
-        description: "Estrategias de autorregulación emocional y resiliencia para estudiantes universitarios."
+        description: "Dinámica interactiva de clasificación de talentos y perfilado cuántico guiada por Moya en tamaño de asistente."
     },
     {
         id: 2,
@@ -275,12 +293,23 @@ const MOCK_PRESENTATIONS = [
     }
 ]
 
-const ArchivesView = () => {
+const ArchivesView = ({ students = [] }: { students?: Student[] }) => {
+    const { enterPresence } = useEleonor()
     const [activeTab, setActiveTab] = useState<"exams" | "presentations">("exams")
     const [exams, setExams] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [duplicating, setDuplicating] = useState<number | null>(null)
     const [presentations] = useState(MOCK_PRESENTATIONS)
+    const [selectedPres, setSelectedPres] = useState<typeof MOCK_PRESENTATIONS[0] | null>(null)
+    const [currentSlide, setCurrentSlide] = useState(0)
+
+    useEffect(() => {
+        if (selectedPres) {
+            enterPresence("INTERVENTION")
+        } else {
+            enterPresence("IDLE_VISIBLE")
+        }
+    }, [selectedPres, enterPresence])
 
     const load = async () => {
         const token = localStorage.getItem("eleonor_token")
@@ -322,8 +351,8 @@ const ArchivesView = () => {
                     <button
                         onClick={() => setActiveTab("exams")}
                         className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${activeTab === "exams"
-                                ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
-                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                            ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
                             }`}
                     >
                         <FileText className="w-4 h-4" />
@@ -337,8 +366,8 @@ const ArchivesView = () => {
                     <button
                         onClick={() => setActiveTab("presentations")}
                         className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${activeTab === "presentations"
-                                ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
-                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                            ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
                             }`}
                     >
                         <Presentation className="w-4 h-4" />
@@ -455,13 +484,11 @@ const ArchivesView = () => {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-white/5">
-                                            <ExternalLink className="w-3.5 h-3.5 text-[hsl(74,100%,47%)]" />
-                                            Ver
-                                        </button>
-                                        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[hsl(74,100%,47%)]/15 hover:bg-[hsl(74,100%,47%)] hover:text-slate-950 text-[hsl(74,100%,47%)] text-xs font-bold transition-all border border-[hsl(74,100%,47%)]/30">
-                                            <Download className="w-3.5 h-3.5" />
-                                            Descargar
+                                        <button
+                                            onClick={() => { setSelectedPres(pres); setCurrentSlide(0); }}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 text-xs font-black transition-all shadow-[0_0_20px_rgba(186,239,0,0.3)]">
+                                            <Play className="w-3.5 h-3.5 fill-current" />
+                                            Iniciar presentación
                                         </button>
                                     </div>
                                 </div>
@@ -470,6 +497,17 @@ const ArchivesView = () => {
                     </div>
                 </div>
             )}
+
+            {/* Moya Asistente Interactivo de Presentación */}
+            <AnimatePresence>
+                {selectedPres && (
+                    <MoyaPresentationAssistant
+                        students={students}
+                        onClose={() => setSelectedPres(null)}
+                        presentationTitle={selectedPres.title}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     )
 }
@@ -520,6 +558,127 @@ const DASHBOARD_EXAMS = [
     }
 ]
 
+// Tarea 6B — Vista de perfil de estudiante con pestañas: Perfil Cognitivo / Exámenes
+const StudentProfileView = ({
+    studentId,
+    quantumProps,
+}: {
+    studentId: number
+    quantumProps: ComponentProps<typeof QuantumResultsView>
+}) => {
+    const [activeTab, setActiveTab] = useState<'cognitive' | 'exams'>('cognitive')
+    const [exams, setExams] = useState<StudentExam[]>([])
+    const [examsLoading, setExamsLoading] = useState(false)
+    const [examsError, setExamsError] = useState<string | null>(null)
+    const [expandedExamId, setExpandedExamId] = useState<number | null>(null)
+
+    useEffect(() => {
+        if (activeTab !== 'exams') return
+        const fetchExams = async () => {
+            setExamsLoading(true)
+            setExamsError(null)
+            const token = localStorage.getItem("eleonor_token")
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/exams`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}))
+                    throw new Error(err.detail || "No se pudieron cargar los exámenes.")
+                }
+                setExams(await res.json())
+            } catch (e: any) {
+                setExamsError(e.message || "Error al cargar los exámenes.")
+            } finally {
+                setExamsLoading(false)
+            }
+        }
+        fetchExams()
+        // Se vuelve a pedir cada vez que cambia el estudiante (studentId), no en cada render
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, studentId])
+
+    return (
+        <div className="space-y-6">
+            {/* Pestañas */}
+            <div className="flex gap-2 border-b border-white/5">
+                <button
+                    onClick={() => setActiveTab('cognitive')}
+                    className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'cognitive' ? 'border-[hsl(74,100%,47%)] text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                >
+                    📊 Perfil Cognitivo
+                </button>
+                <button
+                    onClick={() => setActiveTab('exams')}
+                    className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'exams' ? 'border-[hsl(74,100%,47%)] text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                >
+                    📝 Exámenes
+                </button>
+            </div>
+
+            {activeTab === 'cognitive' && <QuantumResultsView {...quantumProps} />}
+
+            {activeTab === 'exams' && (
+                <div className="space-y-3">
+                    {examsLoading ? (
+                        <div className="flex items-center justify-center py-32">
+                            <Loader2 className="w-8 h-8 text-gray-500 animate-spin" />
+                        </div>
+                    ) : examsError ? (
+                        <div className="p-8 border border-red-500/20 bg-red-500/5 rounded-3xl text-center">
+                            <p className="text-sm text-red-400 font-bold">{examsError}</p>
+                        </div>
+                    ) : exams.length === 0 ? (
+                        <div className="p-10 border border-dashed border-white/10 rounded-3xl text-center">
+                            <p className="text-xs text-gray-600 font-black uppercase tracking-widest italic">Este estudiante no tiene exámenes asignados.</p>
+                        </div>
+                    ) : (
+                        exams.map(exam => {
+                            const isExpanded = expandedExamId === exam.exam_id
+                            return (
+                                <div key={exam.exam_id} className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
+                                    <button
+                                        onClick={() => setExpandedExamId(isExpanded ? null : exam.exam_id)}
+                                        className="w-full flex items-center justify-between p-5 hover:bg-white/[0.03] transition-colors"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <FileText className="w-4 h-4 text-gray-500" />
+                                            <div className="text-left">
+                                                <div className="text-sm font-bold text-white">{exam.title}</div>
+                                                <div className="text-[10px] text-gray-500 uppercase tracking-widest">{exam.agent_name}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${exam.completed ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-gray-500'}`}>
+                                                {exam.completed ? 'Completado' : exam.status}
+                                            </span>
+                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
+                                        </div>
+                                    </button>
+                                    {isExpanded && (
+                                        <div className="border-t border-white/5 p-5 space-y-4">
+                                            {exam.answers.length === 0 ? (
+                                                <p className="text-xs text-gray-600 italic">Este estudiante aún no ha respondido este examen.</p>
+                                            ) : (
+                                                exam.answers.map((a, i) => (
+                                                    <div key={i} className="p-4 bg-black/20 rounded-2xl border border-white/5">
+                                                        <div className="text-xs font-bold text-white mb-2">{a.question}</div>
+                                                        <div className="text-xs text-gray-400">{a.answer ?? "—"}</div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
 export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) => {
     const [students, setStudents] = useState<Student[]>([])
     const [groups, setGroups] = useState<Group[]>([])
@@ -543,8 +702,16 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     const [activeStudentList, setActiveStudentList] = useState<Student[]>([])
 
     const isStudentExamCompleted = (studentId: number, examId: string) => {
-        const hash = (studentId * 17 + examId.charCodeAt(0)) % 10
-        return hash > 2
+        const student = students.find(s => s.id === studentId) || activeStudentList.find(s => s.id === studentId)
+        if (!student) return false
+        if (student.completed_exams && Array.isArray(student.completed_exams)) {
+            const targetId = examId.toLowerCase()
+            return student.completed_exams.some(ce => {
+                const norm = ce.toLowerCase()
+                return norm === targetId || norm.includes(targetId) || targetId.includes(norm)
+            })
+        }
+        return false
     }
 
     useEffect(() => {
@@ -569,11 +736,17 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     const fetchQuantumData = async (studentId: number) => {
         setQuantumData(null)
         setQuantumLoading(true)
-        const token = localStorage.getItem("eleonor_token")
+        const token = localStorage.getItem("eleonor_token") || localStorage.getItem("token") || sessionStorage.getItem("eleonor_token") || sessionStorage.getItem("token")
         try {
-            const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/quantum`, {
+            let res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/quantum`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
+            if (res.status === 404) {
+                // Fallback attempt for production backend routing without /api prefix
+                res = await fetch(`${API_BASE_URL}/mentor/students/${studentId}/quantum`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            }
             if (res.ok) setQuantumData(await res.json())
             else console.error("Quantum API error:", res.status, await res.text())
         } catch (err) {
@@ -696,6 +869,8 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         }
     }
 
+
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-40">
@@ -712,18 +887,21 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(74,100%,47%)]" />
                     </div>
                 ) : (
-                    <QuantumResultsView
-                        studentName={viewingStudentName}
+                    <StudentProfileView
                         studentId={viewingStudentId}
-                        onBack={() => { setViewingStudentId(null); setQuantumData(null); setActiveExamForProfile(null) }}
-                        data={quantumData}
-                        onNextStudent={handleNextStudent}
-                        onPrevStudent={handlePrevStudent}
-                        hasNextStudent={hasNextStudent}
-                        hasPrevStudent={hasPrevStudent}
-                        currentIndex={currentIndex >= 0 ? currentIndex : 0}
-                        totalStudents={totalStudents}
-                        activeExam={activeExamForProfile}
+                        quantumProps={{
+                            studentName: viewingStudentName,
+                            studentId: viewingStudentId,
+                            onBack: () => { setViewingStudentId(null); setQuantumData(null); setActiveExamForProfile(null) },
+                            data: quantumData,
+                            onNextStudent: handleNextStudent,
+                            onPrevStudent: handlePrevStudent,
+                            hasNextStudent: hasNextStudent,
+                            hasPrevStudent: hasPrevStudent,
+                            currentIndex: currentIndex >= 0 ? currentIndex : 0,
+                            totalStudents: totalStudents,
+                            activeExam: activeExamForProfile,
+                        }}
                     />
                 )}
             </div>
@@ -739,7 +917,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                     <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Archivos</h1>
                     <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Exámenes guardados. Duplica cualquier examen para reutilizarlo como plantilla.</p>
                 </div>
-                <ArchivesView />
+                <ArchivesView students={students} />
             </div>
         )
     }
@@ -772,18 +950,20 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                                     </button>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                                    <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                    <p className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                        <Users className="w-3.5 h-3.5 text-emerald-400" />
                                         Estudiantes ({filteredExamStudents.length})
                                     </p>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        {/* Filtro por Grupo */}
-                                        <div className="flex items-center gap-2 bg-slate-950/80 border border-emerald-500/30 rounded-2xl px-3 py-1.5 shadow-lg">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Grupo:</span>
+                                    <div className="flex flex-wrap items-center gap-2.5">
+                                        {/* Selector / Switch de Grupo */}
+                                        <div className="relative flex items-center gap-1.5 bg-slate-950/90 border border-emerald-500/30 rounded-2xl px-3 py-1.5 shadow-lg group hover:border-emerald-500/50 transition-colors">
+                                            <Folder className="w-3.5 h-3.5 text-[hsl(74,100%,47%)]" />
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">GRUPO:</span>
                                             <select
                                                 value={selectedGroupFilter}
                                                 onChange={(e) => handleGroupFilterChange(e.target.value)}
-                                                className="bg-transparent text-xs font-bold text-slate-100 focus:outline-none cursor-pointer"
+                                                className="bg-transparent text-xs font-bold text-emerald-300 focus:outline-none cursor-pointer pr-1"
                                             >
                                                 <option value="all" className="bg-slate-900 text-slate-100">Todos los grupos</option>
                                                 {groups.map(g => (
@@ -792,18 +972,30 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
                                             </select>
                                         </div>
 
-                                        {/* Filtro por Estado (Realizados / Pendientes) */}
-                                        <div className="flex items-center gap-2 bg-slate-950/80 border border-emerald-500/30 rounded-2xl px-3 py-1.5 shadow-lg">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estado:</span>
-                                            <select
-                                                value={statusFilter}
-                                                onChange={(e) => setStatusFilter(e.target.value as "all" | "completed" | "pending")}
-                                                className="bg-transparent text-xs font-bold text-slate-100 focus:outline-none cursor-pointer"
-                                            >
-                                                <option value="all" className="bg-slate-900 text-slate-100">Todos</option>
-                                                <option value="completed" className="bg-slate-900 text-emerald-400 font-bold">Realizados</option>
-                                                <option value="pending" className="bg-slate-900 text-amber-400 font-bold">Pendientes</option>
-                                            </select>
+                                        {/* Switch Segmentado de Estado (Skill Tech Glowing Switch) */}
+                                        <div className="flex items-center gap-1 bg-slate-950/90 p-1 rounded-2xl border border-emerald-500/30 shadow-lg">
+                                            {[
+                                                { id: "all", label: "Todos", icon: Users, color: "text-slate-200" },
+                                                { id: "completed", label: "Realizados", icon: CheckCircle, color: "text-emerald-400" },
+                                                { id: "pending", label: "Pendientes", icon: Clock, color: "text-amber-400" },
+                                            ].map((tab) => {
+                                                const isActive = statusFilter === tab.id
+                                                const Icon = tab.icon
+                                                return (
+                                                    <button
+                                                        key={tab.id}
+                                                        type="button"
+                                                        onClick={() => setStatusFilter(tab.id as any)}
+                                                        className={`relative px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-300 flex items-center gap-1.5 ${isActive
+                                                                ? "text-slate-950 shadow-[0_0_15px_rgba(186,239,0,0.35)] bg-[hsl(74,100%,47%)] font-black"
+                                                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                                                            }`}
+                                                    >
+                                                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-slate-950 font-bold" : tab.color}`} />
+                                                        <span>{tab.label}</span>
+                                                    </button>
+                                                )
+                                            })}
                                         </div>
 
                                         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Buscar..." />
@@ -812,7 +1004,24 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
 
                                 <div className="space-y-2.5 overflow-y-auto pr-1 flex-grow max-h-[450px]">
                                     {filteredExamStudents.length === 0 ? (
-                                        <div className="text-center py-12 text-slate-500 text-sm">No se encontraron estudiantes para este filtro.</div>
+                                        <div className="flex flex-col items-center justify-center py-16 px-6 bg-slate-950/60 rounded-3xl border border-dashed border-emerald-500/20 text-center space-y-4 my-2">
+                                            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                                                <Clock className="w-7 h-7" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h3 className="text-base font-black text-white uppercase tracking-wider">Aún no completó los datos</h3>
+                                                <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+                                                    {statusFilter === "completed"
+                                                        ? "No se encontraron estudiantes que hayan realizado esta evaluación de diagnóstico."
+                                                        : statusFilter === "pending"
+                                                            ? "No existen estudiantes pendientes bajo este criterio de búsqueda."
+                                                            : "No se encontraron estudiantes que coincidan con la búsqueda."}
+                                                </p>
+                                            </div>
+                                            <p className="text-[11px] text-emerald-400/80 font-medium">
+                                                💡 Puedes usar los switches y filtros de arriba para cambiar de grupo o ver el estado global.
+                                            </p>
+                                        </div>
                                     ) : (
                                         filteredExamStudents.map((student) => {
                                             const isCompleted = selectedExamModal ? isStudentExamCompleted(student.id, selectedExamModal.id) : true
@@ -1051,4 +1260,3 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         </div>
     )
 }
-
