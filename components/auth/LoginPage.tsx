@@ -76,7 +76,11 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
       localStorage.setItem("eleonor_user", JSON.stringify(data.user))
       onLogin()
     } catch (err: any) {
-      setError(err.message)
+      if (err.message === "Failed to fetch" || err.name === "TypeError") {
+        setError(`No se pudo conectar con el servidor backend (${API_BASE_URL}). Por favor, verifica que el backend de Python esté ejecutándose.`)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -192,7 +196,11 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
         onLogin()
       }
     } catch (err: any) {
-      setError(err.message)
+      if (err.message === "Failed to fetch" || err.name === "TypeError") {
+        setError(`No se pudo conectar con el servidor backend (${baseUrl}). Por favor, verifica que el backend de Python (uvicorn) esté ejecutándose.`)
+      } else {
+        setError(err.message)
+      }
     } finally {
       setIsLoading(false)
     }

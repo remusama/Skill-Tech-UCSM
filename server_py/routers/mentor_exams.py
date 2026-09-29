@@ -19,7 +19,7 @@ from server_py.mentoria.models import (
 )
 from sqlalchemy.orm.attributes import flag_modified
 
-router = APIRouter(tags=["Mentor Exams"])
+router = APIRouter(prefix="/api", tags=["Mentor Exams"])
 
 # ============================================================================
 # FUNCIONES AUXILIARES Y AUTORIZACIÓN
@@ -329,6 +329,7 @@ async def get_exam_detail(
 
 
 @router.get("/mentor/students/{student_id}/quantum")
+@router.get("/students/{student_id}/quantum")
 async def get_student_quantum_mentor(
     student_id: int,
     db: Session = Depends(get_db),

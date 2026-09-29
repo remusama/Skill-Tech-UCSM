@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { ArrowLeft, Brain, Zap, Activity, Target, Sparkles, TrendingUp, Calendar, Users, Edit3, Save, Clock, CheckCircle2, Sliders, ChevronLeft, ChevronRight, X } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { ArrowLeft, Brain, Zap, Activity, Target, Sparkles, TrendingUp, Calendar, Users, Edit3, Save, Clock, CheckCircle2, Sliders, ChevronLeft, ChevronRight } from "lucide-react"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar } from 'recharts'
 import { API_BASE_URL } from "@/lib/config"
+import { getStudentHouseProfile, CASAS_INFO, playStudentHouseAudio } from "@/lib/casasData"
+import { LewinResults } from "../quiz/LewinResults"
+import { NeoPiRResults } from "../quiz/NeoPiRResults"
+import { CepvResults } from "../quiz/CepvResults"
+import { CCLResults } from "../quiz/CCLResults"
 
 interface MetricProps {
     label: string
@@ -69,59 +74,6 @@ const PRACTICAL_ITEMS = [
     { id: "adaptabilidad_autogestion", label: "Adaptabilidad y Autogestión", desc: "Flexibilidad frente al cambio y autorregulación del aprendizaje." }
 ]
 
-// Tarea 2 — Panel de transcriptos con lista de preguntas (izq.) + detalle expandido (der.)
-const TranscriptViewer = ({ responses }: { responses: any[] }) => {
-    const [selectedIndex, setSelectedIndex] = useState(0)
-
-    if (!responses || responses.length === 0) {
-        return (
-            <div className="h-full flex flex-col items-center justify-center p-16 text-center">
-                <Activity className="w-12 h-12 text-white/5 mb-6" />
-                <p className="text-[11px] text-gray-600 italic uppercase font-black leading-relaxed tracking-wide">
-                    El registro detallado de este ciclo no está disponible en la base de datos central.
-                </p>
-            </div>
-        )
-    }
-
-    const selected = responses[selectedIndex] || responses[0]
-
-    return (
-        <div className="h-full flex">
-            <div className="w-2/5 h-full overflow-y-auto custom-scrollbar border-r border-white/5 p-3 space-y-1.5">
-                {responses.map((resp: any, i: number) => (
-                    <button
-                        key={i}
-                        onClick={() => setSelectedIndex(i)}
-                        className={`w-full text-left p-3 rounded-2xl transition-all flex items-start gap-3 ${i === selectedIndex ? 'bg-blue-500/10 border border-blue-500/30' : 'hover:bg-white/[0.03] border border-transparent'}`}
-                    >
-                        <span className={`text-[9px] font-black shrink-0 mt-0.5 ${i === selectedIndex ? 'text-blue-400' : 'text-gray-600'}`}>
-                            {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <span className={`text-[11px] font-bold leading-tight line-clamp-2 ${i === selectedIndex ? 'text-white' : 'text-gray-500'}`}>
-                            {resp.question}
-                        </span>
-                    </button>
-                ))}
-            </div>
-
-            <div className="w-3/5 h-full overflow-y-auto custom-scrollbar p-8">
-                <div className="mb-2 flex items-center gap-2">
-                    <span className="text-[9px] text-blue-500 font-black uppercase tracking-[0.2em]">Entrada {selectedIndex + 1}</span>
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-                </div>
-                <div className="text-base text-white font-black mb-6 leading-relaxed tracking-tight">
-                    {selected.question}
-                </div>
-                <div className="flex flex-col gap-2 p-5 bg-blue-500/[0.03] rounded-2xl border border-blue-500/10">
-                    <span className="text-[10px] text-blue-500 font-black uppercase">Output:</span>
-                    <span className="text-sm text-gray-300 font-medium leading-relaxed">{selected.answer}</span>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 export const QuantumResultsView = ({
     studentName,
     studentId,
@@ -160,42 +112,6 @@ export const QuantumResultsView = ({
     const [selectedDiagnostic, setSelectedDiagnostic] = useState<SessionHistory | null>(null)
     const [attendanceRate, setAttendanceRate] = useState<number | string>(85)
 
-    // Tarea 4B — Apreciación de la Psicóloga (edición manual sobre la sugerencia de Eleonor)
-    const [psychEdit, setPsychEdit] = useState(false)
-    const [psychText, setPsychText] = useState("")
-    const [psychSaving, setPsychSaving] = useState(false)
-    const [psychError, setPsychError] = useState<string | null>(null)
-
-    const savePsychFeedback = async () => {
-        if (!studentId || !selectedDiagnostic) return
-        setPsychSaving(true)
-        setPsychError(null)
-        try {
-            const token = localStorage.getItem("eleonor_token")
-            const res = await fetch(
-                `${API_BASE_URL}/api/mentor/students/${studentId}/sessions/${selectedDiagnostic.id}/psych-feedback`,
-                {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ psych_suggestion: psychText })
-                }
-            )
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}))
-                throw new Error(err.detail || "No se pudo guardar la apreciación.")
-            }
-            setSelectedDiagnostic(prev => prev ? { ...prev, data: { ...prev.data, psych_suggestion: psychText } } : prev)
-            setPsychEdit(false)
-        } catch (e: any) {
-            setPsychError(e.message || "Error al guardar.")
-        } finally {
-            setPsychSaving(false)
-        }
-    }
-
     // Si viene desde la vista de un examen específico, ir directo a las respuestas de ese examen
     useEffect(() => {
         if (activeExam) {
@@ -220,17 +136,7 @@ export const QuantumResultsView = ({
             if (matchedItem) {
                 setSelectedDiagnostic(matchedItem)
             } else {
-                setSelectedDiagnostic({
-                    id: 101,
-                    score: 88,
-                    area: activeExam.title,
-                    date: new Date().toLocaleDateString('es-PE'),
-                    data: {
-                        nivel_etiqueta: "Evaluado",
-                        nivel_rango: "80–95",
-                        razonamiento_vector: { analitico: 0.88, divergente: 0.80, intuitivo: 0.84, practico: 0.92 }
-                    }
-                })
+                setSelectedDiagnostic(null)
             }
         }
     }, [activeExam, studentId, data])
@@ -411,17 +317,45 @@ export const QuantumResultsView = ({
                         <ArrowLeft className="w-5 h-5" />
                     </motion.button>
                     <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[10px] text-[hsl(74,100%,47%)] font-black uppercase tracking-[0.3em]">
                                 Perfil del Estudiante
                             </span>
+                            {(() => {
+                                const hProf = getStudentHouseProfile(studentName)
+                                const hInfo = hProf ? CASAS_INFO[hProf.house] : null
+                                if (!hInfo) return null
+                                return (
+                                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full ${hInfo.badgeBg} ${hInfo.badgeText} border border-current/30 font-mono font-bold uppercase tracking-wider flex items-center gap-1.5`}>
+                                        <img src={hInfo.logo} alt="" className="w-3.5 h-3.5 object-contain" />
+                                        <span>CASA {hInfo.name}</span>
+                                    </span>
+                                )
+                            })()}
                             {activeExam && (
                                 <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[hsl(74,100%,47%)]/15 border border-[hsl(74,100%,47%)]/40 text-[hsl(74,100%,47%)] font-bold uppercase tracking-wider">
                                     Examen: {activeExam.title}
                                 </span>
                             )}
                         </div>
-                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase italic">{studentName}</h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase italic">{studentName}</h1>
+                            {(() => {
+                                const hProf = getStudentHouseProfile(studentName)
+                                if (!hProf) return null
+                                return (
+                                    <button
+                                        type="button"
+                                        onClick={() => playStudentHouseAudio(hProf)}
+                                        title="Escuchar audio del Sombrero Seleccionador"
+                                        className="p-2 rounded-xl bg-slate-900 hover:bg-[hsl(74,100%,47%)] hover:text-slate-950 text-emerald-400 border border-emerald-500/30 transition-all shadow-md flex items-center gap-1.5 text-xs font-bold"
+                                    >
+                                        <Sparkles className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Audio Sombrero</span>
+                                    </button>
+                                )
+                            })()}
+                        </div>
                     </div>
                 </div>
 
@@ -899,152 +833,282 @@ export const QuantumResultsView = ({
                                         )}
 
                                         {/* Level 4: Detail View */}
-                                        {diagLevel === 'detail' && selectedDiagnostic && (
-                                            <div className="bg-white/5 rounded-[4rem] p-16 border border-white/10 animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-7xl mx-auto backdrop-blur-3xl relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none">
-                                                    <Brain className="w-64 h-64" />
-                                                </div>
+                                        {diagLevel === 'detail' && (
+                                            selectedDiagnostic ? (() => {
+                                                const areaNorm = (selectedDiagnostic.area || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                                                const d = selectedDiagnostic.data || {}
+                                                const handleExit = () => setDiagLevel('exams')
 
-                                                <div className="relative z-10">
-                                                    <div className="flex items-center justify-between mb-16">
-                                                        <div>
-                                                            <div className="flex items-center gap-5 mb-4">
-                                                                <div className="w-5 h-5 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.2)] animate-pulse" style={{ backgroundColor: getAreaColor(selectedDiagnostic.area) }}></div>
-                                                                <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">{selectedDiagnostic.area}</h3>
-                                                            </div>
-                                                            <p className="text-xs text-gray-500 font-black uppercase tracking-[0.4em] ml-1">Perfil Orientativo · {selectedDiagnostic.date}</p>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <div className="text-2xl font-black text-white tracking-tighter tabular-nums mb-1">
-                                                                {selectedDiagnostic.data?.nivel_etiqueta || (
-                                                                    selectedDiagnostic.score >= 80 ? "Experto" :
-                                                                    selectedDiagnostic.score >= 60 ? "Competente" :
-                                                                    selectedDiagnostic.score >= 40 ? "En Desarrollo" : "Inicial"
-                                                                )}
-                                                            </div>
-                                                            <div className="text-sm font-bold text-orange-400 tabular-nums mb-1">
-                                                                Rango estimado: {selectedDiagnostic.data?.nivel_rango || `${Math.max(0, selectedDiagnostic.score - 9)}–${Math.min(100, selectedDiagnostic.score + 10)}`}
-                                                            </div>
-                                                            <div className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Tendencia orientativa</div>
-                                                        </div>
-                                                    </div>
+                                                // 1. KURT LEWIN (LIDERAZGO)
+                                                const isLewin = (
+                                                    areaNorm.includes("liderazg") ||
+                                                    areaNorm.includes("lewin") ||
+                                                    areaNorm.includes("kurt") ||
+                                                    Boolean(d.estilo_dominante) ||
+                                                    Boolean(d.detalle?.autoritario) ||
+                                                    Boolean(d.counts?.autoritario) ||
+                                                    (typeof d.observaciones === "string" && d.observaciones.toLowerCase().includes("lewin"))
+                                                )
 
-                                                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-16">
-                                                        <div className="space-y-12">
-                                                            <section>
-                                                                <div className="flex items-center justify-between mb-6">
-                                                                    <h4 className="text-[11px] font-black text-orange-500 uppercase tracking-[0.4em] flex items-center gap-4">
-                                                                        <div className="w-10 h-0.5 bg-orange-500/30 rounded-full"></div>
-                                                                        Apreciación de la Psicóloga
-                                                                    </h4>
-                                                                    {studentId && !psychEdit && (
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setPsychText(selectedDiagnostic.data?.psych_suggestion || selectedDiagnostic.data?.analisis_profundo || "")
-                                                                                setPsychEdit(true)
-                                                                                setPsychError(null)
-                                                                            }}
-                                                                            className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-orange-400/70 hover:text-orange-400 transition-colors"
-                                                                        >
-                                                                            <Edit3 className="w-3 h-3" /> Editar
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                                <div className="bg-black/60 rounded-[3rem] p-10 border border-white/5 shadow-2xl backdrop-blur-xl relative group">
-                                                                    <div className="absolute top-4 right-8">
-                                                                        <Sparkles className="w-5 h-5 text-orange-500/20" />
+                                                if (isLewin) {
+                                                    const text = `${d.analisis_profundo || ''} ${d.observaciones || ''}`
+                                                    const autMatch = text.match(/autoritario:\s*(\d+)/i)
+                                                    const demMatch = text.match(/democrático:\s*(\d+)|democratico:\s*(\d+)/i)
+                                                    const laisMatch = text.match(/laissez-faire:\s*(\d+)/i)
+                                                    const domMatch = text.match(/predominante:\s*([a-z-]+)/i)
+
+                                                    const counts = d.detalle || d.counts || {
+                                                        autoritario: autMatch ? parseInt(autMatch[1], 10) : 4,
+                                                        democratico: demMatch ? parseInt(demMatch[1] || demMatch[2], 10) : 3,
+                                                        "laissez-faire": laisMatch ? parseInt(laisMatch[1], 10) : 7
+                                                    }
+                                                    const dominant = d.estilo_dominante || d.dominant || (domMatch ? domMatch[1].toLowerCase() : "laissez-faire")
+                                                    const isTied = d.isTied ?? false
+
+                                                    return (
+                                                        <LewinResults
+                                                            result={{ counts, dominant, isTied }}
+                                                            onExit={handleExit}
+                                                        />
+                                                    )
+                                                }
+
+                                                // 2. NEO-PI-R
+                                                const isNeo = (
+                                                    areaNorm.includes("neo") ||
+                                                    areaNorm.includes("personalidad") ||
+                                                    Boolean(d.dominios) ||
+                                                    Boolean(d.domains) ||
+                                                    Boolean(d.facetas) ||
+                                                    Boolean(d.facets)
+                                                )
+
+                                                if (isNeo && (d.dominios || d.domains || d.facetas || d.facets)) {
+                                                    const domains = d.dominios || d.domains || { N: 50, E: 50, O: 50, A: 50, C: 50 }
+                                                    const facets = d.facetas || d.facets || [[50,50,50,50,50,50],[50,50,50,50,50,50],[50,50,50,50,50,50],[50,50,50,50,50,50],[50,50,50,50,50,50]]
+                                                    const gender = d.gender || "M"
+                                                    return (
+                                                        <NeoPiRResults
+                                                            result={{ domains, facets, gender, raw: d.raw }}
+                                                            onExit={handleExit}
+                                                        />
+                                                    )
+                                                }
+
+                                                // 3. CEPV-20
+                                                const isCepv = (
+                                                    areaNorm.includes("cepv") ||
+                                                    areaNorm.includes("expectativa") ||
+                                                    Boolean(d.avg)
+                                                )
+
+                                                if (isCepv && d.avg) {
+                                                    return (
+                                                        <CepvResults
+                                                            result={{ avg: d.avg, openAns: d.openAns, overall_avg: d.overall_avg }}
+                                                            onExit={handleExit}
+                                                        />
+                                                    )
+                                                }
+
+                                                // 4. CCL (COMPLEJIDAD COGNITIVA Y LIDERAZGO)
+                                                const isCCL = (
+                                                    areaNorm.includes("ccl") ||
+                                                    (Boolean(d.scores) && Boolean(d.levels))
+                                                )
+
+                                                if (isCCL && d.scores && d.levels) {
+                                                    return (
+                                                        <CCLResults
+                                                            result={{
+                                                                scores: d.scores,
+                                                                levels: d.levels,
+                                                                nivel_general: d.nivel_general ?? d.nivel ?? 0
+                                                            }}
+                                                            onExit={handleExit}
+                                                        />
+                                                    )
+                                                }
+
+                                                // 5. GENÉRICO (SOLO PARA EXÁMENES MEDIDOS POR AGENTES DE IA)
+                                                return (
+                                                    <div className="bg-white/5 rounded-[4rem] p-16 border border-white/10 animate-in fade-in slide-in-from-bottom-8 duration-700 max-w-7xl mx-auto backdrop-blur-3xl relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none">
+                                                            <Brain className="w-64 h-64" />
+                                                        </div>
+
+                                                        <div className="relative z-10">
+                                                            <div className="flex items-center justify-between mb-16">
+                                                                <div>
+                                                                    <div className="flex items-center gap-5 mb-4">
+                                                                        <div className="w-5 h-5 rounded-full shadow-[0_0_15px_rgba(255,255,255,0.2)] animate-pulse" style={{ backgroundColor: getAreaColor(selectedDiagnostic.area) }}></div>
+                                                                        <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">{selectedDiagnostic.area}</h3>
                                                                     </div>
-                                                                    {psychEdit ? (
-                                                                        <div className="space-y-4">
-                                                                            <textarea
-                                                                                value={psychText}
-                                                                                onChange={e => setPsychText(e.target.value)}
-                                                                                rows={6}
-                                                                                className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-gray-200 leading-relaxed focus:outline-none focus:ring-2 focus:ring-orange-500/30 resize-none"
-                                                                                placeholder="Escribe la apreciación profesional sobre esta sesión..."
-                                                                            />
-                                                                            {psychError && (
-                                                                                <p className="text-[10px] text-red-400 font-bold uppercase tracking-wide">{psychError}</p>
-                                                                            )}
-                                                                            <div className="flex items-center gap-3">
-                                                                                <button
-                                                                                    onClick={savePsychFeedback}
-                                                                                    disabled={psychSaving}
-                                                                                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 disabled:opacity-40 transition-colors"
-                                                                                >
-                                                                                    <Save className="w-3 h-3" /> {psychSaving ? "Guardando..." : "Guardar"}
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={() => { setPsychEdit(false); setPsychError(null) }}
-                                                                                    disabled={psychSaving}
-                                                                                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-gray-300 transition-colors"
-                                                                                >
-                                                                                    <X className="w-3 h-3" /> Cancelar
-                                                                                </button>
+                                                                    <p className="text-xs text-gray-500 font-black uppercase tracking-[0.4em] ml-1">Perfil Orientativo · {selectedDiagnostic.date}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <div className="text-2xl font-black text-white tracking-tighter tabular-nums mb-1">
+                                                                        {selectedDiagnostic.data?.nivel_etiqueta || (
+                                                                            selectedDiagnostic.score >= 80 ? "Experto" :
+                                                                            selectedDiagnostic.score >= 60 ? "Competente" :
+                                                                            selectedDiagnostic.score >= 40 ? "En Desarrollo" : "Inicial"
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-sm font-bold text-orange-400 tabular-nums mb-1">
+                                                                        Rango estimado: {selectedDiagnostic.data?.nivel_rango || `${Math.max(0, selectedDiagnostic.score - 9)}–${Math.min(100, selectedDiagnostic.score + 10)}`}
+                                                                    </div>
+                                                                    <div className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Tendencia orientativa</div>
+                                                                </div>
+                                                            </div>
+
+                                                            {(selectedDiagnostic.data?.razonamiento_vector || selectedDiagnostic.data?.bloom_matrix) && (
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                                                                    {selectedDiagnostic.data?.razonamiento_vector && (
+                                                                        <div className="bg-black/40 rounded-[3rem] p-8 border border-white/5 backdrop-blur-xl">
+                                                                            <h4 className="text-[11px] font-black text-purple-400 uppercase tracking-[0.4em] mb-6 text-center">Vector de Razonamiento</h4>
+                                                                            <div className="h-64">
+                                                                                <ResponsiveContainer width="100%" height="100%">
+                                                                                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                                                                        { subject: 'Analítico', A: selectedDiagnostic.data.razonamiento_vector.analitico * 100 },
+                                                                                        { subject: 'Divergente', A: selectedDiagnostic.data.razonamiento_vector.divergente * 100 },
+                                                                                        { subject: 'Intuitivo', A: selectedDiagnostic.data.razonamiento_vector.intuitivo * 100 },
+                                                                                        { subject: 'Mecánico', A: selectedDiagnostic.data.razonamiento_vector.mecanico * 100 },
+                                                                                        { subject: 'Estratégico', A: selectedDiagnostic.data.razonamiento_vector.estrategico * 100 }
+                                                                                    ]}>
+                                                                                        <PolarGrid stroke="#ffffff20" />
+                                                                                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 'bold' }} />
+                                                                                        <Radar name="Estudiante" dataKey="A" stroke="#a855f7" fill="#a855f7" fillOpacity={0.3} />
+                                                                                        <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '12px' }} />
+                                                                                    </RadarChart>
+                                                                                </ResponsiveContainer>
                                                                             </div>
                                                                         </div>
-                                                                    ) : (
-                                                                        <p className="text-gray-300 text-base leading-[1.8] font-medium italic">
-                                                                            "{selectedDiagnostic.data?.psych_suggestion || selectedDiagnostic.data?.analisis_profundo || selectedDiagnostic.data?.observaciones || "Las evidencias de esta sesión están siendo procesadas..."}"
-                                                                        </p>
                                                                     )}
-                                                                    {!psychEdit && selectedDiagnostic.data?.nota_incertidumbre && (
-                                                                        <p className="text-[10px] text-gray-600 mt-4 pt-4 border-t border-white/5 font-medium leading-relaxed">
-                                                                            ⚠ {selectedDiagnostic.data.nota_incertidumbre}
-                                                                        </p>
+                                                                    {selectedDiagnostic.data?.bloom_matrix && (
+                                                                        <div className="bg-black/40 rounded-[3rem] p-8 border border-white/5 backdrop-blur-xl">
+                                                                            <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em] mb-6 text-center">Matriz de Bloom</h4>
+                                                                            <div className="h-64">
+                                                                                <ResponsiveContainer width="100%" height="100%">
+                                                                                    <BarChart data={[
+                                                                                        { name: 'Recordar', uv: selectedDiagnostic.data.bloom_matrix.recordar * 100 },
+                                                                                        { name: 'Comprender', uv: selectedDiagnostic.data.bloom_matrix.comprender * 100 },
+                                                                                        { name: 'Aplicar', uv: selectedDiagnostic.data.bloom_matrix.aplicar * 100 },
+                                                                                        { name: 'Analizar', uv: selectedDiagnostic.data.bloom_matrix.analizar * 100 },
+                                                                                        { name: 'Evaluar', uv: selectedDiagnostic.data.bloom_matrix.evaluar * 100 },
+                                                                                        { name: 'Crear', uv: selectedDiagnostic.data.bloom_matrix.crear * 100 },
+                                                                                    ]} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                                                                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#ffffff10" />
+                                                                                        <XAxis type="number" hide domain={[0, 100]} />
+                                                                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: 'bold' }} />
+                                                                                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '12px' }} />
+                                                                                        <Bar dataKey="uv" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} />
+                                                                                    </BarChart>
+                                                                                </ResponsiveContainer>
+                                                                            </div>
+                                                                        </div>
                                                                     )}
                                                                 </div>
-                                                            </section>
+                                                            )}
 
-                                                            <section>
-                                                                <h4 className="text-[11px] font-black text-orange-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-4">
-                                                                    <div className="w-10 h-0.5 bg-orange-400/30 rounded-full"></div>
-                                                                    Rutas de Exploración Sugeridas
-                                                                </h4>
-                                                                <div className="grid grid-cols-1 gap-4">
-                                                                    {selectedDiagnostic.data?.recomendaciones?.map((rec: string, i: number) => {
-                                                                        const ROUTE_EMOJIS = ["🧭", "📚", "🔬", "💡", "🎯", "🚀"]
-                                                                        const ROUTE_BORDER_COLORS = ["border-orange-500/20", "border-blue-500/20", "border-emerald-500/20", "border-purple-500/20", "border-pink-500/20", "border-cyan-500/20"]
-                                                                        const emoji = ROUTE_EMOJIS[i % ROUTE_EMOJIS.length]
-                                                                        const borderColor = ROUTE_BORDER_COLORS[i % ROUTE_BORDER_COLORS.length]
-                                                                        return (
-                                                                            <div key={i} className={`flex gap-6 p-6 bg-white/[0.03] rounded-3xl border ${borderColor} transition-all hover:bg-white/[0.06] group/rec`}>
-                                                                                <div className="flex flex-col items-center gap-2 shrink-0">
-                                                                                    <span className="text-xl">{emoji}</span>
-                                                                                    <span className="text-2xl font-black text-orange-500/20 group-hover/rec:text-orange-500/50 transition-colors">{String(i + 1).padStart(2, '0')}</span>
-                                                                                </div>
-                                                                                <div className="flex items-center gap-3 flex-1">
-                                                                                    <p className="text-[13px] text-gray-400 font-medium leading-relaxed group-hover/rec:text-gray-200 transition-colors">{rec}</p>
-                                                                                    <TrendingUp className="w-4 h-4 text-orange-500/0 group-hover/rec:text-orange-500/60 transition-all shrink-0" />
-                                                                                </div>
+                                                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-16">
+                                                                <div className="space-y-12">
+                                                                    <section>
+                                                                        <h4 className="text-[11px] font-black text-orange-500 uppercase tracking-[0.4em] mb-6 flex items-center gap-4">
+                                                                            <div className="w-10 h-0.5 bg-orange-500/30 rounded-full"></div>
+                                                                            Eleonor Sugiere
+                                                                        </h4>
+                                                                        <div className="bg-black/60 rounded-[3rem] p-10 border border-white/5 shadow-2xl backdrop-blur-xl relative group">
+                                                                            <div className="absolute top-4 right-8">
+                                                                                <Sparkles className="w-5 h-5 text-orange-500/20" />
                                                                             </div>
-                                                                        )
-                                                                    }) || (
-                                                                            <div className="p-8 border border-dashed border-white/10 rounded-[2rem] text-center">
-                                                                                <p className="text-xs text-gray-600 font-black uppercase tracking-widest italic">No se han derivado recomendaciones de este nodo.</p>
-                                                                            </div>
-                                                                        )}
-                                                                </div>
-                                                            </section>
-                                                        </div>
+                                                                            <p className="text-gray-300 text-base leading-[1.8] font-medium italic">
+                                                                                "{selectedDiagnostic.data?.analisis_profundo || selectedDiagnostic.data?.observaciones || "Las evidencias de esta sesión están siendo procesadas..."}"
+                                                                            </p>
+                                                                            {selectedDiagnostic.data?.nota_incertidumbre && (
+                                                                                <p className="text-[10px] text-gray-600 mt-4 pt-4 border-t border-white/5 font-medium leading-relaxed">
+                                                                                    ⚠ {selectedDiagnostic.data.nota_incertidumbre}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
+                                                                    </section>
 
-                                                        <section>
-                                                            <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-4">
-                                                                <div className="w-10 h-0.5 bg-blue-400/30 rounded-full"></div>
-                                                                Transcritor de Respuestas
-                                                            </h4>
-                                                            <div className="bg-black/40 rounded-[3rem] overflow-hidden border border-white/5 h-[400px] shadow-inner relative">
-                                                                <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-10"></div>
-                                                                <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
-
-                                                                <div className="h-full">
-                                                                    <TranscriptViewer responses={selectedDiagnostic.data?.raw_responses} />
+                                                                    <section>
+                                                                        <h4 className="text-[11px] font-black text-orange-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-4">
+                                                                            <div className="w-10 h-0.5 bg-orange-400/30 rounded-full"></div>
+                                                                            Rutas de Exploración Sugeridas
+                                                                        </h4>
+                                                                        <div className="grid grid-cols-1 gap-4">
+                                                                            {selectedDiagnostic.data?.recomendaciones?.map((rec: string, i: number) => (
+                                                                                <div key={i} className="flex gap-6 p-6 bg-white/[0.03] rounded-3xl border border-white/5 transition-all hover:bg-white/[0.06] group/rec">
+                                                                                    <span className="text-2xl font-black text-orange-500/20 group-hover/rec:text-orange-500/50 transition-colors">0{i + 1}</span>
+                                                                                    <p className="text-[13px] text-gray-400 font-medium leading-relaxed">{rec}</p>
+                                                                                </div>
+                                                                            )) || (
+                                                                                    <div className="p-8 border border-dashed border-white/10 rounded-[2rem] text-center">
+                                                                                        <p className="text-xs text-gray-600 font-black uppercase tracking-widest italic">No se han derivado recomendaciones de este nodo.</p>
+                                                                                    </div>
+                                                                                )}
+                                                                        </div>
+                                                                    </section>
                                                                 </div>
+
+                                                                <section>
+                                                                    <h4 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-4">
+                                                                        <div className="w-10 h-0.5 bg-blue-400/30 rounded-full"></div>
+                                                                        Transcritor de Respuestas
+                                                                    </h4>
+                                                                    <div className="bg-black/40 rounded-[3rem] overflow-hidden border border-white/5 h-[400px] shadow-inner relative">
+                                                                        <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-black/20 to-transparent pointer-events-none z-10"></div>
+                                                                        <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
+
+                                                                        <div className="h-full overflow-y-auto custom-scrollbar p-6">
+                                                                            {selectedDiagnostic.data?.raw_responses ? (
+                                                                                <div className="space-y-4">
+                                                                                    {selectedDiagnostic.data.raw_responses.map((resp: any, i: number) => (
+                                                                                        <div key={i} className="p-8 bg-white/[0.02] rounded-[2rem] border border-white/5 hover:border-blue-500/20 transition-all group/item">
+                                                                                            <div className="flex items-center justify-between mb-4">
+                                                                                                <span className="text-[9px] text-blue-500 font-black uppercase tracking-[0.2em]">Entrada {i + 1}</span>
+                                                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500/20 group-hover/item:bg-blue-500 transition-colors"></div>
+                                                                                            </div>
+                                                                                            <div className="text-sm text-white font-black mb-4 leading-relaxed tracking-tight">{resp.question}</div>
+                                                                                            <div className="flex items-start gap-3 p-4 bg-blue-500/[0.03] rounded-2xl border border-blue-500/10">
+                                                                                                <span className="text-[10px] text-blue-500 font-black uppercase">Output:</span>
+                                                                                                <span className="text-[11px] text-gray-300 font-medium">{resp.answer}</span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="h-full flex flex-col items-center justify-center p-16 text-center">
+                                                                                    <Activity className="w-12 h-12 text-white/5 mb-6" />
+                                                                                    <p className="text-[11px] text-gray-600 italic uppercase font-black leading-relaxed tracking-wide">
+                                                                                        El registro detallado de este ciclo no está disponible en la base de datos central.
+                                                                                    </p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </section>
                                                             </div>
-                                                        </section>
+                                                        </div>
                                                     </div>
+                                                )
+                                            })() : (
+                                                <div className="bg-slate-900/80 rounded-[3rem] p-12 border border-emerald-500/20 text-center space-y-4 max-w-2xl mx-auto my-12 shadow-2xl backdrop-blur-xl">
+                                                    <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto shadow-[0_0_30px_rgba(245,158,11,0.2)]">
+                                                        <Clock className="w-8 h-8" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <h3 className="text-2xl font-black text-white uppercase tracking-wider">Aún no completó los datos</h3>
+                                                        <p className="text-sm text-slate-300 leading-relaxed">
+                                                            El estudiante <span className="text-[hsl(74,100%,47%)] font-bold">{studentName}</span> aún no ha realizado las evaluaciones ni registrado las respuestas para el examen ({activeExam?.title || "Diagnóstico"}).
+                                                        </p>
+                                                    </div>
+                                                    <p className="text-xs text-slate-400">
+                                                        Puedes usar los botones de navegación <span className="text-emerald-400 font-bold">&lt; &gt;</span> en la parte superior para consultar los datos de otros estudiantes.
+                                                    </p>
                                                 </div>
-                                            </div>
+                                            )
                                         )}
                                     </div>
                                 </div>
