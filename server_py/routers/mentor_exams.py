@@ -3,11 +3,13 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
+
+from sqlalchemy import and_, or_
+from sqlalchemy.orm import Session,joinedload,selectinload
 
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic
-from server_py.memoria.database import User, ExamResult, get_db
+from server_py.memoria.database import User, get_db
 from server_py.mentoria.models import (
     Agent,
     GroupStudent,
@@ -17,7 +19,6 @@ from server_py.mentoria.models import (
     MentorExamQuestion,
     MentorGroup,
 )
-from sqlalchemy.orm.attributes import flag_modified
 
 router = APIRouter(prefix="/api", tags=["Mentor Exams"])
 
@@ -46,10 +47,15 @@ def check_is_mentor(user_id: int, db: Session) -> User:
 
 def _find_or_create_assignment(db: Session, exam_id: int, student_id: int) -> MentorExamAssignment:
     """Busca o inicializa una asignación de examen para un estudiante específico."""
-    assignment = db.query(MentorExamAssignment).filter(
-        MentorExamAssignment.exam_id == exam_id,
-        MentorExamAssignment.student_id == student_id,
-    ).first()
+    assignment = (
+        db.query(MentorExamAssignment)
+        .filter(
+            MentorExamAssignment.exam_id == exam_id,
+            MentorExamAssignment.student_id == student_id,
+        )
+        .with_for_update()
+        .first()
+    )
     
     if assignment:
         return assignment
@@ -217,23 +223,6 @@ async def assign_exam(
             detail="Examen no encontrado o no tienes permiso sobre él."
         )
 
-    # Assign to individual students
-    for student_id in req.student_ids:
-        student = db.query(User).filter(User.id == student_id, User.role == "student").first()
-        if student:
-            existing = db.query(MentorExamAssignment).filter(
-                MentorExamAssignment.exam_id == exam_id,
-                MentorExamAssignment.student_id == student_id,
-                MentorExamAssignment.group_id is None
-            ).first()
-            if not existing:
-                db.add(MentorExamAssignment(
-                    exam_id=exam_id,
-                    student_id=student_id,
-                    group_id=None,
-                    status="pending"
-                ))
-
     try:
         # Asignación individual
         for student_id in req.student_ids:
@@ -329,7 +318,6 @@ async def get_exam_detail(
 
 
 @router.get("/mentor/students/{student_id}/quantum")
-@router.get("/students/{student_id}/quantum")
 async def get_student_quantum_mentor(
     student_id: int,
     db: Session = Depends(get_db),
@@ -525,74 +513,173 @@ async def get_exam_results(
 # ============================================================================
 
 @router.get("/student/mentor-exams")
-async def get_student_mentor_exams(
-    db: Session = Depends(get_db), 
+def get_student_mentor_exams(
+    db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
 ):
-    """Retorna los exámenes asignados al estudiante actual (directamente o por grupo)."""
-    student = db.query(User).filter(User.id == current_user_id).first()
+    """Retorna los exámenes publicados asignados al estudiante actual."""
+
+    student = db.query(User.id).filter(
+        User.id == current_user_id
+    ).first()
+
     if not student:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado."
+        )
+
+    # =========================================================
+    # 1. ASIGNACIONES DIRECTAS
+    # =========================================================
 
     direct = db.query(MentorExamAssignment).filter(
         MentorExamAssignment.student_id == current_user_id,
         MentorExamAssignment.group_id.is_(None)
     ).all()
 
-    student_groups = db.query(GroupStudent.group_id).filter(
+    # =========================================================
+    # 2. ASIGNACIONES POR GRUPO
+    # =========================================================
+
+    student_groups = db.query(
+        GroupStudent.group_id
+    ).filter(
         GroupStudent.student_id == current_user_id
     ).all()
-    group_ids = [gs[0] for gs in student_groups]
 
-    group_assignments = db.query(MentorExamAssignment).filter(
-        MentorExamAssignment.group_id.in_(group_ids)
-    ).all() if group_ids else []
+    group_ids = [
+        group_id
+        for (group_id,) in student_groups
+    ]
 
-    all_exam_ids = set()
+    if group_ids:
+        group_assignments = db.query(
+            MentorExamAssignment
+        ).filter(
+            MentorExamAssignment.group_id.in_(group_ids)
+        ).all()
+    else:
+        group_assignments = []
+
+    all_assignments = direct + group_assignments
+
+    if not all_assignments:
+        return []
+
+    # =========================================================
+    # 3. UNA ASIGNACIÓN POR EXAMEN
+    # =========================================================
+    # Se conserva el comportamiento actual:
+    # las asignaciones directas aparecen antes que las grupales,
+    # por lo que la individual tiene prioridad.
+    # =========================================================
+
+    assignments_by_exam = {}
+
+    for assignment in all_assignments:
+        if assignment.exam_id not in assignments_by_exam:
+            assignments_by_exam[
+                assignment.exam_id
+            ] = assignment
+
+    exam_ids = list(
+        assignments_by_exam.keys()
+    )
+
+    # =========================================================
+    # 4. CARGAR EXÁMENES + AGENTES + PREGUNTAS EN BLOQUE
+    # =========================================================
+
+    exams = (
+        db.query(MentorExam)
+        .options(
+            joinedload(MentorExam.agent),
+            selectinload(MentorExam.questions)
+        )
+        .filter(
+            MentorExam.id.in_(exam_ids),
+            MentorExam.status == "published"
+        )
+        .all()
+    )
+
+    if not exams:
+        return []
+
+    # =========================================================
+    # 5. CONSTRUIR RESPUESTA
+    # =========================================================
+
     result = []
 
-    for assignment in direct + group_assignments:
-        if assignment.exam_id not in all_exam_ids:
-            all_exam_ids.add(assignment.exam_id)
+    for exam in exams:
 
-            exam = db.query(MentorExam).filter(
-                MentorExam.id == assignment.exam_id, 
-                MentorExam.status == "published"
-            ).first()
+        assignment = assignments_by_exam.get(
+            exam.id
+        )
 
-            if exam and exam.status == "published":
-                agent = db.query(Agent).filter(Agent.id == exam.agent_id).first()
-                questions = db.query(MentorExamQuestion).filter(
-                    MentorExamQuestion.exam_id == exam.id
-                ).order_by(MentorExamQuestion.order).all()
+        if not assignment:
+            continue
 
-                result.append({
-                    "id": exam.id,
-                    "title": exam.title,
-                    "description": exam.description,
-                    "agent_name": agent.name if agent else "Desconocido",
-                    "competencies": agent.competencies if agent else [],
-                    "status": assignment.status,
-                    "assigned_at": assignment.assigned_at.isoformat() if getattr(assignment, "assigned_at", None) else None,
-                    "questions": [
-                        {
-                            "id": q.id,
-                            "question": q.question,
-                            "question_type": q.question_type,
-                            "options": q.options or [],
-                            "correct_answer": q.correct_answer,
-                            "order": q.order,
-                            "dimension": q.dimension
-                        } 
-                        for q in questions
-                    ]
-                })
+        agent = exam.agent
+
+        questions = sorted(
+            exam.questions,
+            key=lambda q: q.order
+        )
+
+        result.append({
+            "id": exam.id,
+            "title": exam.title,
+            "description": exam.description,
+
+            "agent_name":
+                agent.name
+                if agent
+                else "Desconocido",
+
+            "competencies":
+                agent.competencies
+                if agent
+                else [],
+
+            "status":
+                assignment.status,
+
+            "assigned_at":
+                assignment.assigned_at.isoformat()
+                if getattr(
+                    assignment,
+                    "assigned_at",
+                    None
+                )
+                else None,
+
+            "questions": [
+                {
+                    "id": question.id,
+                    "question": question.question,
+                    "question_type":
+                        question.question_type,
+                    "options":
+                        question.options or [],
+                    "correct_answer":
+                        question.correct_answer,
+                    "order":
+                        question.order,
+                    "dimension":
+                        question.dimension,
+                }
+                for question in questions
+            ],
+        })
 
     return result
 
 
 @router.post("/mentor/exams/{exam_id}/submit")
-async def submit_exam_answers(
+def submit_exam_answers(
     exam_id: int,
     req: SubmitExamRequest,
     db: Session = Depends(get_db),
@@ -673,123 +760,3 @@ async def submit_exam_answers(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al guardar las respuestas: {str(error)}"
         )
-
-
-# ── Tarea 4A: Apreciación de la Psicóloga ───────────────────────────────────
-
-class PsychFeedbackRequest(BaseModel):
-    psych_suggestion: str
-
-
-@router.patch("/mentor/students/{student_id}/sessions/{session_id}/psych-feedback")
-async def save_psych_feedback(
-    student_id: int,
-    session_id: int,
-    req: PsychFeedbackRequest,
-    db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
-):
-    """Permite a un mentor/psicólogo guardar una apreciación manual sobre una sesión
-    de diagnóstico de un estudiante, persistida dentro de ExamResult.data (JSON)."""
-    check_is_mentor(current_user_id, db)
-
-    exam_result = db.query(ExamResult).filter(
-        ExamResult.id == session_id,
-        ExamResult.user_id == student_id,
-    ).first()
-    if not exam_result:
-        raise HTTPException(status_code=404, detail="Sesión no encontrada para este estudiante.")
-
-    if exam_result.data is None:
-        exam_result.data = {}
-
-    exam_result.data["psych_suggestion"] = req.psych_suggestion
-    flag_modified(exam_result, "data")
-    db.commit()
-    db.refresh(exam_result)
-
-    return {
-        "message": "Apreciación guardada correctamente.",
-        "student_id": student_id,
-        "session_id": session_id,
-        "psych_suggestion": exam_result.data.get("psych_suggestion"),
-    }
-
-
-# ── Tarea 6A: Exámenes de un estudiante (vista del mentor) ─────────────────
-
-@router.get("/mentor/students/{student_id}/exams")
-async def get_exams_for_student(
-    student_id: int,
-    db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id),
-):
-    """Devuelve todos los exámenes de mentor asignados a un estudiante (directos o
-    por grupo), junto con sus respuestas si ya los completó."""
-    check_is_mentor(current_user_id, db)
-
-    student = db.query(User).filter(User.id == student_id, User.role == "student").first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Estudiante no encontrado.")
-
-    direct = db.query(MentorExamAssignment).filter(
-        MentorExamAssignment.student_id == student_id,
-    ).all()
-
-    student_groups = db.query(GroupStudent).filter(GroupStudent.student_id == student_id).all()
-    group_ids = [gs.group_id for gs in student_groups]
-    group_assignments = db.query(MentorExamAssignment).filter(
-        MentorExamAssignment.group_id.in_(group_ids),
-        MentorExamAssignment.student_id.is_(None),
-    ).all() if group_ids else []
-
-    seen_exam_ids = set()
-    result = []
-
-    for assignment in direct + group_assignments:
-        if assignment.exam_id in seen_exam_ids:
-            continue
-        seen_exam_ids.add(assignment.exam_id)
-
-        exam = db.query(MentorExam).filter(MentorExam.id == assignment.exam_id).first()
-        if not exam:
-            continue
-        agent = db.query(Agent).filter(Agent.id == exam.agent_id).first()
-        questions = db.query(MentorExamQuestion).filter(
-            MentorExamQuestion.exam_id == exam.id
-        ).order_by(MentorExamQuestion.order).all()
-
-        answers_list = []
-        completed = assignment.status == "completed"
-        if completed:
-            real_assignment = assignment
-            if assignment.student_id is None:
-                real_assignment = db.query(MentorExamAssignment).filter(
-                    MentorExamAssignment.exam_id == exam.id,
-                    MentorExamAssignment.student_id == student_id,
-                ).first() or assignment
-
-            answers = db.query(MentorExamAnswer).filter(
-                MentorExamAnswer.assignment_id == real_assignment.id
-            ).all()
-            answers_by_question = {a.question_id: a for a in answers}
-            for q in questions:
-                a = answers_by_question.get(q.id)
-                if a is None:
-                    continue
-                answers_list.append({
-                    "question": q.question,
-                    "question_type": q.question_type,
-                    "answer": a.value_text if q.question_type == "text" else a.value_numeric,
-                })
-
-        result.append({
-            "exam_id": exam.id,
-            "title": exam.title,
-            "agent_name": agent.name if agent else "Desconocido",
-            "status": assignment.status,
-            "completed": completed,
-            "answers": answers_list,
-        })
-
-    return result

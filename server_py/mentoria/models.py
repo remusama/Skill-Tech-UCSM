@@ -12,6 +12,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, relationship
 
@@ -113,6 +114,14 @@ class MentorExamQuestion(Base):
 class MentorExamAssignment(Base):
     """Asignación de un examen a un estudiante individual o a un grupo."""
     __tablename__ = "mentor_exam_assignments"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "exam_id",
+            "student_id",
+            name="uq_mentor_exam_assignment_exam_student",
+        ),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     exam_id = Column(Integer, ForeignKey("mentor_exams.id"))
@@ -132,6 +141,14 @@ class MentorExamAssignment(Base):
 class MentorExamAnswer(Base):
     """Respuesta registrada de un estudiante para una pregunta específica."""
     __tablename__ = "mentor_exam_answers"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "assignment_id",
+            "question_id",
+            name="uq_mentor_exam_answer_assignment_question",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     assignment_id = Column(Integer, ForeignKey("mentor_exam_assignments.id"))
