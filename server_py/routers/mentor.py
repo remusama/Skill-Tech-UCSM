@@ -1,7 +1,7 @@
 from typing import List, Optional
 from collections import defaultdict
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, load_only
 from pydantic import BaseModel
 
 from server_py.memoria.database import get_db, User, ExamResult, UserSkill
@@ -15,26 +15,56 @@ def _get_completed_exams_by_student(db: Session, student_ids: List[int]):
     if not student_ids:
         return completed_map
 
-    exam_results = db.query(ExamResult).filter(ExamResult.user_id.in_(student_ids)).all()
-    for er in exam_results:
-        area_norm = (er.area or "").lower().strip()
-        completed_map[er.user_id].add(area_norm)
-        if "neo" in area_norm or "personalidad" in area_norm:
-            completed_map[er.user_id].add("neo-pi-r")
-        if "cepv" in area_norm or "valores" in area_norm or "estilo" in area_norm:
-            completed_map[er.user_id].add("cepv")
-        if "ccl" in area_norm or "liderazgo" in area_norm:
-            completed_map[er.user_id].add("ccl")
-        if "expectativa" in area_norm:
-            completed_map[er.user_id].add("expectativas")
+    exam_results = (
+        db.query(
+            ExamResult.user_id,
+            ExamResult.area,
+        )
+        .filter(
+            ExamResult.user_id.in_(student_ids)
+        )
+        .all()
+    )
 
-    assignments = db.query(MentorExamAssignment).filter(
-        MentorExamAssignment.student_id.in_(student_ids),
-        MentorExamAssignment.status == "completed"
-    ).all()
-    for a in assignments:
-        if a.exam_id:
-            completed_map[a.student_id].add(str(a.exam_id))
+    for user_id, area in exam_results:
+        area_norm = (area or "").lower().strip()
+
+        completed_map[user_id].add(area_norm)
+
+        if "neo" in area_norm or "personalidad" in area_norm:
+            completed_map[user_id].add("neo-pi-r")
+
+        if "cepv" in area_norm or "valores" in area_norm or "estilo" in area_norm:
+            completed_map[user_id].add("cepv")
+
+        if "ccl" in area_norm or "liderazgo" in area_norm:
+            completed_map[user_id].add("ccl")
+
+        if "expectativa" in area_norm:
+            completed_map[user_id].add("expectativas")
+
+    assignments = (
+        db.query(
+            MentorExamAssignment.student_id,
+            MentorExamAssignment.exam_id,
+        )
+        .filter(
+            MentorExamAssignment.student_id.in_(
+                student_ids
+            ),
+            MentorExamAssignment.status == "completed"
+        )
+        .all()
+    )
+
+    for student_id, exam_id in assignments:
+        if (
+            student_id is not None
+            and exam_id is not None
+        ):
+            completed_map[
+                student_id
+            ].add(str(exam_id))
 
     return completed_map
 
@@ -45,12 +75,25 @@ def _get_completed_exams_by_student(db: Session, student_ids: List[int]):
 def check_is_mentor(user_id: int, db: Session):
     """Verifica si el usuario existe y si posee un rol con permisos de mentoría.
     """
-    user = db.query(User).filter(User.id == user_id).first()
+    user = (
+        db.query(User)
+        .options(
+            load_only(
+                User.id,
+                User.role,
+            )
+        )
+        .filter(
+            User.id == user_id
+        )
+        .first()
+    )
     if not user or user.role not in ["teacher", "admin", "mentor"]:
         raise HTTPException(
             status_code=403, 
             detail="Acceso denegado: Se requiere rol de mentor."
         )
+
     return user
 
 # ============================================================================
@@ -67,7 +110,7 @@ class CreateGroupRequest(BaseModel):
 # ============================================================================
 
 @router.get("/students")
-async def get_mentor_students(
+def get_mentor_students(
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
 ):
@@ -76,16 +119,42 @@ async def get_mentor_students(
     """
     check_is_mentor(current_user_id, db)
 
-    students = db.query(User).filter(User.role == "student").all()
+    students = (
+        db.query(
+            User.id,
+            User.username,
+            User.full_name,
+        )
+        .filter(
+            User.role == "student"
+        )
+        .all()
+    )
     student_ids = [s.id for s in students]
 
     # Precarga de todas las habilidades para los estudiantes seleccionados
-    all_skills = db.query(UserSkill).filter(UserSkill.user_id.in_(student_ids)).all()
+    all_skills = (
+        db.query(
+            UserSkill.user_id,
+            UserSkill.area,
+            UserSkill.level,
+        )
+        .filter(
+            UserSkill.user_id.in_(student_ids)
+        )
+        .all()
+    )
+
     skills_by_student = {}
-    for sk in all_skills:
-        if sk.user_id not in skills_by_student:
-            skills_by_student[sk.user_id] = []
-        skills_by_student[sk.user_id].append(sk)
+
+    for user_id, area, level in all_skills:
+        if user_id not in skills_by_student:
+            skills_by_student[user_id] = []
+
+        skills_by_student[user_id].append({
+            "area": area,
+            "level": level,
+        })
 
     # Precarga de exámenes completados por estudiante
     completed_exams_map = _get_completed_exams_by_student(db, student_ids)
@@ -93,8 +162,17 @@ async def get_mentor_students(
     result = []
     for s in students:
         s_skills = skills_by_student.get(s.id, [])
-        top_skill = max(s_skills, key=lambda x: x.level).area if s_skills else "N/A"
-        avg_level = sum(sk.level for sk in s_skills) / max(1, len(s_skills)) if s_skills else 0
+        top_skill = (
+            max(s_skills, key=lambda x: x["level"])["area"]
+            if s_skills
+            else "N/A"
+        )
+
+        avg_level = (
+            sum(sk["level"] for sk in s_skills) / len(s_skills)
+            if s_skills
+            else 0
+        )
 
         result.append({
             "id": s.id,
@@ -108,13 +186,19 @@ async def get_mentor_students(
 
 
 @router.get("/groups")
-async def get_mentor_groups(
+def get_mentor_groups(
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Todos los mentores comparten la misma base de datos de grupos de estudiantes."""
     check_is_mentor(current_user_id, db)
-    groups = db.query(MentorGroup).all()
+    groups = (
+        db.query(MentorGroup)
+        .options(
+            selectinload(MentorGroup.students)
+        )
+        .all()
+    )
 
     return [
         {
@@ -128,7 +212,7 @@ async def get_mentor_groups(
 
 
 @router.post("/groups")
-async def create_mentor_group(
+def create_mentor_group(
     req: CreateGroupRequest, 
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
@@ -158,14 +242,25 @@ async def create_mentor_group(
 
 
 @router.get("/exams")
-async def get_mentor_exams(
+def get_mentor_exams(
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Obtiene los exámenes creados por el mentor autenticado."""
     check_is_mentor(current_user_id, db)
-    exams = db.query(MentorExam).filter(MentorExam.mentor_id == current_user_id).all()
-
+    exams = (
+        db.query(
+            MentorExam.id,
+            MentorExam.title,
+            MentorExam.description,
+            MentorExam.status,
+            MentorExam.created_at,
+        )
+        .filter(
+            MentorExam.mentor_id == current_user_id
+        )
+        .all()
+    )
     return [
         {
             "id": e.id,
@@ -181,14 +276,29 @@ async def get_mentor_exams(
 # ============================================================================
 
 @router.get("/students/{student_id}/history")
-async def get_student_history(
+def get_student_history(
     student_id: int, 
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Obtiene el historial de exámenes de un estudiante por su ID."""
     check_is_mentor(current_user_id, db)
-    history = db.query(ExamResult).filter(ExamResult.user_id == student_id).order_by(ExamResult.timestamp.desc()).all()
+    history = (
+        db.query(
+            ExamResult.id,
+            ExamResult.area,
+            ExamResult.score,
+            ExamResult.timestamp,
+            ExamResult.data,
+        )
+        .filter(
+            ExamResult.user_id == student_id
+        )
+        .order_by(
+            ExamResult.timestamp.desc()
+        )
+        .all()
+    )
     return [
         {
             "id": h.id, 
@@ -201,7 +311,7 @@ async def get_student_history(
 
 
 @router.get("/stats/global")
-async def get_global_stats(
+def get_global_stats(
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
 ):
@@ -215,7 +325,7 @@ async def get_global_stats(
 
 
 @router.get("/groups/{group_id}/students")
-async def get_group_students(
+def get_group_students(
     group_id: int, 
     db: Session = Depends(get_db), 
     current_user_id: int = Depends(get_current_user_id)
@@ -223,24 +333,79 @@ async def get_group_students(
     """Devuelve los estudiantes pertenecientes a un grupo específico con sus datos de habilidad."""
     check_is_mentor(current_user_id, db)
     group = db.query(MentorGroup).filter(MentorGroup.id == group_id).first()
+
     if not group:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
 
-    student_ids = [gs.student_id for gs in group.students]
-    students = db.query(User).filter(User.id.in_(student_ids)).all()
+    student_ids = [
+        student_id
+        for (student_id,) in (
+            db.query(GroupStudent.student_id)
+            .filter(
+                GroupStudent.group_id == group_id
+            )
+            .all()
+        )
+    ]
 
-    all_skills = db.query(UserSkill).filter(UserSkill.user_id.in_(student_ids)).all()
+    students = (
+        db.query(
+            User.id,
+            User.username,
+            User.full_name,
+        )
+        .filter(
+            User.id.in_(student_ids)
+        )
+        .all()
+    )
+
+    all_skills = (
+        db.query(
+            UserSkill.user_id,
+            UserSkill.area,
+            UserSkill.level,
+        )
+        .filter(
+            UserSkill.user_id.in_(student_ids)
+        )
+        .all()
+    )
+
     skills_by_student = {}
-    for sk in all_skills:
-        skills_by_student.setdefault(sk.user_id, []).append(sk)
+
+    for user_id, area, level in all_skills:
+        skills_by_student.setdefault(
+            user_id,
+            []
+        ).append({
+            "area": area,
+            "level": level,
+        })
 
     completed_exams_map = _get_completed_exams_by_student(db, student_ids)
 
     result = []
+
     for s in students:
         s_skills = skills_by_student.get(s.id, [])
-        top_skill = max(s_skills, key=lambda x: x.level).area if s_skills else "N/A"
-        avg_level = sum(sk.level for sk in s_skills) / max(1, len(s_skills)) if s_skills else 0
+        top_skill = (
+            max(
+                s_skills,
+                key=lambda x: x["level"]
+            )["area"]
+            if s_skills
+            else "N/A"
+        )
+
+        avg_level = (
+            sum(
+                sk["level"]
+                for sk in s_skills
+            ) / len(s_skills)
+            if s_skills
+            else 0
+        )
         result.append({
             "id": s.id,
             "username": s.username,
@@ -249,6 +414,7 @@ async def get_group_students(
             "average_level": avg_level,
             "completed_exams": list(completed_exams_map.get(s.id, []))
         })
+
     return result
 
 
@@ -258,7 +424,7 @@ VALID_PSICOMETRIA_AREAS = {"liderazgo", "liderazgo_ccl", "personalidad_neo"}
 
 
 @router.get("/dashboard/psicometria")
-async def get_psicometria_dashboard(
+def get_psicometria_dashboard(
     area: str,
     group_id: int = None,
     db: Session = Depends(get_db),
@@ -276,38 +442,97 @@ async def get_psicometria_dashboard(
 
     if group_id is not None:
         group = db.query(MentorGroup).filter(MentorGroup.id == group_id).first()
+
         if not group:
             raise HTTPException(status_code=404, detail="Grupo no encontrado")
-        student_ids = [gs.student_id for gs in group.students]
-    else:
-        student_ids = [s.id for s in db.query(User).filter(User.role == "student").all()]
+        student_ids = [
+            student_id
+            for (student_id,) in (
+                db.query(GroupStudent.student_id)
+                .filter(
+                    GroupStudent.group_id == group_id
+                )
+                .all()
+            )
+        ]
 
+    else:
+        student_ids = [
+            user_id
+            for (user_id,) in (
+                db.query(User.id)
+                .filter(User.role == "student")
+                .all()
+            )
+        ]
     if not student_ids:
         return {"area": area, "total": 0, "group_avg_score": 0, "students": []}
 
-    students_by_id = {s.id: s for s in db.query(User).filter(User.id.in_(student_ids)).all()}
+    student_rows = (
+        db.query(
+            User.id,
+            User.full_name,
+            User.username,
+        )
+        .filter(
+            User.id.in_(student_ids)
+        )
+        .all()
+    )
 
-    results = db.query(ExamResult).filter(
-        ExamResult.user_id.in_(student_ids),
-        ExamResult.area == area,
-    ).order_by(ExamResult.timestamp.desc()).all()
+    students_by_id = {
+        student_id: {
+            "id": student_id,
+            "full_name": full_name,
+            "username": username,
+        }
+        for student_id, full_name, username in student_rows
+    }
+    results = (
+        db.query(
+            ExamResult.user_id,
+            ExamResult.score,
+            ExamResult.data,
+            ExamResult.timestamp,
+        )
+        .filter(
+            ExamResult.user_id.in_(student_ids),
+            ExamResult.area == area,
+        )
+        .order_by(
+            ExamResult.timestamp.desc()
+        )
+        .all()
+    )
 
     latest_by_student = {}
-    for r in results:
-        if r.user_id not in latest_by_student:
-            latest_by_student[r.user_id] = r
+
+    for user_id, score, data, timestamp in results:
+        if user_id not in latest_by_student:
+            latest_by_student[user_id] = {
+                "score": score,
+                "data": data,
+                "timestamp": timestamp,
+            }
 
     students_out = []
+
     for student_id, result in latest_by_student.items():
         student = students_by_id.get(student_id)
+
         if not student:
             continue
+
         students_out.append({
-            "student_id": student.id,
-            "student_name": student.full_name or student.username,
-            "score": result.score,
-            "data": result.data,
-            "date": result.timestamp.isoformat() if result.timestamp else None,
+            "student_id": student["id"],
+            "student_name": student["full_name"] or student["username"],
+            "score": result["score"],
+            "data": result["data"],
+            "date": (
+                result["timestamp"].isoformat()
+                if result["timestamp"]
+                else None
+            ),
         })
 
     total = len(students_out)
