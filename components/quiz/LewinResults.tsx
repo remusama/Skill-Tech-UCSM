@@ -17,24 +17,30 @@ export function LewinResults({ result, onExit }: Props) {
   const data = (["autoritario", "democratico", "laissez-faire"] as LeadershipStyle[]).map((k) => ({ name: LEWIN_STYLE_LABEL[k], key: k, value: counts[k] ?? 0 }));
 
   return (
-    <div className="fixed inset-0 z-[250] bg-[#0B0121] overflow-y-auto custom-scrollbar">
-      <div className="relative min-h-screen w-full flex flex-col pt-6 pb-12 bg-gradient-to-b from-[#012216] via-[#023320] via-40% to-[#3c5a21]">
-        <BackgroundAnimation />
-        <div className="max-w-5xl mx-auto w-full px-6 relative z-10 pb-8">
-          <h2 className="text-2xl font-black italic text-white uppercase">Resultado — Estilo Dominante: {LEWIN_STYLE_LABEL[dominant] ?? dominant}</h2>
-          {result.isTied && <p className="text-xs text-amber-300 mt-1">Empate detectado entre estilos — interpretación combinada.</p>}
-          {result.offline && <p className="text-xs text-white/40 mt-1">Resultado local (sin conexión al servidor).</p>}
-          <p className="text-sm text-white/60 mt-2">{LEWIN_STYLE_DESCRIPTION[dominant]}</p>
+    <div className="fixed inset-0 z-[250] bg-slate-50 dark:bg-[#0B0121] overflow-y-auto custom-scrollbar transition-colors">
+      <div className="relative min-h-screen w-full flex flex-col pt-6 pb-12 bg-slate-50 dark:bg-gradient-to-b dark:from-[#012216] dark:via-[#023320] dark:via-40% dark:to-[#3c5a21] transition-colors">
+        
+        {/* Se oculta la animación en modo claro */}
+        <div className="hidden dark:block absolute inset-0 pointer-events-none">
+          <BackgroundAnimation />
+        </div>
 
-          <Card className="mt-6 p-6 bg-[#063924]/60 border-[#0b4a30] backdrop-blur-xl rounded-2xl">
+        <div className="max-w-5xl mx-auto w-full px-6 relative z-10 pb-8">
+          <h2 className="text-2xl font-black italic text-slate-900 dark:text-white uppercase">Resultado — Estilo Dominante: {LEWIN_STYLE_LABEL[dominant] ?? dominant}</h2>
+          {result.isTied && <p className="text-xs text-amber-600 dark:text-amber-300 mt-1">Empate detectado entre estilos — interpretación combinada.</p>}
+          {result.offline && <p className="text-xs text-slate-500 dark:text-white/40 mt-1">Resultado local (sin conexión al servidor).</p>}
+          <p className="text-sm text-slate-700 dark:text-white/60 mt-2">{LEWIN_STYLE_DESCRIPTION[dominant]}</p>
+
+          <Card className="mt-6 p-6 bg-white dark:bg-[#063924]/60 border border-slate-200 dark:border-[#0b4a30] backdrop-blur-xl rounded-2xl shadow-sm dark:shadow-none">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data}>
-                  <XAxis dataKey="name" tick={{ fill: "#fff", fontSize: 12 }} />
-                  <YAxis domain={[0, 11]} tick={{ fill: "#fff" }} />
+                  <XAxis dataKey="name" tick={{ fill: "currentColor", fontSize: 12 }} className="text-slate-600 dark:text-white" />
+                  <YAxis domain={[0, 11]} tick={{ fill: "currentColor" }} className="text-slate-600 dark:text-white" />
                   <Tooltip 
                     formatter={(value: any) => [`${value}`, "valor "]}
-                    contentStyle={{ backgroundColor: "#063924", borderColor: "#0b4a30", borderRadius: "12px", color: "#fff" }} 
+                    contentStyle={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", borderRadius: "12px", color: "#0f172a" }} 
+                    wrapperClassName="dark:[&>div]:!bg-[#063924] dark:[&>div]:!border-[#0b4a30] dark:[&>div]:!text-white"
                   />
                   <Bar dataKey="value">
                     {data.map((e) => <Cell key={e.key} fill={COLORS[e.key]} />)}
@@ -43,15 +49,20 @@ export function LewinResults({ result, onExit }: Props) {
               </ResponsiveContainer>
             </div>
             <div className="flex gap-4 justify-center mt-4 text-xs">
-              {data.map((d) => <span key={d.key} className="text-white/70"><span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ background: COLORS[d.key] }} />{d.name}: <b className="text-white">{d.value}/11</b></span>)}
+              {data.map((d) => (
+                <span key={d.key} className="text-slate-600 dark:text-white/70">
+                  <span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ background: COLORS[d.key] }} />
+                  {d.name}: <b className="text-slate-900 dark:text-white">{d.value}/11</b>
+                </span>
+              ))}
             </div>
           </Card>
 
-          <Card className="mt-6 p-6 bg-[#063924]/60 border-[#0b4a30] backdrop-blur-xl rounded-2xl overflow-x-auto">
-            <h3 className="text-sm font-black uppercase tracking-widest text-white mb-3">Tabla interpretativa</h3>
+          <Card className="mt-6 p-6 bg-white dark:bg-[#063924]/60 border border-slate-200 dark:border-[#0b4a30] backdrop-blur-xl rounded-2xl overflow-x-auto shadow-sm dark:shadow-none">
+            <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-3">Tabla interpretativa</h3>
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="text-white/50 text-xs uppercase">
+                <tr className="text-slate-400 dark:text-white/50 text-xs uppercase border-b border-slate-200 dark:border-[#0b4a30]">
                   <th className="text-left p-2">Rasgo</th>
                   <th className="text-left p-2">Autoritario</th>
                   <th className="text-left p-2">Democrático</th>
@@ -60,10 +71,19 @@ export function LewinResults({ result, onExit }: Props) {
               </thead>
               <tbody>
                 {(Object.keys(LEWIN_TRAITS) as (keyof typeof LEWIN_TRAITS)[]).map((trait) => (
-                  <tr key={trait} className="border-t border-[#0b4a30]/60">
-                    <td className="p-2 font-bold text-white/80 capitalize">{trait}</td>
+                  <tr key={trait} className="border-t border-slate-100 dark:border-[#0b4a30]/60">
+                    <td className="p-2 font-bold text-slate-800 dark:text-white/80 capitalize">{trait}</td>
                     {(["autoritario", "democratico", "laissez-faire"] as LeadershipStyle[]).map((s) => (
-                      <td key={s} className={`p-2 text-white/60 ${s === dominant ? "bg-[#164e32]/80 text-white font-semibold" : ""}`}>{LEWIN_TRAITS[trait][s]}</td>
+                      <td 
+                        key={s} 
+                        className={`p-2 text-slate-600 dark:text-white/60 ${
+                          s === dominant 
+                            ? "bg-slate-100 font-semibold text-slate-900 dark:bg-[#164e32]/80 dark:text-white dark:font-semibold" 
+                            : ""
+                        }`}
+                      >
+                        {LEWIN_TRAITS[trait][s]}
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -76,7 +96,7 @@ export function LewinResults({ result, onExit }: Props) {
               <Button 
                 variant="outline" 
                 onClick={onExit} 
-                className="bg-[#0b3320]/80 border-[#14532d] text-white/70 hover:bg-[#114d2e] hover:text-white rounded-xl text-xs font-black uppercase tracking-widest px-6"
+                className="bg-white hover:bg-slate-200 focus:bg-slate-200 active:bg-slate-200 text-slate-800 border-slate-300 dark:bg-[#0b3320]/80 dark:border-[#14532d] dark:text-white/70 dark:hover:bg-[#114d2e] dark:hover:text-white rounded-xl text-xs font-black uppercase tracking-widest px-6 shadow-sm dark:shadow-none"
               >
                 Volver
               </Button>

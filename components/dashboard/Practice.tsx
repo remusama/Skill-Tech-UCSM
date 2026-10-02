@@ -97,19 +97,21 @@ const THEMES: Record<string, { color: string, textColor: string, badge: string, 
         via: "via-rose-500 dark:via-rose-400"
     },
     psicometria: {
-        color: "from-[#82610d] to-[#54400c] dark:from-[#d0b04d] dark:to-[#997a23]",
-        textColor: "text-[#694d07] dark:text-[#d0b04d]",
-        badge: "text-[#4a3604] bg-[#b89530]/20 border-[#b89530]/40 dark:text-[#d0b04d] dark:bg-[#d0b04d]/10 dark:border-[#d0b04d]/20",
-        tab: "bg-[#82610d] dark:bg-[#d0b04d]",
-        via: "via-[#82610d] dark:via-[#d0b04d]"
-    },
+            // Cambia la primera parte (modo claro) a verde, dejando la parte 'dark:' intacta
+            color: "from-[#15803d] to-[#166534] dark:from-[#d0b04d] dark:to-[#997a23]",
+            textColor: "text-[#15803d] dark:text-[#d0b04d]",
+            badge: "text-[#14532d] bg-[#15803d]/20 border-[#15803d]/40 dark:text-[#d0b04d] dark:bg-[#d0b04d]/10 dark:border-[#d0b04d]/20",
+            tab: "bg-[#15803d] dark:bg-[#d0b04d]",
+            via: "via-[#15803d] dark:via-[#d0b04d]"
+        },
     expectativas: {
-        color: "from-[#444444] to-[#1c2e0e] dark:from-[#c7c7c7] dark:to-[#3c5a21]",
-        textColor: "text-[#111111] dark:text-[#c7c7c7]",
-        badge: "text-[#111e07] bg-[#273d15]/20 border-[#555555]/40 dark:text-[#3c5a21] dark:bg-[#3c5a21]/10 dark:border-[#c7c7c7]/20",
-        tab: "bg-[#333333] dark:bg-[#3c5a21]",
-        via: "via-[#333333] dark:via-[#3c5a21]"
-    }
+            // Haz lo mismo aquí si usas este objeto para otra pestaña en personal
+        color: "from-[#15803d] to-[#14532d] dark:from-[#c7c7c7] dark:to-[#3c5a21]",
+        textColor: "text-[#15803d] dark:text-[#c7c7c7]",
+        badge: "text-[#14532d] bg-[#15803d]/20 border-[#15803d]/40 dark:text-[#3c5a21] dark:bg-[#3c5a21]/10 dark:border-[#c7c7c7]/20",
+        tab: "bg-[#15803d] dark:bg-[#3c5a21]",
+        via: "via-[#15803d] dark:via-[#3c5a21]"
+     }
 };
 
 export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }) {
@@ -353,8 +355,9 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
             <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">
                 <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00] drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(213,174,87,0.5)]" />
-                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-slate-900 dark:text-white uppercase leading-none">
+                    <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00] drop-shadow-sm" />
+                    {/* Cambiado a text-slate-900 sin transparencias para que resalte en claro */}
+                    <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter text-slate-900 dark:text-white uppercase leading-none opacity-100">
                         Mentoría
                     </h1>
                 </div>
@@ -450,7 +453,8 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 {activeCategory === 'mentoria' && (
                     <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00]" />
+                            {/* Modificado aquí: de dorado a verde en modo claro (#15803d y #166534), conservando los valores oscuros */}
+                            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-[#15803d] to-[#166534] dark:from-[#d0b04d] dark:to-[#baef00]" />
                             <h2 className="text-lg font-black uppercase tracking-widest text-slate-900 dark:text-white">
                                 Exámenes de Mentoría
                             </h2>
@@ -566,47 +570,43 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                                     {exam.disabled ? (exam.status || '(Ingenieros Chambeando :V)') : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
                                                                 </Badge>
                                                             </div>
-                                                            <div className="p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors">
-                                                                {currentArea?.icon && <currentArea.icon className={cn("w-5 h-5 transition-colors", theme.textColor)} />}
+
+                                                            <h3 className="text-lg font-bold mb-1 text-slate-900 dark:text-white leading-tight group-hover:opacity-80 transition-opacity line-clamp-2">
+                                                                {exam.title}
+                                                            </h3>
+                                                            <div className="text-xs text-slate-700 dark:text-gray-400 mb-6 font-medium flex items-center gap-2">
+                                                                <div className="w-1 h-1 rounded-full bg-slate-500 dark:bg-gray-500" />
+                                                                {exam.professor || "Evaluación oficial"}
                                                             </div>
                                                         </div>
 
-                                                        <h3 className="text-lg font-bold mb-1 text-slate-900 dark:text-white leading-tight group-hover:opacity-80 transition-opacity line-clamp-2">
-                                                            {exam.title}
-                                                        </h3>
-                                                        <div className="text-xs text-slate-700 dark:text-gray-400 mb-6 font-medium flex items-center gap-2">
-                                                            <div className="w-1 h-1 rounded-full bg-slate-500 dark:bg-gray-500" />
-                                                            {exam.professor || "Evaluación oficial"}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="space-y-4 mt-auto">
-                                                        <div className="bg-slate-100 dark:bg-black/30 rounded-xl p-3 grid grid-cols-2 gap-y-2 gap-x-3 text-[10px] border border-slate-200 dark:border-transparent">
-                                                            <div>
-                                                                <span className="text-slate-600 dark:text-gray-500 block mb-0.5 uppercase tracking-wider">Duración</span>
-                                                                <span className="text-slate-900 dark:text-white font-mono flex items-center gap-1 font-bold">
-                                                                    <Clock className={cn("w-3 h-3", theme.textColor)} /> {exam.duration || "10 min"}
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <span className="text-slate-600 dark:text-gray-500 block mb-0.5 uppercase tracking-wider">Items</span>
-                                                                <span className="text-slate-900 dark:text-white font-mono flex items-center gap-1 font-bold">
-                                                                    <BrainCircuit className={cn("w-3 h-3", theme.textColor)} /> {exam.questions || 10}
-                                                                </span>
-                                                            </div>
-                                                            <div className="col-span-2 pt-1 border-t border-slate-200 dark:border-white/5 mt-1">
-                                                                <div className="flex justify-between mb-1">
-                                                                    <span className="text-slate-600 dark:text-gray-500 uppercase tracking-wider">Complejidad</span>
-                                                                    <span className="text-slate-900 dark:text-white font-mono font-bold">{exam.difficulty || 50}%</span>
+                                                        <div className="space-y-4 mt-auto">
+                                                            <div className="bg-slate-100 dark:bg-black/30 rounded-xl p-3 grid grid-cols-2 gap-y-2 gap-x-3 text-[10px] border border-slate-200 dark:border-transparent">
+                                                                <div>
+                                                                    <span className="text-slate-600 dark:text-gray-500 block mb-0.5 uppercase tracking-wider">Duración</span>
+                                                                    <span className="text-slate-900 dark:text-white font-mono flex items-center gap-1 font-bold">
+                                                                        <Clock className={cn("w-3 h-3", activeTextColor)} /> {exam.duration || "10 min"}
+                                                                    </span>
                                                                 </div>
-                                                                <div className="w-full bg-slate-200 dark:bg-white/5 h-1 rounded-full overflow-hidden">
-                                                                    <div
-                                                                        className={cn("h-full bg-gradient-to-r", theme.color)}
-                                                                        style={{ width: `${exam.difficulty || 50}%` }}
-                                                                    />
+                                                                <div>
+                                                                    <span className="text-slate-600 dark:text-gray-500 block mb-0.5 uppercase tracking-wider">Items</span>
+                                                                    <span className="text-slate-900 dark:text-white font-mono flex items-center gap-1 font-bold">
+                                                                        <BrainCircuit className={cn("w-3 h-3", activeTextColor)} /> {exam.questions || 10}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="col-span-2 pt-1 border-t border-slate-200 dark:border-white/5 mt-1">
+                                                                    <div className="flex justify-between mb-1">
+                                                                        <span className="text-slate-600 dark:text-gray-500 uppercase tracking-wider">Complejidad</span>
+                                                                        <span className="text-slate-900 dark:text-white font-mono font-bold">{exam.difficulty || 50}%</span>
+                                                                    </div>
+                                                                    <div className="w-full bg-slate-200 dark:bg-white/5 h-1 rounded-full overflow-hidden">
+                                                                        <div
+                                                                            className={cn("h-full bg-gradient-to-r", activeColor)}
+                                                                            style={{ width: `${exam.difficulty || 50}%` }}
+                                                                        />
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
 
                                                         {exam.disabled ? (
                                                             <Button
@@ -625,9 +625,9 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                             </Button>
                                                         )}
                                                     </div>
-                                                </div>
-                                            </motion.div>
-                                        ))}
+                                                </motion.div>
+                                            );
+                                        })}
                                     </motion.div>
                                 )}
 

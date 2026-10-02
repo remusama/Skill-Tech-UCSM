@@ -59,30 +59,34 @@ export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => voi
   if (result) return <LewinResults result={result} onExit={onExit} />;
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col pt-6 overflow-hidden bg-gradient-to-b from-[#012216] via-[#023320] via-40% to-[#3c5a21]">
-      <BackgroundAnimation />
+    <div className="relative min-h-screen w-full flex flex-col pt-6 overflow-hidden bg-slate-50 dark:bg-gradient-to-b dark:from-[#012216] dark:via-[#023320] dark:via-40% dark:to-[#3c5a21] transition-colors">
+      {/* Se oculta la animación en modo claro para evitar que oscurezca la interfaz */}
+      <div className="hidden dark:block absolute inset-0 pointer-events-none">
+        <BackgroundAnimation />
+      </div>
+
       <div className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col relative z-10">
         <div className="mb-6">
           <h2 className="text-2xl font-black italic text-white uppercase">Test de Liderazgo — Kurt Lewin</h2>
           <p className="text-xs text-white/50 uppercase tracking-widest mt-1">33 afirmaciones — Elige la carta roja (Espera / Desacuerdo) o verde (Adelante / Acuerdo) — Determinístico</p>
           <div className="mt-4">
-            <div className="flex justify-between text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">
+            <div className="flex justify-between text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest mb-1">
               <span>{answered}/33 respondidas</span><span>{progress}%</span>
             </div>
-            <Progress value={progress} className="h-2 bg-[#022a1c] [&>div]:bg-[#22c55e]" />
+            <Progress value={progress} className="h-2 bg-slate-200 dark:bg-[#022a1c] [&>div]:bg-[#15803d] dark:[&>div]:bg-[#22c55e]" />
           </div>
         </div>
         
         <LewinCardDynamic items={kurtLewinItems} answers={answers} onAnswer={setAns} />
         
-        {error && <p className="text-xs text-red-400 text-center mb-2">{error}</p>}
+        {error && <p className="text-xs text-rose-600 dark:text-red-400 text-center mb-2">{error}</p>}
         
         <div className="pb-6 flex justify-between items-center gap-4">
           {onExit && (
             <Button 
               variant="outline" 
               onClick={onExit} 
-              className="bg-[#0b3320]/80 border-[#14532d] text-white/70 hover:bg-[#114d2e] hover:text-white rounded-xl text-xs font-black uppercase tracking-widest px-6"
+              className="bg-white dark:bg-[#0b3320]/80 border-slate-200 dark:border-[#14532d] text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-[#114d2e] dark:hover:text-white rounded-xl text-xs font-black uppercase tracking-widest px-6"
             >
               Salir
             </Button>

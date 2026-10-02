@@ -315,3 +315,15 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #0a6b17 rgba(3, 35, 24, 0.652);
 }
+/* --- FORZAR VISIBILIDAD DE TÍTULOS EN MODO CLARO --- */
+.light-theme h1,
+.light-theme h2,
+.light-theme h3 {
+  color: #01130d !important;
+  opacity: 1 !important;
+}
+
+.light-theme [class*="text-white"] {
+  /* Si algún elemento heredaba texto blanco forzado dentro del tema claro */
+  color: #01130d !important;
+}

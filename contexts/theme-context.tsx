@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 
 type Theme = "dark" | "light"
@@ -24,14 +23,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Actualizar el DOM y localStorage cuando cambia el tema
+  
   useEffect(() => {
     const root = document.documentElement
 
-    if (theme === "light") {
-      root.classList.add("light-theme")
+    if (theme === "dark") {
+      root.classList.add("dark")
     } else {
-      root.classList.remove("light-theme")
+      root.classList.remove("dark")
     }
 
     localStorage.setItem("theme", theme)
