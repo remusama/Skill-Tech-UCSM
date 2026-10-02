@@ -58,7 +58,7 @@ export async function fetchUserSkills(): Promise<UserSkill[]> {
 
 export async function fetchStudentSkills(studentId: number): Promise<UserSkill[]> {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/informante/students/${studentId}/skills`, {
+        const response = await fetch(`${API_BASE_URL}/informante/students/${studentId}/skills`, {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error("Failed to fetch student skills");

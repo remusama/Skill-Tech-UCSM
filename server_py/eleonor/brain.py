@@ -1,23 +1,42 @@
-# Definición de Lógica de Negocio y Gestión de Estado Scoped
+"""Módulo de lógica de negocio y gestión de estado scoped para Eleonor.
+
+Proporciona utilidades para el conteo de tokens, actualización de métricas emocionales
+y mapeo de modos conductuales, expresiones faciales y síntesis de voz (SSML).
+"""
+
+from typing import Any, Dict
 import tiktoken
 
 
-def count_tokens(text: str, model="gpt-4o-mini"):
-    """Cuenta el número de tokens en una cadena de texto."""
+def count_tokens(text: str, model: str ="gpt-4o-mini")-> int:
+    """Cuenta el número de tokens en una cadena de texto según el modelo especificado.
+
+    Args:
+        text: Cadena de texto a evaluar.
+        model: Identificador del modelo de lenguaje para el codificador tiktoken.
+
+    Returns:
+        Número total de tokens estimados o calculados.
+    """
     try:
         encoding = tiktoken.encoding_for_model(model)
         return len(encoding.encode(text))
     except Exception:
-        return len(text) // 4  # Fallback aproximado
+        # Fallback aproximado: ~4 caracteres por token
+        return max(1, len(text) // 4) if text else 0
 
 
-def clamp(value, min_v=0.0, max_v=1.0):
+def clamp(value: float, min_v: float = 0.0, max_v: float = 1.0) -> float:
+    """Restringe un valor numérico dentro de un rango determinado."""
     return max(min_v, min(max_v, value))
 
 
-def update_eleonor_state(analysis, session):
-    """
-    Updates the session object (DB) based on LLM analysis.
+def update_eleonor_state(analysis: Dict[str, Any], session: Any) -> None:
+    """Actualiza el estado dinámico de la sesión en base al análisis devuelto por el LLM.
+
+    Args:
+        analysis: Diccionario con los deltas o métricas extraídas de la interacción.
+        session: Instancia del modelo de sesión (persistencia en base de datos).
     """
     deltas = analysis.get("impacto_en_estado_de_eleonor", {})
     v_d = deltas.get("valence_delta", analysis.get("v", 0))
@@ -29,10 +48,14 @@ def update_eleonor_state(analysis, session):
     elif v_d < 0:
         session.valence = "negativa"
 
-    session.tension = clamp(session.tension + (t_d * 1.5))
-    session.engagement = clamp(session.engagement + (e_d * 1.5))
+    # Inicialización de respaldo en caso de valores nulos
+    current_tension = getattr(session, "tension", 0.0) or 0.0
+    current_engagement = getattr(session, "engagement", 0.0) or 0.0
 
-    # Gestión de Boundary
+    session.tension = clamp(current_tension + (t_d * 1.5))
+    session.engagement = clamp(current_engagement + (e_d * 1.5))
+
+    # Gestión del límite/frontera de seguridad (Boundary)
     if session.tension > 0.9:
         session.boundary = "hold"
     elif session.tension > 0.75:
@@ -41,12 +64,22 @@ def update_eleonor_state(analysis, session):
         session.boundary = "none"
 
 
-def map_expression(session):
-    boundary = session.boundary
+def map_expression(session: Any) -> str:
+    """Mapea el estado actual de la sesión a una expresión o emoción visible.
+
+    Args:
+        session: Objeto de sesión que contiene valence, tension, engagement y boundary.
+
+    Returns:
+        Etiqueta de la expresión visual resultante.
+    """
+    boundary = getattr(session, "boundary", "none")
     if boundary == "hold":
         return "Mentira"
 
-    v, t, e = session.valence, session.tension, session.engagement
+    v = getattr(session, "valence", "neutral")
+    t = getattr(session, "tension", 0.0)
+    e = getattr(session, "engagement", 0.0)
 
     if t > 0.8:
         return "Enojo"
@@ -68,22 +101,40 @@ def map_expression(session):
     return "Neutro"
 
 
-def get_behavioral_mode(session, analysis):
-    boundary = session.boundary
+def get_behavioral_mode(session: Any, analysis: Dict[str, Any]) -> str:
+    """Determina el modo de comportamiento de la respuesta según la tensión y el análisis.
+
+    Args:
+        session: Objeto de sesión del usuario.
+        analysis: Análisis estructurado emitido por la IA.
+
+    Returns:
+        El modo conductual aplicable para la generación de respuesta.
+    """
+    boundary = getattr(session, "boundary", "none")
 
     if boundary == "hold":
         return "Baja Interferencia"
-    if analysis.get("contradicciones_detectadas") or session.tension > 0.65:
+    if analysis.get("contradicciones_detectadas") or getattr(session, "tension", 0.0) > 0.65:
         return "Soporte Estructurado"
-    if session.valence == "negativa" or session.tension > 0.4:
+    if getattr(session, "valence", "") == "negativa" or getattr(session, "tension", 0.0) > 0.4:
         return "Empatía Técnica"
+
     return "Normal"
 
 
-def get_ssml_voice_mode(session):
-    v = session.valence
-    t = session.tension
-    e = session.engagement
+def get_ssml_voice_mode(session: Any) -> str:
+    """Determina la configuración del modo de voz SSML acorde al estado emocional.
+
+    Args:
+        session: Objeto de sesión que contiene la información de estado.
+
+    Returns:
+        Nombre de la configuración o perfil de voz SSML.
+    """
+    v = getattr(session, "valence", "neutral")
+    t = getattr(session, "tension", 0.0)
+    e = getattr(session, "engagement", 0.0)
 
     if v == "positiva" and t < 0.4:
         return "calma_acompañante"

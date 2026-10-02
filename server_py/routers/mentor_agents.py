@@ -1,15 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from pydantic import BaseModel
-from server_py.memoria.database import get_db, User
-from server_py.mentoria.models import Agent
+
 from server_py.auth.router import get_current_user_id
+from server_py.memoria.database import User, get_db
+from server_py.mentoria.models import Agent
 
 router = APIRouter(prefix="/api/mentor", tags=["Mentor Agents"])
 
-# ── Base agent templates seeded at startup ──────────────────────────────────
-BASE_AGENTS = [
+# ============================================================================
+# PLANTILLAS BASE DE AGENTES EVALUADORES
+# ============================================================================
+
+BASE_AGENTS: List[Dict[str, Any]] =[
     {
         "name": "Razonamiento",
         "description": "Evaluador de habilidades de pensamiento lógico, análisis y resolución de problemas.",
@@ -60,109 +65,143 @@ BASE_AGENTS = [
     },
 ]
 
+# ============================================================================
+# FUNCIONES AUXILIARES Y AUTORIZACIÓN
+# ============================================================================
 
 def check_is_mentor(user_id: int, db: Session) -> User:
+    """Verifica si el usuario existe y posee un rol con permisos de mentoría.
+
+    Raises:
+        HTTPException: 404 si no existe, 403 si carece de rol adecuado.
+    """
     user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(status_code=403, detail="Acceso denegado: Se requiere rol de mentor.")
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Usuario no encontrado."
+        )
+    if user.role not in ["teacher", "admin", "mentor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Acceso denegado: Se requiere rol de mentor."
+        )
     return user
 
 
-def seed_base_agents(db: Session):
-    """Seeds base agent templates if they don't exist."""
-    existing = db.query(Agent).filter(Agent.is_template.is_(True)).count()
-    if existing == 0:
-        for a in BASE_AGENTS:
-            db.add(Agent(
-                name=a["name"],
-                description=a["description"],
-                system_prompt=a["system_prompt"],
-                competencies=a["competencies"],
-                is_template=True,
-                creator_id=None
-            ))
-        db.commit()
+def seed_base_agents(db: Session)-> None:
+    """Inserta las plantillas base de agentes si aún no existen en la BD."""
+    try:
+        existing = db.query(Agent).filter(Agent.is_template.is_(True)).count()
+        if existing == 0:
+            templates = [
+                Agent(
+                    name=a["name"],
+                    description=a["description"],
+                    system_prompt=a["system_prompt"],
+                    competencies=a["competencies"],
+                    is_template=True,
+                    creator_id=None
+                )
+                for a in BASE_AGENTS
+            ]
+            db.bulk_save_objects(templates)
+            db.commit()
+    except Exception as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al inicializar agentes base: {str(error)}"
+        )
 
-
-class CreateAgentRequest(BaseModel):
-    name: str
-    description: Optional[str] = None
-    system_prompt: Optional[str] = None
-    competencies: List[str] = []
-
-
-@router.get("/agents")
-async def list_agents(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
-    """
-    Returns base template agents + agents created by any mentor (visible to all mentors).
-    """
-    check_is_mentor(current_user_id, db)
-
-    # Ensure base templates exist
-    seed_base_agents(db)
-
-    templates = db.query(Agent).filter(Agent.is_template.is_(True)).all()
-    custom = db.query(Agent).filter(Agent.is_template.is_(False)).all()
-
-    def agent_to_dict(a: Agent, is_mine: bool = False):
-        return {
-            "id": a.id,
-            "name": a.name,
-            "description": a.description,
-            "system_prompt": a.system_prompt,
-            "competencies": a.competencies or [],
-            "is_template": a.is_template,
-            "creator_id": a.creator_id,
-            "is_mine": is_mine,
-            "created_at": a.created_at.isoformat() if a.created_at else None
-        }
-
-    return {
-        "templates": [agent_to_dict(a) for a in templates],
-        "custom": [agent_to_dict(a, is_mine=(a.creator_id == current_user_id)) for a in custom]
-    }
-
-
-@router.post("/agents")
-async def create_agent(req: CreateAgentRequest, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
-    """
-    Creates a custom agent owned by the mentor.
-    """
-    check_is_mentor(current_user_id, db)
-
-    agent = Agent(
-        name=req.name,
-        description=req.description,
-        system_prompt=req.system_prompt,
-        competencies=req.competencies,
-        is_template=False,
-        creator_id=current_user_id
-    )
-    db.add(agent)
-    db.commit()
-    db.refresh(agent)
-
-    return {
-        "id": agent.id,
-        "name": agent.name,
-        "description": agent.description,
-        "competencies": agent.competencies,
-        "is_template": agent.is_template
-    }
-
-
+def format_agent_response(agent: Agent, current_user_id: int) -> Dict[str, Any]:
+    """Serializa un modelo Agent a un diccionario estructurado para la API."""
     return {
         "id": agent.id,
         "name": agent.name,
         "description": agent.description,
         "system_prompt": agent.system_prompt,
         "competencies": agent.competencies or [],
-        "is_template": agent.is_template
+        "is_template": agent.is_template,
+        "creator_id": agent.creator_id,
+        "is_mine": (agent.creator_id == current_user_id) if not agent.is_template else False,
+        "created_at": agent.created_at.isoformat() if getattr(agent, "created_at", None) else None
     }
+
+# ============================================================================
+# ESQUEMAS DE PETICIÓN (PYDANTIC)
+# ============================================================================
+
+class CreateAgentRequest(BaseModel):
+    name: str = Field(..., description="Nombre identificador del agente")
+    description: Optional[str] = Field(None, description="Propósito del agente")
+    system_prompt: Optional[str] = Field(None, description="Instrucción del sistema para el modelo IA")
+    competencies: List[str] = Field(default_factory=list, description="Lista de competencias que evalúa")
 
 
 class AgentChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., description="Mensaje o respuesta del estudiante a evaluar")
+
+# ============================================================================
+# ENDPOINTS DE LA API
+# ============================================================================
+
+@router.get("/agents")
+async def list_agents(
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Retorna la lista de plantillas base globales y los agentes personalizados 
+    creados por mentores.
+    """
+    check_is_mentor(current_user_id, db)
+    seed_base_agents(db)
+
+    templates = db.query(Agent).filter(Agent.is_template.is_(True)).all()
+    custom = db.query(Agent).filter(Agent.is_template.is_(False)).all()
+
+    return {
+        "templates": [format_agent_response(a, current_user_id) for a in templates],
+        "custom": [format_agent_response(a, current_user_id) for a in custom]
+    }
+
+
+@router.post("/agents", status_code=status.HTTP_201_CREATED)
+async def create_agent(
+    req: CreateAgentRequest, 
+    db: Session = Depends(get_db), 
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Crea un agente evaluador personalizado asignado al mentor actual."""
+    check_is_mentor(current_user_id, db)
+
+    try:
+        agent = Agent(
+            name=req.name,
+            description=req.description,
+            system_prompt=req.system_prompt,
+            competencies=req.competencies,
+            is_template=False,
+            creator_id=current_user_id
+        )
+        db.add(agent)
+        db.commit()
+        db.refresh(agent)
+
+        return {
+            "id": agent.id,
+            "name": agent.name,
+            "description": agent.description,
+            "system_prompt": agent.system_prompt,
+            "competencies": agent.competencies or [],
+            "is_template": agent.is_template
+        }
+    except Exception as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al guardar el agente: {str(error)}"
+        )
 
 
 @router.post("/agents/{agent_id}/chat")
@@ -178,7 +217,10 @@ async def chat_with_agent(
     check_is_mentor(current_user_id, db)
     agent = db.query(Agent).filter(Agent.id == agent_id).first()
     if not agent:
-        raise HTTPException(status_code=404, detail="Agente no encontrado")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Agente no encontrado."
+        )
 
     competencies_str = ", ".join(agent.competencies or [])
     system_prompt = (
@@ -199,11 +241,16 @@ async def chat_with_agent(
             "reply": reply,
             "status": "ok"
         }
-    except Exception as e:
+
+    except Exception as error:
         return {
             "agent_id": agent.id,
             "agent_name": agent.name,
-            "reply": f"🤖 [{agent.name}] (Modo Evaluador): Analizando la respuesta ante el parámetro '{req.message[:40]}...'. Competencias evaluadas: [{competencies_str}]. El estudiante demuestra capacidad de respuesta en el área objetivo.",
+            "reply": (
+                f"[{agent.name}] (Modo Evaluador): Analizando la respuesta ante el parámetro "
+                f"'{req.message[:40]}...'. Competencias evaluadas: [{competencies_str}]. "
+                "El estudiante demuestra capacidad de respuesta en el área objetivo."
+            ),
             "status": "simulated",
-            "detail": str(e)
+            "detail": str(error)
         }

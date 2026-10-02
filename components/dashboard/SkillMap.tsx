@@ -12,6 +12,8 @@ import {
   Sparkles, GraduationCap, UserCircle, Target,
   TrendingUp, Clock, Info
 } from "lucide-react"
+
+import { JourneyVisualizer } from "@/components/dashboard/JourneyVisualizer"
 import { useTheme } from "@/contexts/theme-context"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -257,32 +259,18 @@ export function SkillMap() {
                     icon={GraduationCap}
                     theme={theme}
                   />
-                  <div className="h-[400px] w-full mt-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={academicData}>
-                        <defs>
-                          <linearGradient id="colorRadar" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#0d971f" stopOpacity={0.8} />
-                            <stop offset="100%" stopColor="#baef00" stopOpacity={0.4} />
-                          </linearGradient>
-                        </defs>
-                        <PolarGrid stroke={colors.grid} />
-                        <PolarAngleAxis
-                          dataKey="subject"
-                          tick={{ fill: colors.text, fontSize: 10, fontWeight: 'bold' }}
-                        />
-                        <Radar
-                          name="Nivel"
-                          dataKey="A"
-                          stroke="#0d971f"
-                          strokeWidth={2.5}
-                          fill="url(#colorRadar)"
-                          fillOpacity={0.6}
-                        />
-                        <Tooltip content={<CustomTooltip theme={theme} />} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+
+                  <JourneyVisualizer 
+                    areaId="academico" 
+                    areaName="Académico" 
+                    theme={{
+                      color: "from-emerald-500 to-green-500",
+                      textColor: "text-emerald-400",
+                      badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                      tab: "bg-emerald-500",
+                      via: "via-emerald-500"
+                    }} 
+                  />
                 </MagicCard>
 
                 <MagicCard 
@@ -297,32 +285,18 @@ export function SkillMap() {
                     icon={UserCircle}
                     theme={theme}
                   />
-                  <div className="h-[400px] w-full mt-4">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={softSkillsData}>
-                        <defs>
-                          <linearGradient id="colorRadarSoft" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#d0b04d" stopOpacity={0.8} />
-                            <stop offset="100%" stopColor="#0d971f" stopOpacity={0.4} />
-                          </linearGradient>
-                        </defs>
-                        <PolarGrid stroke={colors.grid} />
-                        <PolarAngleAxis
-                          dataKey="subject"
-                          tick={{ fill: colors.text, fontSize: 10, fontWeight: 'bold' }}
-                        />
-                        <Radar
-                          name="Nivel"
-                          dataKey="A"
-                          stroke="#d0b04d"
-                          strokeWidth={2.5}
-                          fill="url(#colorRadarSoft)"
-                          fillOpacity={0.6}
-                        />
-                        <Tooltip content={<CustomTooltip theme={theme} />} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+
+                  <JourneyVisualizer 
+                    areaId="soft-skills" 
+                    areaName="Soft Skills" 
+                    theme={{
+                      color: "from-purple-500 to-fuchsia-500",
+                      textColor: "text-purple-400",
+                      badge: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+                      tab: "bg-purple-500",
+                      via: "via-purple-500"
+                    }} 
+                  />
                 </MagicCard>
               </div>
             )}

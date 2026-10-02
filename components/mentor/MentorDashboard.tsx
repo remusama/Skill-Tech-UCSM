@@ -1,14 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, ComponentProps } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-    Users, Search, Folder, ChevronRight, BarChart3,
+    Users, Search, Folder, ChevronRight, ChevronDown, BarChart3,
     Plus, X, ArrowLeft, CheckCircle, Archive, Copy, FileText,
-    BookOpen, Loader2, Trash2, Edit, ExternalLink
+    BookOpen, Loader2, Trash2, Edit, ExternalLink, Clock,
+    Presentation, Download, Play
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
+import { useEleonor } from "@/contexts/eleonor-context"
 import { QuantumResultsView } from "../admin/QuantumResultsView"
+import { MoyaPresentationAssistant } from "./MoyaPresentationAssistant"
 
 interface Student {
     id: number
@@ -16,6 +19,7 @@ interface Student {
     full_name: string
     top_skill: string
     average_level: number
+    completed_exams?: string[]
 }
 
 interface Group {
@@ -23,6 +27,32 @@ interface Group {
     name: string
     description: string
     student_count: number
+}
+
+interface StudentExamAnswer {
+    question: string
+    question_type: string
+    answer: string | number | null
+}
+
+interface StudentExam {
+    exam_id: number
+    title: string
+    agent_name: string
+    status: string
+    completed: boolean
+    answers: StudentExamAnswer[]
+}
+
+const matchesStudentSearch = (student: Student, term: string) => {
+    const normalizedTerm = term.trim().toLowerCase()
+
+    if (!normalizedTerm) return true
+
+    return (
+        student.full_name.toLowerCase().startsWith(normalizedTerm) ||
+        student.username.toLowerCase().startsWith(normalizedTerm)
+    )
 }
 
 interface MentorDashboardProps {
@@ -113,8 +143,7 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
     const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+        matchesStudentSearch(s, searchTerm)
     )
 
     const handleCreate = async () => {
@@ -169,9 +198,28 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
                 <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">
-                        Agregar estudiantes ({selectedIds.length} seleccionados)
-                    </p>
+                    <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs text-slate-400 uppercase tracking-wider font-bold">
+                            Agregar estudiantes ({selectedIds.length} seleccionados)
+                        </p>
+                        {filteredStudents.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const allFilteredIds = filteredStudents.map(s => s.id)
+                                    const areAllSelected = allFilteredIds.every(id => selectedIds.includes(id))
+                                    if (areAllSelected) {
+                                        setSelectedIds(prev => prev.filter(id => !allFilteredIds.includes(id)))
+                                    } else {
+                                        setSelectedIds(prev => Array.from(new Set([...prev, ...allFilteredIds])))
+                                    }
+                                }}
+                                className="text-xs text-emerald-400 hover:text-emerald-300 font-bold uppercase tracking-wider transition-colors px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg border border-emerald-500/20"
+                            >
+                                {filteredStudents.every(s => selectedIds.includes(s.id)) ? "Desmarcar todo" : "Seleccionar todo"}
+                            </button>
+                        )}
+                    </div>
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                         {filteredStudents.map(s => {
                             const sel = selectedIds.includes(s.id)
@@ -206,10 +254,62 @@ const CreateGroupModal = ({ students, onClose, onCreated }: {
 }
 
 // ── ARCHIVES VIEW ──────────────────────────────────────────────────────────────
-const ArchivesView = () => {
+const MOCK_PRESENTATIONS = [
+    {
+        id: 1,
+        title: "Sombrero seleccionador",
+        category: "Dinámica de Diagnóstico",
+        slides: 18,
+        format: "PPTX",
+        date: "08/09/2026",
+        description: "Dinámica interactiva de clasificación de talentos y perfilado cuántico guiada por Moya en tamaño de asistente."
+    },
+    {
+        id: 2,
+        title: "Liderazgo Asertivo y Dinámicas de Equipo",
+        category: "Capacitación",
+        slides: 24,
+        format: "PDF",
+        date: "04/09/2026",
+        description: "Conceptos clave de comunicación no violenta, delegación efectiva y trabajo colaborativo."
+    },
+    {
+        id: 3,
+        title: "Interpretación de Resultados NEO-PI-R",
+        category: "Guía de Diagnóstico",
+        slides: 15,
+        format: "PPTX",
+        date: "01/09/2026",
+        description: "Marco conceptual de los Cinco Grandes rasgos de personalidad para mentoría individual."
+    },
+    {
+        id: 4,
+        title: "Estrategias de Adaptación y Pensamiento Crítico",
+        category: "Sesión Práctica",
+        slides: 20,
+        format: "PDF",
+        date: "25/08/2026",
+        description: "Herramientas de análisis reflexivo y resolución de dilemas éticos y complejos."
+    }
+]
+
+const ArchivesView = ({ students = [] }: { students?: Student[] }) => {
+    const { enterPresence } = useEleonor()
+    const [activeTab, setActiveTab] = useState<"exams" | "presentations">("exams")
     const [exams, setExams] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [duplicating, setDuplicating] = useState<number | null>(null)
+    const [presentations] = useState(MOCK_PRESENTATIONS)
+    const [selectedPres, setSelectedPres] = useState<typeof MOCK_PRESENTATIONS[0] | null>(null)
+    const [currentSlide, setCurrentSlide] = useState(0)
+
+    useEffect(() => {
+        if (selectedPres) {
+            enterPresence("INTERVENTION")
+        } else {
+            enterPresence("IDLE_VISIBLE")
+        }
+    }, [selectedPres, enterPresence])
 
     const load = async () => {
         const token = localStorage.getItem("eleonor_token")
@@ -244,62 +344,335 @@ const ArchivesView = () => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
+            {/* Switch de Navegación Estilizado Skill Tech */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-2 bg-slate-900/80 border border-emerald-500/20 rounded-3xl backdrop-blur-md shadow-2xl">
+                <div className="flex items-center gap-2 p-1 bg-slate-950/80 rounded-2xl border border-emerald-500/10">
+                    <button
+                        onClick={() => setActiveTab("exams")}
+                        className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${activeTab === "exams"
+                            ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                            }`}
+                    >
+                        <FileText className="w-4 h-4" />
+                        <span>Exámenes Guardados</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${activeTab === "exams" ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
+                            }`}>
+                            {exams.length}
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab("presentations")}
+                        className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 ${activeTab === "presentations"
+                            ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_20px_rgba(186,239,0,0.35)] font-black"
+                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                            }`}
+                    >
+                        <Presentation className="w-4 h-4" />
+                        <span>Presentaciones</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${activeTab === "presentations" ? "bg-slate-950/30 text-slate-950" : "bg-slate-800 text-slate-400"
+                            }`}>
+                            {presentations.length}
+                        </span>
+                    </button>
+                </div>
+
+                <div className="text-xs text-slate-400 px-3 font-medium">
+                    {activeTab === "exams" ? "Gestión de plantillas y modelos de evaluación" : "Recursos interactivos y diapositivas de mentoría"}
+                </div>
+            </div>
+
             {loading ? (
                 <div className="flex items-center justify-center py-32">
-                    <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+                    <Loader2 className="w-10 h-10 animate-spin text-[hsl(74,100%,47%)]" />
                 </div>
-            ) : exams.length === 0 ? (
-                <div className="text-center py-32 text-slate-500">
-                    <Archive className="w-14 h-14 mx-auto mb-4 opacity-20 text-emerald-400" />
-                    <p className="text-base font-medium text-slate-400">No hay exámenes guardados.</p>
-                    <p className="text-sm mt-1 text-slate-500">Crea un examen desde el panel de exámenes.</p>
-                </div>
-            ) : (
-                <div className="grid gap-4">
-                    {exams.map((exam, i) => (
-                        <motion.div key={exam.id}
-                            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                            className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-slate-900/50 border border-emerald-500/10 rounded-2xl hover:border-emerald-500/30 transition-all"
-                        >
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                                    <FileText className="w-5 h-5" />
+            ) : activeTab === "exams" ? (
+                /* SECCIÓN DE EXÁMENES GUARDADOS */
+                exams.length === 0 ? (
+                    <div className="text-center py-32 text-slate-500 bg-slate-900/40 rounded-3xl border border-emerald-500/10 p-8">
+                        <Archive className="w-14 h-14 mx-auto mb-4 opacity-20 text-[hsl(74,100%,47%)]" />
+                        <p className="text-base font-medium text-slate-300">No hay exámenes guardados.</p>
+                        <p className="text-sm mt-1 text-slate-500">Crea un examen desde el panel de exámenes.</p>
+                    </div>
+                ) : (
+                    <div className="grid gap-4">
+                        {exams.map((exam, i) => (
+                            <motion.div key={exam.id}
+                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                                className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-slate-900/60 border border-emerald-500/10 hover:border-emerald-500/40 rounded-3xl transition-all duration-300 shadow-xl"
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[hsl(74,100%,47%)] flex-shrink-0">
+                                        <FileText className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <h3 className="font-bold text-base text-slate-100">{exam.title}</h3>
+                                            <span className={`text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full border ${statusBadge(exam.status)}`}>
+                                                {exam.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-slate-400 mt-0.5">Agente: <span className="text-emerald-300 font-medium">{exam.agent_name}</span></p>
+                                        <div className="flex items-center gap-4 mt-2 text-xs text-slate-400 font-mono">
+                                            <span>{exam.question_count} preguntas</span>
+                                            <span>•</span>
+                                            <span>{exam.assignment_count} asignaciones</span>
+                                            {exam.created_at && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span>{new Date(exam.created_at).toLocaleDateString('es-PE')}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                        {exam.competencies?.length > 0 && (
+                                            <div className="flex flex-wrap gap-1.5 mt-3">
+                                                {exam.competencies.slice(0, 3).map((c: string) => (
+                                                    <span key={c} className="text-[10px] px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full border border-emerald-500/20 font-medium">{c}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <button
+                                        onClick={() => handleDuplicate(exam.id)}
+                                        disabled={duplicating === exam.id}
+                                        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-[hsl(74,100%,47%)] hover:text-slate-950 border border-emerald-500/20 rounded-xl text-slate-200 text-xs font-bold transition-all disabled:opacity-50 shadow-md"
+                                    >
+                                        {duplicating === exam.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+                                        Duplicar Plantilla
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )
+            ) : (
+                /* SECCIÓN DE PRESENTACIONES */
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {presentations.map((pres, i) => (
+                            <motion.div
+                                key={pres.id}
+                                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                className="p-6 bg-slate-900/60 border border-emerald-500/15 hover:border-[hsl(74,100%,47%)]/40 rounded-3xl transition-all duration-300 shadow-xl flex flex-col justify-between group"
+                            >
                                 <div>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <h3 className="font-bold text-base text-slate-100">{exam.title}</h3>
-                                        <span className={`text-[10px] uppercase tracking-wider font-black px-2 py-0.5 rounded-full border ${statusBadge(exam.status)}`}>
-                                            {exam.status}
+                                    <div className="flex items-start justify-between gap-3">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[hsl(74,100%,47%)]">
+                                            {pres.category}
+                                        </span>
+                                        <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                            {pres.format}
                                         </span>
                                     </div>
-                                    <p className="text-sm text-slate-400 mt-0.5">Agente: <span className="text-emerald-300">{exam.agent_name}</span></p>
-                                    <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
-                                        <span>{exam.question_count} preguntas</span>
-                                        <span>{exam.assignment_count} asignaciones</span>
-                                        {exam.created_at && <span>{new Date(exam.created_at).toLocaleDateString('es-PE')}</span>}
+                                    <h3 className="font-bold text-lg text-white mt-1.5 group-hover:text-[hsl(74,100%,47%)] transition-colors">
+                                        {pres.title}
+                                    </h3>
+                                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                                        {pres.description}
+                                    </p>
+                                </div>
+
+                                <div className="mt-6 pt-4 border-t border-emerald-500/10 flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-3 text-slate-400 font-mono text-[11px]">
+                                        <span>{pres.slides} Diapositivas</span>
+                                        <span>•</span>
+                                        <span>{pres.date}</span>
                                     </div>
-                                    {exam.competencies?.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {exam.competencies.slice(0, 3).map((c: string) => (
-                                                <span key={c} className="text-[10px] px-2 py-0.5 bg-teal-500/10 text-teal-400 rounded-full border border-teal-500/20">{c}</span>
-                                            ))}
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => { setSelectedPres(pres); setCurrentSlide(0); }}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 text-xs font-black transition-all shadow-[0_0_20px_rgba(186,239,0,0.3)]">
+                                            <Play className="w-3.5 h-3.5 fill-current" />
+                                            Iniciar presentación
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Moya Asistente Interactivo de Presentación */}
+            <AnimatePresence>
+                {selectedPres && (
+                    <MoyaPresentationAssistant
+                        students={students}
+                        onClose={() => setSelectedPres(null)}
+                        presentationTitle={selectedPres.title}
+                    />
+                )}
+            </AnimatePresence>
+        </div>
+    )
+}
+
+
+// Top-level SearchBar to avoid unmounting on keystrokes
+const SearchBar = ({ searchTerm, setSearchTerm, placeholder = "Buscar..." }: {
+    searchTerm: string
+    setSearchTerm: (term: string) => void
+    placeholder?: string
+}) => (
+    <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(150,10%,80%)]/50 pointer-events-none" />
+        <input
+            type="text"
+            placeholder={placeholder}
+            className="bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 rounded-2xl py-3 pl-12 pr-6 text-white placeholder:text-[hsl(150,10%,80%)]/40 focus:outline-none focus:ring-2 focus:ring-[hsl(74,100%,47%)]/30 w-full md:w-64 transition-all shadow-xl"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+        />
+    </div>
+)
+
+const DASHBOARD_EXAMS = [
+    {
+        id: "neo-pi-r",
+        title: "NEO-PI-R (Personalidad)",
+        category: "Examen Psicométrico",
+        description: "Evaluación psicométrica de rasgo de personalidad NEO (Cinco Grandes)."
+    },
+    {
+        id: "cepv",
+        title: "CEPV (Estilos de Vida y Valores)",
+        category: "Examen Psicométrico",
+        description: "Evaluación de estilos de vida, valores y preferencias formativas."
+    },
+    {
+        id: "ccl",
+        title: "CCL (Competencias de Liderazgo)",
+        category: "Examen Psicométrico",
+        description: "Evaluación psicométrica de competencias clave de liderazgo."
+    },
+    {
+        id: "expectativas",
+        title: "Expectativas del Estudiante",
+        category: "Test de Diagnóstico",
+        description: "Encuesta sobre expectativas de desarrollo académico y personal."
+    }
+]
+
+// Tarea 6B — Vista de perfil de estudiante con pestañas: Perfil Cognitivo / Exámenes
+const StudentProfileView = ({
+    studentId,
+    quantumProps,
+}: {
+    studentId: number
+    quantumProps: ComponentProps<typeof QuantumResultsView>
+}) => {
+    const [activeTab, setActiveTab] = useState<'cognitive' | 'exams'>('cognitive')
+    const [exams, setExams] = useState<StudentExam[]>([])
+    const [examsLoading, setExamsLoading] = useState(false)
+    const [examsError, setExamsError] = useState<string | null>(null)
+    const [expandedExamId, setExpandedExamId] = useState<number | null>(null)
+
+    useEffect(() => {
+        if (activeTab !== 'exams') return
+        const fetchExams = async () => {
+            setExamsLoading(true)
+            setExamsError(null)
+            const token = localStorage.getItem("eleonor_token")
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/exams`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}))
+                    throw new Error(err.detail || "No se pudieron cargar los exámenes.")
+                }
+                setExams(await res.json())
+            } catch (e: any) {
+                setExamsError(e.message || "Error al cargar los exámenes.")
+            } finally {
+                setExamsLoading(false)
+            }
+        }
+        fetchExams()
+        // Se vuelve a pedir cada vez que cambia el estudiante (studentId), no en cada render
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, studentId])
+
+    return (
+        <div className="space-y-6">
+            {/* Pestañas */}
+            <div className="flex gap-2 border-b border-white/5">
+                <button
+                    onClick={() => setActiveTab('cognitive')}
+                    className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'cognitive' ? 'border-[hsl(74,100%,47%)] text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                >
+                    📊 Perfil Cognitivo
+                </button>
+                <button
+                    onClick={() => setActiveTab('exams')}
+                    className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'exams' ? 'border-[hsl(74,100%,47%)] text-white' : 'border-transparent text-gray-500 hover:text-gray-300'}`}
+                >
+                    📝 Exámenes
+                </button>
+            </div>
+
+            {activeTab === 'cognitive' && <QuantumResultsView {...quantumProps} />}
+
+            {activeTab === 'exams' && (
+                <div className="space-y-3">
+                    {examsLoading ? (
+                        <div className="flex items-center justify-center py-32">
+                            <Loader2 className="w-8 h-8 text-gray-500 animate-spin" />
+                        </div>
+                    ) : examsError ? (
+                        <div className="p-8 border border-red-500/20 bg-red-500/5 rounded-3xl text-center">
+                            <p className="text-sm text-red-400 font-bold">{examsError}</p>
+                        </div>
+                    ) : exams.length === 0 ? (
+                        <div className="p-10 border border-dashed border-white/10 rounded-3xl text-center">
+                            <p className="text-xs text-gray-600 font-black uppercase tracking-widest italic">Este estudiante no tiene exámenes asignados.</p>
+                        </div>
+                    ) : (
+                        exams.map(exam => {
+                            const isExpanded = expandedExamId === exam.exam_id
+                            return (
+                                <div key={exam.exam_id} className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
+                                    <button
+                                        onClick={() => setExpandedExamId(isExpanded ? null : exam.exam_id)}
+                                        className="w-full flex items-center justify-between p-5 hover:bg-white/[0.03] transition-colors"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <FileText className="w-4 h-4 text-gray-500" />
+                                            <div className="text-left">
+                                                <div className="text-sm font-bold text-white">{exam.title}</div>
+                                                <div className="text-[10px] text-gray-500 uppercase tracking-widest">{exam.agent_name}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${exam.completed ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-500/10 text-gray-500'}`}>
+                                                {exam.completed ? 'Completado' : exam.status}
+                                            </span>
+                                            {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
+                                        </div>
+                                    </button>
+                                    {isExpanded && (
+                                        <div className="border-t border-white/5 p-5 space-y-4">
+                                            {exam.answers.length === 0 ? (
+                                                <p className="text-xs text-gray-600 italic">Este estudiante aún no ha respondido este examen.</p>
+                                            ) : (
+                                                exam.answers.map((a, i) => (
+                                                    <div key={i} className="p-4 bg-black/20 rounded-2xl border border-white/5">
+                                                        <div className="text-xs font-bold text-white mb-2">{a.question}</div>
+                                                        <div className="text-xs text-gray-400">{a.answer ?? "—"}</div>
+                                                    </div>
+                                                ))
+                                            )}
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                                <button
-                                    onClick={() => handleDuplicate(exam.id)}
-                                    disabled={duplicating === exam.id}
-                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl text-emerald-300 text-sm font-medium transition-all disabled:opacity-50"
-                                >
-                                    {duplicating === exam.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
-                                    Duplicar
-                                </button>
-                            </div>
-                        </motion.div>
-                    ))}
+                            )
+                        })
+                    )}
                 </div>
             )}
         </div>
@@ -319,6 +692,27 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     const [groupStudents, setGroupStudents] = useState<Student[]>([])
     const [groupStudentsLoading, setGroupStudentsLoading] = useState(false)
     const [showCreateGroup, setShowCreateGroup] = useState(false)
+    const [selectedExamModal, setSelectedExamModal] = useState<typeof DASHBOARD_EXAMS[0] | null>(null)
+
+    // Group & Exam Status Filter state inside exam modal
+    const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>("all")
+    const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "pending">("all")
+    const [activeExamForProfile, setActiveExamForProfile] = useState<typeof DASHBOARD_EXAMS[0] | null>(null)
+    const [groupStudentsMap, setGroupStudentsMap] = useState<Record<number, Student[]>>({})
+    const [activeStudentList, setActiveStudentList] = useState<Student[]>([])
+
+    const isStudentExamCompleted = (studentId: number, examId: string) => {
+        const student = students.find(s => s.id === studentId) || activeStudentList.find(s => s.id === studentId)
+        if (!student) return false
+        if (student.completed_exams && Array.isArray(student.completed_exams)) {
+            const targetId = examId.toLowerCase()
+            return student.completed_exams.some(ce => {
+                const norm = ce.toLowerCase()
+                return norm === targetId || norm.includes(targetId) || targetId.includes(norm)
+            })
+        }
+        return false
+    }
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -342,11 +736,17 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
     const fetchQuantumData = async (studentId: number) => {
         setQuantumData(null)
         setQuantumLoading(true)
-        const token = localStorage.getItem("eleonor_token")
+        const token = localStorage.getItem("eleonor_token") || localStorage.getItem("token") || sessionStorage.getItem("eleonor_token") || sessionStorage.getItem("token")
         try {
-            const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/quantum`, {
+            let res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId}/quantum`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
+            if (res.status === 404) {
+                // Fallback attempt for production backend routing without /api prefix
+                res = await fetch(`${API_BASE_URL}/mentor/students/${studentId}/quantum`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+            }
             if (res.ok) setQuantumData(await res.json())
             else console.error("Quantum API error:", res.status, await res.text())
         } catch (err) {
@@ -356,10 +756,95 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         }
     }
 
-    const handleStudentClick = (student: Student) => {
+    const fetchGroupStudentsIfNeeded = async (groupId: number) => {
+        if (groupStudentsMap[groupId]) return groupStudentsMap[groupId]
+        const token = localStorage.getItem("eleonor_token")
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/mentor/groups/${groupId}/students`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setGroupStudentsMap(prev => ({ ...prev, [groupId]: data }))
+                return data
+            }
+        } catch (err) {
+            console.error("Error fetching group students:", err)
+        }
+        return []
+    }
+
+    const handleGroupFilterChange = async (val: string) => {
+        setSelectedGroupFilter(val)
+        if (val !== "all") {
+            const gId = parseInt(val, 10)
+            if (!isNaN(gId)) {
+                await fetchGroupStudentsIfNeeded(gId)
+            }
+        }
+    }
+
+    const getBaseModalStudents = () => {
+        if (selectedGroupFilter === "all") return students
+        const gId = parseInt(selectedGroupFilter, 10)
+        return groupStudentsMap[gId] || []
+    }
+
+    const filteredStudents = students.filter(s =>
+        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const filteredGroupStudents = groupStudents.filter(s =>
+        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        s.username.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const filteredExamStudents = getBaseModalStudents().filter(s => {
+        const matchesSearch = s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.username.toLowerCase().includes(searchTerm.toLowerCase())
+        if (!matchesSearch) return false
+
+        if (!selectedExamModal) return true
+        const isCompleted = isStudentExamCompleted(s.id, selectedExamModal.id)
+
+        if (statusFilter === "completed") return isCompleted
+        if (statusFilter === "pending") return !isCompleted
+        return true
+    })
+
+    const handleStudentClick = (student: Student, currentList?: Student[], examCtx?: typeof DASHBOARD_EXAMS[0] | null) => {
+        const listToUse = currentList && currentList.length > 0 ? currentList : (selectedExamModal ? filteredExamStudents : filteredStudents)
+        setActiveStudentList(listToUse)
+        setActiveExamForProfile(examCtx || selectedExamModal || null)
+        setSelectedExamModal(null)
         setViewingStudentId(student.id)
         setViewingStudentName(student.full_name)
         fetchQuantumData(student.id)
+    }
+
+    // Student Navigation controls
+    const currentIndex = activeStudentList.findIndex(s => s.id === viewingStudentId)
+    const totalStudents = activeStudentList.length
+    const hasPrevStudent = currentIndex > 0
+    const hasNextStudent = currentIndex >= 0 && currentIndex < totalStudents - 1
+
+    const handleNextStudent = () => {
+        if (hasNextStudent) {
+            const nextStudent = activeStudentList[currentIndex + 1]
+            setViewingStudentId(nextStudent.id)
+            setViewingStudentName(nextStudent.full_name)
+            fetchQuantumData(nextStudent.id)
+        }
+    }
+
+    const handlePrevStudent = () => {
+        if (hasPrevStudent) {
+            const prevStudent = activeStudentList[currentIndex - 1]
+            setViewingStudentId(prevStudent.id)
+            setViewingStudentName(prevStudent.full_name)
+            fetchQuantumData(prevStudent.id)
+        }
     }
 
     // Load group students when a group is selected
@@ -384,24 +869,7 @@ export const MentorDashboard = ({ view = "dashboard" }: MentorDashboardProps) =>
         }
     }
 
-    const filteredStudents = students.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
 
-    const filteredGroupStudents = groupStudents.filter(s =>
-        s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.username.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-
-const SearchBar = () => (
-        <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(150,10%,80%)]/50" />
-            <input type="text" placeholder="Buscar estudiante..."
-                className="bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 rounded-2xl py-3 pl-12 pr-6 text-white placeholder:text-[hsl(150,10%,80%)]/40 focus:outline-none focus:ring-2 focus:ring-[hsl(74,100%,47%)]/30 w-full md:w-64 transition-all shadow-xl"
-                value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-        </div>
-    )
 
     if (loading) {
         return (
@@ -414,19 +882,26 @@ const SearchBar = () => (
     if (viewingStudentId) {
         return (
             <div className="space-y-6">
-                <button onClick={() => { setViewingStudentId(null); setQuantumData(null) }}
-                    className="flex items-center gap-2 text-[hsl(150,10%,80%)] hover:text-[hsl(74,100%,47%)] transition-colors text-sm font-medium">
-                    <ArrowLeft className="w-4 h-4" /> Volver
-                </button>
                 {quantumLoading ? (
                     <div className="flex items-center justify-center py-32">
                         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(74,100%,47%)]" />
                     </div>
                 ) : (
-                    <QuantumResultsView
-                        studentName={viewingStudentName}
-                        onBack={() => { setViewingStudentId(null); setQuantumData(null) }}
-                        data={quantumData}
+                    <StudentProfileView
+                        studentId={viewingStudentId}
+                        quantumProps={{
+                            studentName: viewingStudentName,
+                            studentId: viewingStudentId,
+                            onBack: () => { setViewingStudentId(null); setQuantumData(null); setActiveExamForProfile(null) },
+                            data: quantumData,
+                            onNextStudent: handleNextStudent,
+                            onPrevStudent: handlePrevStudent,
+                            hasNextStudent: hasNextStudent,
+                            hasPrevStudent: hasPrevStudent,
+                            currentIndex: currentIndex >= 0 ? currentIndex : 0,
+                            totalStudents: totalStudents,
+                            activeExam: activeExamForProfile,
+                        }}
                     />
                 )}
             </div>
@@ -442,7 +917,7 @@ const SearchBar = () => (
                     <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Archivos</h1>
                     <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Exámenes guardados. Duplica cualquier examen para reutilizarlo como plantilla.</p>
                 </div>
-                <ArchivesView />
+                <ArchivesView students={students} />
             </div>
         )
     }
@@ -451,13 +926,157 @@ const SearchBar = () => (
     if (view === "dashboard") {
         return (
             <div className="space-y-12 max-w-7xl mx-auto pb-20">
+                {/* Modal para ver respuestas del examen seleccionado */}
+                <AnimatePresence>
+                    {selectedExamModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+                                className="w-full max-w-3xl bg-slate-900 border border-emerald-500/30 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl max-h-[85vh] flex flex-col"
+                            >
+                                <div className="flex items-start justify-between border-b border-emerald-500/20 pb-4">
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[hsl(74,100%,47%)]">
+                                            {selectedExamModal.category}
+                                        </span>
+                                        <h2 className="text-2xl font-black text-white mt-1">{selectedExamModal.title}</h2>
+                                        <p className="text-xs text-slate-400 mt-1">{selectedExamModal.description}</p>
+                                    </div>
+                                    <button onClick={() => setSelectedExamModal(null)} className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                    <p className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                        <Users className="w-3.5 h-3.5 text-emerald-400" />
+                                        Estudiantes ({filteredExamStudents.length})
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2.5">
+                                        {/* Selector / Switch de Grupo */}
+                                        <div className="relative flex items-center gap-1.5 bg-slate-950/90 border border-emerald-500/30 rounded-2xl px-3 py-1.5 shadow-lg group hover:border-emerald-500/50 transition-colors">
+                                            <Folder className="w-3.5 h-3.5 text-[hsl(74,100%,47%)]" />
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">GRUPO:</span>
+                                            <select
+                                                value={selectedGroupFilter}
+                                                onChange={(e) => handleGroupFilterChange(e.target.value)}
+                                                className="bg-transparent text-xs font-bold text-emerald-300 focus:outline-none cursor-pointer pr-1"
+                                            >
+                                                <option value="all" className="bg-slate-900 text-slate-100">Todos los grupos</option>
+                                                {groups.map(g => (
+                                                    <option key={g.id} value={g.id.toString()} className="bg-slate-900 text-slate-100">{g.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Switch Segmentado de Estado (Skill Tech Glowing Switch) */}
+                                        <div className="flex items-center gap-1 bg-slate-950/90 p-1 rounded-2xl border border-emerald-500/30 shadow-lg">
+                                            {[
+                                                { id: "all", label: "Todos", icon: Users, color: "text-slate-200" },
+                                                { id: "completed", label: "Realizados", icon: CheckCircle, color: "text-emerald-400" },
+                                                { id: "pending", label: "Pendientes", icon: Clock, color: "text-amber-400" },
+                                            ].map((tab) => {
+                                                const isActive = statusFilter === tab.id
+                                                const Icon = tab.icon
+                                                return (
+                                                    <button
+                                                        key={tab.id}
+                                                        type="button"
+                                                        onClick={() => setStatusFilter(tab.id as any)}
+                                                        className={`relative px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all duration-300 flex items-center gap-1.5 ${isActive
+                                                                ? "text-slate-950 shadow-[0_0_15px_rgba(186,239,0,0.35)] bg-[hsl(74,100%,47%)] font-black"
+                                                                : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+                                                            }`}
+                                                    >
+                                                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-slate-950 font-bold" : tab.color}`} />
+                                                        <span>{tab.label}</span>
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} placeholder="Buscar..." />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2.5 overflow-y-auto pr-1 flex-grow max-h-[450px]">
+                                    {filteredExamStudents.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-16 px-6 bg-slate-950/60 rounded-3xl border border-dashed border-emerald-500/20 text-center space-y-4 my-2">
+                                            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                                                <Clock className="w-7 h-7" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h3 className="text-base font-black text-white uppercase tracking-wider">Aún no completó los datos</h3>
+                                                <p className="text-xs text-slate-400 max-w-md leading-relaxed">
+                                                    {statusFilter === "completed"
+                                                        ? "No se encontraron estudiantes que hayan realizado esta evaluación de diagnóstico."
+                                                        : statusFilter === "pending"
+                                                            ? "No existen estudiantes pendientes bajo este criterio de búsqueda."
+                                                            : "No se encontraron estudiantes que coincidan con la búsqueda."}
+                                                </p>
+                                            </div>
+                                            <p className="text-[11px] text-emerald-400/80 font-medium">
+                                                💡 Puedes usar los switches y filtros de arriba para cambiar de grupo o ver el estado global.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredExamStudents.map((student) => {
+                                            const isCompleted = selectedExamModal ? isStudentExamCompleted(student.id, selectedExamModal.id) : true
+                                            return (
+                                                <div
+                                                    key={student.id}
+                                                    onClick={() => handleStudentClick(student, filteredExamStudents, selectedExamModal)}
+                                                    className="flex items-center justify-between p-3.5 bg-slate-950/60 hover:bg-slate-800/80 border border-emerald-500/10 hover:border-emerald-500/40 rounded-2xl cursor-pointer transition-all duration-300 group"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center border border-emerald-500/30 text-xs">
+                                                            {student.full_name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-xs text-slate-100 group-hover:text-emerald-400 transition-colors">
+                                                                {student.full_name}
+                                                            </h4>
+                                                            <p className="text-[10px] text-slate-400">@{student.username}</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3">
+                                                        {isCompleted ? (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-medium border border-emerald-500/20">
+                                                                <CheckCircle className="w-3 h-3" />
+                                                                Realizado
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-medium border border-amber-500/20">
+                                                                <Clock className="w-3 h-3" />
+                                                                Pendiente
+                                                            </span>
+                                                        )}
+                                                        <button className="flex items-center gap-1 text-xs text-slate-300 group-hover:text-emerald-400 font-bold px-3 py-1.5 rounded-xl bg-slate-800 group-hover:bg-emerald-500/20 transition-all">
+                                                            Ver Respuestas / Perfil
+                                                            <ChevronRight className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })
+                                    )}
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <span className="text-[10px] font-black uppercase tracking-[0.4em]" style={{ color: '#baef00' }}>Panel del Mentor</span>
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Dashboard</h1>
-                        <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Vista general del estado de tus estudiantes y grupos.</p>
+                        <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Vista general de tus exámenes de diagnóstico y estado de estudiantes.</p>
                     </div>
-                    <SearchBar />
+                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -480,20 +1099,51 @@ const SearchBar = () => (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {groups.map(g => (
                                 <FolderCard key={g.id} title={g.name} subtitle="Grupo de Mentoría"
-                                    count={g.student_count} isGroup isSelected={false} onClick={() => {}} />
+                                    count={g.student_count} isGroup isSelected={false} onClick={() => { }} />
                             ))}
                         </div>
                     </div>
                 )}
 
+                {/* Sección de Exámenes en lugar de Estudiantes */}
                 <div>
                     <h2 className="text-xl font-bold tracking-tight mb-4 flex items-center justify-between text-white">
-                        <span>Estudiantes</span>
-                        <span className="text-sm font-medium text-[hsl(150,10%,80%)] bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 px-3 py-1 rounded-full">{filteredStudents.length} resultados</span>
+                        <span>Exámenes</span>
+                        <span className="text-sm font-medium text-[hsl(150,10%,80%)] bg-[hsl(161,67%,9%)]/60 border border-[hsl(153,30%,75%)]/20 px-3 py-1 rounded-full">
+                            4 Evaluaciones Diagnósticas
+                        </span>
                     </h2>
-                    <div className="grid gap-3">
-                        {filteredStudents.slice(0, 8).map((s, i) => (
-                            <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s)} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {DASHBOARD_EXAMS.map(exam => (
+                            <motion.div
+                                key={exam.id}
+                                whileHover={{ scale: 1.01, translateY: -2 }}
+                                whileTap={{ scale: 0.99 }}
+                                onClick={() => setSelectedExamModal(exam)}
+                                className="cursor-pointer p-6 rounded-3xl bg-[hsl(161,40%,15%)]/60 border border-[hsl(153,30%,75%)]/20 hover:border-[hsl(74,100%,47%)]/50 transition-all duration-300 shadow-xl flex flex-col justify-between"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <span className="text-[10px] uppercase tracking-[0.2em] font-black text-[hsl(74,100%,47%)]">
+                                            {exam.category}
+                                        </span>
+                                        <h3 className="font-bold text-xl text-white mt-1">{exam.title}</h3>
+                                        <p className="text-xs text-[hsl(150,10%,80%)]/70 mt-1">{exam.description}</p>
+                                    </div>
+                                    <div className="p-3 bg-[hsl(74,100%,47%)]/10 rounded-2xl text-[hsl(74,100%,47%)] border border-[hsl(74,100%,47%)]/20 shrink-0">
+                                        <FileText className="w-6 h-6" />
+                                    </div>
+                                </div>
+                                <div className="mt-6 flex items-center justify-between text-xs pt-4 border-t border-[hsl(153,30%,75%)]/10">
+                                    <span className="text-[hsl(150,10%,80%)] font-medium flex items-center gap-1.5">
+                                        <Users className="w-3.5 h-3.5 text-[hsl(74,100%,47%)]" />
+                                        Ver respuestas de estudiantes
+                                    </span>
+                                    <span className="text-[hsl(74,100%,47%)] font-bold flex items-center gap-1">
+                                        Acceder <ChevronRight className="w-4 h-4" />
+                                    </span>
+                                </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
@@ -511,7 +1161,7 @@ const SearchBar = () => (
                         <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/40 tracking-tighter mt-1">Mis Estudiantes</h1>
                         <p className="text-[hsl(150,10%,80%)] mt-2 font-medium">Click en un estudiante para ver su análisis de habilidades.</p>
                     </div>
-                    <SearchBar />
+                    <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 </div>
                 <div className="grid gap-3">
                     {filteredStudents.length === 0 ? (
@@ -521,13 +1171,15 @@ const SearchBar = () => (
                         </div>
                     ) : (
                         filteredStudents.map((s, i) => (
-                            <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s)} />
+                            <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s, filteredStudents)} />
                         ))
                     )}
                 </div>
             </div>
         )
     }
+
+
 
     // ── GRUPOS ─────────────────────────────────────────────────────────────────
     return (
@@ -586,7 +1238,7 @@ const SearchBar = () => (
                         <div className="space-y-4 pt-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-bold text-white">Estudiantes en el grupo</h2>
-                                <SearchBar />
+                                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                             </div>
                             {groupStudentsLoading ? (
                                 <div className="flex items-center justify-center py-12">
@@ -597,7 +1249,7 @@ const SearchBar = () => (
                             ) : (
                                 <div className="grid gap-3">
                                     {filteredGroupStudents.map((s, i) => (
-                                        <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s)} />
+                                        <StudentRow key={s.id} student={s} idx={i} onClick={() => handleStudentClick(s, filteredGroupStudents)} />
                                     ))}
                                 </div>
                             )}

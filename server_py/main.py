@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Add project root to sys.path
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(ROOT_DIR)
 
@@ -10,11 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 from server_py.config import settings  # noqa: E402
 
-# Modular imports
 from server_py.chat import router as chat_router  # noqa: E402
 from server_py.chat import ws_router as ws_chat_router  # noqa: E402
 from server_py.diagnostico import router as diagnosis_router  # noqa: E402
-from server_py.diagnostico import journey_router, leadership_router, neo_router, cepv_router  # noqa: E402
+from server_py.diagnostico import journey_router, leadership_router, neo_router, cepv_router, ccl_router  # noqa: E402
 from server_py.eleonor import api_client as gemini_router  # noqa: E402
 from server_py.auth import router as auth_router  # noqa: E402
 from server_py.user import router as user_router  # noqa: E402
@@ -24,38 +22,37 @@ from server_py.routers import mentor  # noqa: E402
 from server_py.routers import mentor_agents  # noqa: E402
 from server_py.routers import mentor_exams  # noqa: E402
 from server_py.routers import attendance  # noqa: E402
+from server_py.routers import ponencias  # noqa: E402
 from server_py.memoria.database import init_db  # noqa: E402
 from server_py.scripts.auto_migrate import run_auto_migrations  # noqa: E402
 from server_py.scripts.auto_seed_students import auto_seed_students  # noqa: E402
 
-# Initialize Database (Create tables if they do not exist)
 init_db()
-
-# Run automatic migrations (safely adds missing columns without dropping data)
 run_auto_migrations()
-
-# Auto-seed student accounts (registers 48 students automatically if not present)
 auto_seed_students()
 
 app = FastAPI(title="Eleonor Backend Modular")
 
-# CORS configuration restricted to ALLOWED_ORIGINS and FRONTEND_URL
-raw_origins = settings.ALLOWED_ORIGINS
-if settings.FRONTEND_URL and settings.FRONTEND_URL not in raw_origins:
-    raw_origins = f"{raw_origins},{settings.FRONTEND_URL}"
+default_dev_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "https://skill-tech-ucsm.netlify.app",
+]
+
+raw_origins = settings.ALLOWED_ORIGINS.split(",") if settings.ALLOWED_ORIGINS else []
+if settings.FRONTEND_URL:
+    raw_origins.append(settings.FRONTEND_URL)
 
 allowed_origins = []
-for origin in raw_origins.split(","):
+for origin in default_dev_origins + raw_origins:
     o = origin.strip()
     if o:
         clean_origin = o.rstrip("/")
         if clean_origin not in allowed_origins:
             allowed_origins.append(clean_origin)
 
-if "https://skill-tech-ucsm.netlify.app" not in allowed_origins:
-    allowed_origins.append("https://skill-tech-ucsm.netlify.app")
-
-# VALIDACION PARA PRODUCCION - Activarlo por seguridad para evitar solicitudes X cuando tengan acceso a la web
 if "*" in allowed_origins:
     raise RuntimeError(
         "ALLOWED_ORIGINS no puede ser '*' (o incluir '*') porque el backend usa "
@@ -66,13 +63,12 @@ if "*" in allowed_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.netlify\.app",
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2[0-9]|3[01])\.\d+\.\d+)(:\d+)?|https://.*\.netlify\.app|https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include Routers
 app.include_router(chat_router.router)
 app.include_router(ws_chat_router.router)
 app.include_router(diagnosis_router.router)
@@ -80,6 +76,7 @@ app.include_router(journey_router.router)
 app.include_router(leadership_router.router)
 app.include_router(neo_router.router)
 app.include_router(cepv_router.router)
+app.include_router(ccl_router.router)
 app.include_router(gemini_router.router)
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
@@ -91,9 +88,9 @@ app.include_router(mentor.router)
 app.include_router(mentor_agents.router)
 app.include_router(mentor_exams.router)
 app.include_router(attendance.router)
+app.include_router(ponencias.router)
 
 
-# Simple Health check
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "2.0.0-modular"}

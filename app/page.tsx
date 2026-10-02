@@ -18,7 +18,10 @@ const MentorDashboard = dynamic(() => import("@/components/mentor/MentorDashboar
 const AgentCreator = dynamic(() => import("@/components/mentor/AgentCreator").then(mod => mod.AgentCreator), { ssr: false })
 const ExamCreator = dynamic(() => import("@/components/mentor/ExamCreator").then(mod => mod.ExamCreator), { ssr: false })
 const MentorAttendance = dynamic(() => import("@/components/mentor/MentorAttendance").then(mod => mod.MentorAttendance), { ssr: false })
+const PsicometriaDashboard = dynamic(() => import("@/components/mentor/PsicometriaDashboard").then(mod => mod.PsicometriaDashboard), { ssr: false })
 const AvatarDisplay = dynamic(() => import("@/components/avatar/AvatarDisplay"), { ssr: false })
+const PonenciasPanel = dynamic(() => import("@/components/quiz/PonenciasPanel").then(mod => mod.PonenciasPanel), { ssr: false })
+const PonenciasManagerPanel = dynamic(() => import("@/components/mentor/PonenciasManagerPanel").then(mod => mod.PonenciasManagerPanel), { ssr: false })
 
 import { useEleonor } from "@/contexts/eleonor-context"
 import { API_BASE_URL } from "@/lib/config"
@@ -188,11 +191,13 @@ export default function Home() {
         <>
             {(currentPage === "mentor-dashboard" || currentPage === "skillmap") && <MentorDashboard view="dashboard" />}
             {currentPage === "mentor-attendance" && <MentorAttendance />}
+            {currentPage === "mentor-psicometria" && <PsicometriaDashboard />}
             {currentPage === "mentor-students" && <MentorDashboard view="students" />}
             {currentPage === "mentor-groups" && <MentorDashboard view="groups" />}
             {currentPage === "mentor-agents" && <AgentCreator />}
             {currentPage === "mentor-exams" && <ExamCreator />}
             {currentPage === "mentor-archives" && <MentorDashboard view="archives" />}
+            {currentPage === "mentor-ponencias" && <PonenciasManagerPanel />}
 
           </>
         ) : (
@@ -204,6 +209,7 @@ export default function Home() {
             {currentPage === "practice" && <Practice onNavigate={setCurrentPage} />}
             {currentPage === "diagnosis" && <ResultsPage />}
             {currentPage === "settings" && <Settings />}
+            {currentPage === "ponencias" && <PonenciasPanel />}
           </>
         )}
       </main>

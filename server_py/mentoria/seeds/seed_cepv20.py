@@ -1,14 +1,25 @@
-"""
-Script de siembra: CEPV-20
-Cuestionario de Expectativas de Programas Vivenciales
+"""Script de siembra (seed) para la plantilla del cuestionario CEPV-20.
+
+Cuestionario de Expectativas de Programas Vivenciales (CEPV-20).
+Basado en el Modelo de Expectativas de Noe & Schmitt (1986).
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+import sys
 
-from server_py.memoria.database import SessionLocal, Base, engine  # noqa: E402
-from server_py.mentoria.models import MentorExam, MentorExamQuestion  # noqa: E402
+sys.path.insert(
+    0,
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    ),
+)
+
+from server_py.memoria.database import SessionLocal, Base, engine
+from server_py.mentoria.models import MentorExam, MentorExamQuestion
+
+# ============================================================================
+# CONSTANTES Y DEFINICIONES DE DIMENSIONES
+# ============================================================================
 
 DIM_APRENDIZAJE = "aprendizaje_aplicabilidad"
 DIM_METODOLOGIA = "metodologia_vivencial"
@@ -59,36 +70,84 @@ LIKERT_SCALE_OPTIONS = [
     {"value": 5, "label": "Totalmente de acuerdo (TA)"},
 ]
 
+# ============================================================================
+# FUNCIÓN PRINCIPAL DE SIEMBRA
+# ============================================================================
 
 def seed_cepv20(mentor_id: int | None = None):
+    """Crea la plantilla base CEPV-20 en la base de datos si no existe previa.
+
+    Args:
+        mentor_id: ID opcional del mentor asignado como creador.
+
+    Returns:
+        Instancia del examen MentorExam creado o existente.
+    """
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        existing = db.query(MentorExam).filter(MentorExam.title == "CEPV-20: Expectativas de Programas Vivenciales").first()
+        title_target = "CEPV-20: Expectativas de Programas Vivenciales"
+        existing = db.query(MentorExam).filter(MentorExam.title == title_target).first()
+
         if existing:
-            print(f"[seed_cepv20] La plantilla ya existe (id={existing.id}). No se crea de nuevo.")
+            print(f"[seed_cepv20] La plantilla ya existe (id={existing.id}). No se creará de nuevo.")
             return existing
+
         exam = MentorExam(
             mentor_id=mentor_id,
             agent_id=None,
             title="CEPV-20: Expectativas de Programas Vivenciales",
-            description="Cuestionario de Expectativas de Programas Vivenciales (CEPV-20). Adaptación psicométrica del Modelo de Expectativas de Noe & Schmitt (1986) y el Cuestionario de Expectativas de Formación de Martínez-Bocanegra et al. Aplíquese ANTES de iniciar el programa.",
+            description=(
+                "Cuestionario de Expectativas de Programas Vivenciales (CEPV-20). "
+                "Adaptación psicométrica del Modelo de Expectativas de Noe & Schmitt (1986) "
+                "y el Cuestionario de Expectativas de Formación de Martínez-Bocanegra et al. "
+                "Aplíquese ANTES de iniciar el programa."
+            ),
             status="published",
         )
         db.add(exam)
-        db.flush()
+        db.flush() # Obtiene exam.id sin confirmar la transacción completa
+
+        questions_to_create = []
         order = 0
+
+        # Construir preguntas de escala Likert
         for _, dimension, text in LIKERT_ITEMS:
-            db.add(MentorExamQuestion(exam_id=exam.id, question=text, question_type="likert_5", options=LIKERT_SCALE_OPTIONS, order=order, dimension=dimension))
+            questions_to_create.append(
+                MentorExamQuestion(
+                    exam_id=exam.id,
+                    question=text,
+                    question_type="likert_5",
+                    options=LIKERT_SCALE_OPTIONS,
+                    order=order,
+                    dimension=dimension,
+                )
+            )
             order += 1
+        # Construir preguntas abiertas
         for text in OPEN_QUESTIONS:
-            db.add(MentorExamQuestion(exam_id=exam.id, question=text, question_type="text", options=None, order=order, dimension=None))
+            questions_to_create.append(
+                MentorExamQuestion(
+                    exam_id=exam.id,
+                    question=text,
+                    question_type="text",
+                    options=None,
+                    order=order,
+                    dimension=None,
+                )
+            )
             order += 1
+
+        # Inserción masiva en la sesión
+        db.add_all(questions_to_create)
         db.commit()
+
         print(f"[seed_cepv20] Plantilla creada con id={exam.id} (23 preguntas: 20 Likert + 3 abiertas).")
         return exam
-    except Exception:
+
+    except Exception as error:
         db.rollback()
+        print(f"[seed_cepv20] Error durante la creación de la plantilla: {error}")
         raise
     finally:
         db.close()

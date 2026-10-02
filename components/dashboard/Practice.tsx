@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { QuizInterface } from "../quiz/QuizInterface"
 import { LewinLeadershipTest } from "../quiz/LewinLeadershipTest"
 import { NeoPiRTest } from "../quiz/NeoPiRTest"
+import { CCLTest } from "../quiz/CCLTest"
 import { CepvSurvey } from "../quiz/CepvSurvey"
 import { getRandomQuestions } from "../quiz/QuizData"
 import { cn } from "@/lib/utils"
@@ -24,7 +25,6 @@ import { academicAreas, personalAreas } from "@/lib/data/courseData"
 
 const allAreas = [...academicAreas, ...personalAreas]
 
-// --- TEMAS ADAPTATIVOS (Contraste corregido para Light / Dark) ---
 const THEMES: Record<string, { color: string, textColor: string, badge: string, tab: string, via: string }> = {
     ciencias: {
         color: "from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-500",
@@ -118,9 +118,7 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
     const [activeCategory, setActiveCategory] = useState<'academica' | 'personal' | 'mentoria'>('mentoria')
     const [mentorExams, setMentorExams] = useState<any[]>([])
     const [loadingMentorExams, setLoadingMentorExams] = useState(false)
-    
     const [selectedTab, setSelectedTab] = useState<'examenes' | 'practicas' | 'escenarios'>("examenes")
-    
     const [selectedArea, setSelectedArea] = useState("ciencias")
     const [showNotification, setShowNotification] = useState(false)
     const [activeExam, setActiveExam] = useState<any>(null)
@@ -212,6 +210,9 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
 
     const handleStartExam = (exam: any) => {
         if (!currentArea) return;
+        if (exam.disabled || exam.status?.includes("trabajando") || exam.status?.includes("Chambeando")) {
+            return
+        }
         if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
             setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
             return
@@ -222,6 +223,18 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         }
         if (currentArea.id === "expectativas" && exam.id === "cepv-20") {
             setActiveExam({ ...exam, areaName: currentArea.name, isCepv: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "lewin-33") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isLewin: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "neo-240") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isNeo: true })
+            return
+        }
+        if (currentArea.id === "psicometria" && exam.id === "ccl-36") {
+            setActiveExam({ ...exam, areaName: currentArea.name, isCCL: true })
             return
         }
         const questions = getRandomQuestions(currentArea.id, exam.title, exam.questions)
@@ -303,6 +316,13 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                 </motion.div>
             )
         }
+        if ((activeExam as any).isCCL) {
+            return (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-slate-50 dark:bg-[#0B0121] overflow-auto">
+                    <CCLTest onExit={handleCancelExam} onComplete={() => {}} />
+                </motion.div>
+            )
+        }
         return (
             <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
@@ -333,7 +353,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
         <div ref={practiceContainerRef} id="practice-scroll-container" className="relative min-h-screen text-slate-900 dark:text-white overflow-y-auto overflow-x-hidden font-sans flex flex-col pt-6">
             <div ref={topAnchorRef} className="absolute top-0 left-0 w-0 h-0" aria-hidden />
 
-            {/* TOP HEADER CORREGIDO */}
             <div className="w-full max-w-7xl mx-auto px-6 mb-2 relative z-50 pl-20 md:pl-6">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-8 md:h-12 rounded-full bg-gradient-to-b from-[#82610d] to-[#4e6300] dark:from-[#d0b04d] dark:to-[#baef00] drop-shadow-sm" />
@@ -348,7 +367,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
             </div>
 
             <div className="w-full max-w-7xl mx-auto px-6 flex flex-col gap-6 flex-1">
-                {/* BOTONES DE CATEGORÍA CON TEXTO VISIBLE EN MODO CLARO */}
                 <div className="flex gap-2 p-1.5 bg-slate-200/90 dark:bg-white/[0.04] border border-slate-300 dark:border-white/10 rounded-2xl w-fit">
                     {(["mentoria", "personal"] as const).map((cat) => (
                         <button
@@ -432,8 +450,6 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                     </div>
                 )}
 
-                
-                {/* SUBTÍTULO Y LISTADO CON TEXTO CORREGIDO PARA MODO CLARO */}
                 {activeCategory === 'mentoria' && (
                     <div className="flex-1 overflow-y-auto pb-20 space-y-4 pr-2">
                         <div className="flex items-center gap-2 mb-2">
@@ -523,50 +539,36 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                         exit={{ opacity: 0, scale: 0.95 }}
                                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                                     >
-                                        {currentArea?.exams.map((exam: any, i: number) => {
-                                            // Preservamos la parte 'dark:' del tema original y solo cambiamos el claro
-                                            const isPersonalOrPsico = activeCategory === 'personal' || currentArea?.id?.includes('personal');
-                                            
-                                            const darkColor = theme.color?.split(' ').filter((c: string) => c.startsWith('dark:')).join(' ') || '';
-                                            const darkTextColor = theme.textColor?.split(' ').filter((c: string) => c.startsWith('dark:')).join(' ') || '';
-                                            const darkVia = theme.via?.split(' ').filter((c: string) => c.startsWith('dark:')).join(' ') || '';
+                                        {currentArea?.exams.map((exam: any, i: number) => (
+                                            <motion.div
+                                                key={exam.id}
+                                                initial={{ opacity: 0, y: 30 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: i * 0.05 }}
+                                                className="group relative h-full"
+                                            >
+                                                {highlightedAreas.some(h => currentArea.id.includes(h) || exam.title.toLowerCase().includes(h)) && (
+                                                    <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-500 dark:border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.3)] dark:shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
+                                                )}
 
-                                            const activeColor = isPersonalOrPsico ? `from-[#15803d] to-[#166534] ${darkColor}` : theme.color;
-                                            const activeTextColor = isPersonalOrPsico ? `text-[#15803d] ${darkTextColor}` : theme.textColor;
-                                            const activeVia = isPersonalOrPsico ? `via-[#15803d] ${darkVia}` : theme.via;
+                                                <div className="h-full bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 shadow-sm dark:shadow-none hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50/80 dark:hover:bg-white/[0.05] hover:shadow-md dark:hover:shadow-[0_0_25px_rgba(255,255,255,0.05)] flex flex-col justify-between">
+                                                    <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity", theme.via)} />
 
-                                            return (
-                                                <motion.div
-                                                    key={exam.id}
-                                                    initial={{ opacity: 0, y: 30 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: i * 0.05 }}
-                                                    className="group relative h-full"
-                                                >
-                                                    {highlightedAreas.some(h => currentArea.id.includes(h) || exam.title.toLowerCase().includes(h)) && (
-                                                        <div className="absolute -inset-1 rounded-[2.2rem] border-2 border-cyan-500 dark:border-cyan-400/70 shadow-[0_0_30px_rgba(6,182,212,0.3)] dark:shadow-[0_0_30px_rgba(6,182,212,0.5)] animate-pulse z-10 pointer-events-none" />
-                                                    )}
-
-                                                    <div className="h-full bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-[2rem] p-6 relative overflow-hidden transition-all duration-300 shadow-sm dark:shadow-none hover:border-slate-300 dark:hover:border-white/20 hover:bg-slate-50/80 dark:hover:bg-white/[0.05] hover:shadow-md dark:hover:shadow-[0_0_25px_rgba(255,255,255,0.05)] flex flex-col justify-between">
-                                                        <div className={cn("absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity", activeVia)} />
-
-                                                        <div>
-                                                            <div className="flex justify-between items-start mb-6">
-                                                                <div className="flex flex-col">
-                                                                    <span className={cn("text-[10px] uppercase font-black tracking-[0.2em] mb-1", activeTextColor)}>
-                                                                        Módulo 0{i + 1}
-                                                                    </span>
-                                                                    <Badge variant="outline" className={cn("border-0 font-bold text-[10px] px-2 py-0.5 backdrop-blur-md rounded-md",
-                                                                        exam.status === 'Disponible' 
+                                                    <div>
+                                                        <div className="flex justify-between items-start mb-6">
+                                                            <div className="flex flex-col">
+                                                                <span className={cn("text-[10px] uppercase font-black tracking-[0.2em] mb-1", theme.textColor)}>
+                                                                    Módulo 0{i + 1}
+                                                                </span>
+                                                                <Badge variant="outline" className={cn("border-0 font-bold text-[10px] px-2 py-0.5 backdrop-blur-md rounded-md",
+                                                                    exam.disabled
+                                                                        ? 'text-amber-900 bg-amber-200 dark:text-amber-300 dark:bg-amber-500/20 border border-amber-500/30'
+                                                                        : exam.status === 'Disponible' 
                                                                             ? 'text-emerald-900 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-400/10' 
                                                                             : 'text-slate-700 bg-slate-200/80 dark:text-gray-500 dark:bg-black/40'
-                                                                    )}>
-                                                                        {exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
-                                                                    </Badge>
-                                                                </div>
-                                                                <div className="p-2.5 bg-slate-100 dark:bg-white/5 rounded-xl group-hover:bg-slate-200 dark:group-hover:bg-white/10 transition-colors">
-                                                                    {currentArea?.icon && <currentArea.icon className={cn("w-5 h-5 transition-colors", activeTextColor)} />}
-                                                                </div>
+                                                                )}>
+                                                                    {exam.disabled ? (exam.status || '(Ingenieros Chambeando :V)') : exam.status === 'Disponible' ? '● ONLINE' : '○ OFFLINE'}
+                                                                </Badge>
                                                             </div>
 
                                                             <h3 className="text-lg font-bold mb-1 text-slate-900 dark:text-white leading-tight group-hover:opacity-80 transition-opacity line-clamp-2">
@@ -606,14 +608,22 @@ export function Practice({ onNavigate }: { onNavigate?: (page: string) => void }
                                                                 </div>
                                                             </div>
 
+                                                        {exam.disabled ? (
+                                                            <Button
+                                                                disabled
+                                                                className="w-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold tracking-wide py-5 rounded-xl cursor-not-allowed opacity-80"
+                                                            >
+                                                                {exam.status || "(Ingenieros Chambeando :V)"}
+                                                            </Button>
+                                                        ) : (
                                                             <Button
                                                                 onClick={() => handleStartExam(exam)}
-                                                                className={cn("w-full text-white font-bold tracking-wide border-0 py-5 rounded-xl shadow-lg transition-all group-hover:scale-[1.02] bg-gradient-to-r hover:brightness-110", activeColor)}
+                                                                className={cn("w-full text-white font-bold tracking-wide border-0 py-5 rounded-xl shadow-lg transition-all group-hover:scale-[1.02] bg-gradient-to-r hover:brightness-110", theme.color)}
                                                             >
                                                                 <Play className="w-3.5 h-3.5 mr-2 fill-current" />
                                                                 INICIAR
                                                             </Button>
-                                                        </div>
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             );
