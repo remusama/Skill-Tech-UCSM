@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Index,
 )
 from sqlalchemy.orm import Mapped, relationship
 
@@ -178,7 +179,7 @@ class AttendanceClass(Base):
     start_time = Column(String)
     late_time = Column(String)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=_utc_now)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
     # Relaciones
     mentor = relationship("User", foreign_keys=[mentor_id])
@@ -189,6 +190,18 @@ class AttendanceClass(Base):
 class AttendanceRecord(Base):
     """Registro individual de asistencia de un estudiante a una clase."""
     __tablename__ = "attendance_records"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "class_id",
+            "student_id",
+            name="uq_attendance_records_class_student",
+        ),
+        Index(
+            "ix_attendance_records_student_id",
+            "student_id",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     class_id = Column(Integer, ForeignKey("attendance_classes.id"))

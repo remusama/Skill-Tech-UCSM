@@ -5,37 +5,25 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy import func, case
+from sqlalchemy.orm import Session, joinedload, selectinload, load_only
+from sqlalchemy.exc import IntegrityError
 
 from server_py.auth.router import get_current_user_id
 from server_py.memoria.database import User, get_db
-from server_py.mentoria.models import AttendanceClass, AttendanceRecord, GroupStudent
+from server_py.common.permisos import check_is_mentor
+from server_py.mentoria.models import (
+    AttendanceClass,
+    AttendanceRecord,
+    GroupStudent,
+    MentorGroup,
+)
 
 router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
 
 # ============================================================================
 # FUNCIONES DE APOYO Y AUTORIZACIÓN
 # ============================================================================
-
-def check_is_mentor(user_id: int, db: Session):
-    """Verifica que el usuario exista y posea privilegios administrativos o de docencia.
-
-    Raises:
-        HTTPException: 404 si el usuario no existe, 403 si carece de permisos.
-    """
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado."
-        )
-    if user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado: Se requiere rol de mentor."
-        )
-    return user
-
 
 def generate_secure_token() -> str:
     """Genera una credencial única formateada para alumnos."""
@@ -63,7 +51,7 @@ class ScanRequest(BaseModel):
 # ============================================================================
 
 @router.post("/classes", status_code=status.HTTP_201_CREATED)
-async def create_attendance_class(
+def create_attendance_class(
     req: CreateClassRequest,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
@@ -90,24 +78,26 @@ async def create_attendance_class(
 
         # Inicialización en lote de asistencias si la clase pertenece a un grupo
         if req.group_id:
-            group_students = db.query(GroupStudent).filter(
-                GroupStudent.group_id == req.group_id
-            ).all()
+            student_ids = (
+                db.query(GroupStudent.student_id)
+                .filter(GroupStudent.group_id == req.group_id)
+                .all()
+            )
 
             records = [
                 AttendanceRecord(
                     class_id=new_class.id,
-                    student_id=gs.student_id,
+                    student_id=student_id,
                     status="falta",
                     registered_at=None,
                     scan_type=None
                 )
-                for gs in group_students
+                for (student_id,) in student_ids
             ]
+
             db.bulk_save_objects(records)
 
         db.commit()
-        db.refresh(new_class)
 
         return {
             "message": "Clase creada exitosamente.",
@@ -123,7 +113,7 @@ async def create_attendance_class(
 
 
 @router.get("/classes")
-async def get_attendance_classes(
+def get_attendance_classes(
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
 ):
@@ -131,21 +121,60 @@ async def get_attendance_classes(
     check_is_mentor(current_user_id, db)
 
     classes = (
-        db.query(AttendanceClass)
-        .options(
-            joinedload(AttendanceClass.group),
-            selectinload(AttendanceClass.records)
+        db.query(
+            AttendanceClass,
+            func.count(AttendanceRecord.id).label("total_students"),
+            func.sum(
+                case(
+                    (AttendanceRecord.status == "presente", 1),
+                    else_=0
+                )
+            ).label("present"),
+            func.sum(
+                case(
+                    (AttendanceRecord.status == "tardanza", 1),
+                    else_=0
+                )
+            ).label("tardy"),
+            func.sum(
+                case(
+                    (AttendanceRecord.status == "falta", 1),
+                    else_=0
+                )
+            ).label("absent"),
         )
+        .outerjoin(
+            AttendanceRecord,
+            AttendanceRecord.class_id == AttendanceClass.id
+        )
+        .options(
+            load_only(
+                AttendanceClass.id,
+                AttendanceClass.name,
+                AttendanceClass.code,
+                AttendanceClass.group_id,
+                AttendanceClass.date,
+                AttendanceClass.start_time,
+                AttendanceClass.late_time,
+                AttendanceClass.is_active,
+                AttendanceClass.created_at,
+            ),
+            joinedload(AttendanceClass.group).load_only(
+                MentorGroup.id,
+                MentorGroup.name,
+            ),
+        )
+        .group_by(AttendanceClass.id)
         .order_by(AttendanceClass.created_at.desc())
         .all()
     )
 
     result = []
-    for c in classes:
-        total_students = len(c.records)
-        present = sum(1 for r in c.records if r.status == "presente")
-        tardy = sum(1 for r in c.records if r.status == "tardanza")
-        absent = sum(1 for r in c.records if r.status == "falta")
+    for c, total_students, present, tardy, absent in classes:
+        total_students = total_students or 0
+        present = present or 0
+        tardy = tardy or 0
+        absent = absent or 0
 
         attendance_rate = (
             round(((present + tardy) / max(1, total_students)) * 100)
@@ -175,7 +204,7 @@ async def get_attendance_classes(
 
 
 @router.get("/classes/{class_id}")
-async def get_class_details(
+def get_class_details(
     class_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
@@ -186,8 +215,34 @@ async def get_class_details(
     c = (
         db.query(AttendanceClass)
         .options(
-            joinedload(AttendanceClass.group),
-            selectinload(AttendanceClass.records).joinedload(AttendanceRecord.student)
+            load_only(
+                AttendanceClass.id,
+                AttendanceClass.name,
+                AttendanceClass.code,
+                AttendanceClass.group_id,
+                AttendanceClass.date,
+                AttendanceClass.start_time,
+                AttendanceClass.late_time,
+                AttendanceClass.is_active,
+            ),
+            joinedload(AttendanceClass.group).load_only(
+                MentorGroup.id,
+                MentorGroup.name,
+            ),
+            selectinload(AttendanceClass.records)
+                .load_only(
+                    AttendanceRecord.id,
+                    AttendanceRecord.student_id,
+                    AttendanceRecord.status,
+                    AttendanceRecord.registered_at,
+                    AttendanceRecord.scan_type,
+                )
+                .joinedload(AttendanceRecord.student)
+                .load_only(
+                    User.id,
+                    User.username,
+                    User.full_name,
+                ),
         )
         .filter(AttendanceClass.id == class_id)
         .first()
@@ -227,7 +282,7 @@ async def get_class_details(
 
 
 @router.post("/scan")
-async def scan_attendance(
+def scan_attendance(
     req: ScanRequest,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
@@ -236,7 +291,22 @@ async def scan_attendance(
     check_is_mentor(current_user_id, db)
 
     # Validar existencia de clase y estado activo
-    c = db.query(AttendanceClass).filter(AttendanceClass.code == req.class_code).first()
+    c = (
+        db.query(AttendanceClass)
+        .options(
+            load_only(
+                AttendanceClass.id,
+                AttendanceClass.group_id,
+                AttendanceClass.code,
+                AttendanceClass.date,
+                AttendanceClass.start_time,
+                AttendanceClass.late_time,
+                AttendanceClass.is_active,
+            )
+        )
+        .filter(AttendanceClass.code == req.class_code)
+        .first()
+    )
     if not c:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -249,7 +319,19 @@ async def scan_attendance(
         )
 
     # Identificar estudiante mediante la credencial escaneada
-    student = db.query(User).filter(User.secure_token == req.secure_token).first()
+    student = (
+        db.query(User)
+        .options(
+            load_only(
+                User.id,
+                User.username,
+                User.full_name,
+            )
+        )
+        .filter(User.secure_token == req.secure_token)
+        .first()
+    )
+
     if not student:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -258,10 +340,15 @@ async def scan_attendance(
 
     # Verificar pertenencia al grupo
     if c.group_id:
-        is_member = db.query(GroupStudent).filter(
-            GroupStudent.group_id == c.group_id,
-            GroupStudent.student_id == student.id
-        ).first()
+        is_member = (
+            db.query(GroupStudent.student_id)
+            .filter(
+                GroupStudent.group_id == c.group_id,
+                GroupStudent.student_id == student.id
+            )
+            .first()
+        )
+
         if not is_member:
             raise HTTPException(
                 status_code=403,
@@ -329,12 +416,27 @@ async def scan_attendance(
     else:
         status_attendance = "tardanza"
     # Buscar registro existente o crear uno nuevo
-    record = db.query(AttendanceRecord).filter(
-        AttendanceRecord.class_id == c.id,
-        AttendanceRecord.student_id == student.id
-    ).first()
+    record = (
+        db.query(AttendanceRecord)
+        .options(
+            load_only(
+                AttendanceRecord.id,
+                AttendanceRecord.status,
+                AttendanceRecord.registered_at,
+                AttendanceRecord.scan_type,
+            )
+        )
+        .filter(
+            AttendanceRecord.class_id == c.id,
+            AttendanceRecord.student_id == student.id
+        )
+        .with_for_update()
+        .first()
+    )
 
     student_display_name = student.full_name or student.username
+
+    created_new_record = False
 
     if record:
         if record.status in ["presente", "tardanza"]:
@@ -355,9 +457,37 @@ async def scan_attendance(
             registered_at=now,
             scan_type=req.scan_type
         )
-        db.add(record)
 
-    db.commit()
+        db.add(record)
+        created_new_record = True
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+
+        if not created_new_record:
+            raise
+
+        existing_record = db.query(AttendanceRecord).filter(
+            AttendanceRecord.class_id == c.id,
+            AttendanceRecord.student_id == student.id
+        ).first()
+
+        if existing_record:
+            return {
+                "message": "El estudiante ya había registrado su asistencia previamente.",
+                "student_name": student_display_name,
+                "status": existing_record.status,
+                "registered_at": (
+                    existing_record.registered_at.isoformat()
+                    if existing_record.registered_at
+                    else None
+                )
+            }
+
+        raise
 
     return {
         "message": "Asistencia registrada correctamente.",
@@ -371,12 +501,23 @@ async def scan_attendance(
 # ============================================================================
 
 @router.get("/student/token")
-async def get_student_token(
+def get_student_token(
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Consulta la credencial segura del estudiante autenticado (genera una si no existe)."""
-    user = db.query(User).filter(User.id == current_user_id).first()
+    user = (
+        db.query(User)
+        .options(
+            load_only(
+                User.id,
+                User.secure_token,
+            )
+        )
+        .filter(User.id == current_user_id)
+        .first()
+    )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -386,18 +527,28 @@ async def get_student_token(
     if not user.secure_token:
         user.secure_token = f"SKILL-{uuid.uuid4().hex[:12].upper()}"
         db.commit()
-        db.refresh(user)
 
     return {"token": user.secure_token}
 
 
 @router.post("/student/regenerate_token")
-async def regenerate_student_token(
+def regenerate_student_token(
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Invalida la credencial previa y genera una nueva para el estudiante autenticado."""
-    user = db.query(User).filter(User.id == current_user_id).first()
+    user = (
+        db.query(User)
+        .options(
+            load_only(
+                User.id,
+                User.secure_token,
+            )
+        )
+        .filter(User.id == current_user_id)
+        .first()
+    )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -406,7 +557,6 @@ async def regenerate_student_token(
 
     user.secure_token = f"SKILL-{uuid.uuid4().hex[:12].upper()}"
     db.commit()
-    db.refresh(user)
 
     return {
         "token": user.secure_token,
@@ -415,14 +565,25 @@ async def regenerate_student_token(
 
 
 @router.get("/student/{student_id}/token")
-async def get_any_student_token(
+def get_any_student_token(
     student_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Permite a un mentor obtener el token de cualquier estudiante."""
     check_is_mentor(current_user_id, db)
-    user = db.query(User).filter(User.id == student_id).first()
+    user = (
+        db.query(User)
+        .options(
+            load_only(
+                User.id,
+                User.secure_token,
+            )
+        )
+        .filter(User.id == student_id)
+        .first()
+    )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -432,7 +593,6 @@ async def get_any_student_token(
     if not user.secure_token:
         user.secure_token = f"SKILL-{uuid.uuid4().hex[:12].upper()}"
         db.commit()
-        db.refresh(user)
 
     return {"token": user.secure_token}
 
@@ -449,19 +609,39 @@ def calculate_student_stats(records: List[AttendanceRecord], db: Session):
     
     rate = round(((present + tardy) / max(1, total)) * 100) if total > 0 else 0
 
-    class_ids = [r.class_id for r in records if r.class_id]
+    class_ids = list({
+        r.class_id
+        for r in records
+        if r.class_id
+    })
+
     group_average = 0
 
     if class_ids:
-        all_records = db.query(AttendanceRecord).filter(
-            AttendanceRecord.class_id.in_(class_ids)
-        ).all()
-        
-        total_class_records = len(all_records)
-        total_class_attended = sum(1 for r in all_records if r.status in ["presente", "tardanza"])
-        
+        total_class_records, total_class_attended = (
+            db.query(
+                func.count(AttendanceRecord.id),
+                func.sum(
+                    case(
+                        (
+                            AttendanceRecord.status.in_(["presente", "tardanza"]),
+                            1
+                        ),
+                        else_=0
+                    )
+                )
+            )
+            .filter(AttendanceRecord.class_id.in_(class_ids))
+            .one()
+        )
+
+        total_class_records = total_class_records or 0
+        total_class_attended = total_class_attended or 0
+
         if total_class_records > 0:
-            group_average = round((total_class_attended / total_class_records) * 100)
+            group_average = round(
+                (total_class_attended / total_class_records) * 100
+            )
 
     history = [
         {
@@ -483,13 +663,13 @@ def calculate_student_stats(records: List[AttendanceRecord], db: Session):
             "tardy": tardy,
             "absent": absent,
             "rate": rate,
-            "group_average": group_average or 75
+            "group_average": group_average
         },
         "history": history
     }
 
 @router.get("/student/{student_id}/stats")
-async def get_student_attendance_stats(
+def get_student_attendance_stats(
     student_id: int,
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
@@ -497,7 +677,18 @@ async def get_student_attendance_stats(
     """Métricas históricas de un estudiante específico vistas por un mentor."""
     check_is_mentor(current_user_id, db)
 
-    student = db.query(User).filter(User.id == student_id).first()
+    student = (
+        db.query(User)
+        .options(
+            load_only(
+                User.id,
+                User.full_name,
+                User.username,
+            )
+        )
+        .filter(User.id == student_id)
+        .first()
+    )
     if not student:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -506,7 +697,19 @@ async def get_student_attendance_stats(
 
     records = (
         db.query(AttendanceRecord)
-        .options(joinedload(AttendanceRecord.attendance_class))
+        .options(
+            load_only(
+                AttendanceRecord.class_id,
+                AttendanceRecord.status,
+                AttendanceRecord.registered_at,
+                AttendanceRecord.scan_type,
+            ),
+            joinedload(AttendanceRecord.attendance_class).load_only(
+                AttendanceClass.name,
+                AttendanceClass.date,
+                AttendanceClass.start_time,
+            ),
+        )
         .filter(AttendanceRecord.student_id == student_id)
         .all()
     )
@@ -520,14 +723,26 @@ async def get_student_attendance_stats(
 
 
 @router.get("/my/stats")
-async def get_my_own_attendance_stats(
+def get_my_own_attendance_stats(
     db: Session = Depends(get_db),
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Permite al estudiante autenticado visualizar sus propias métricas e historial de asistencias."""
     records = (
         db.query(AttendanceRecord)
-        .options(joinedload(AttendanceRecord.attendance_class))
+        .options(
+            load_only(
+                AttendanceRecord.class_id,
+                AttendanceRecord.status,
+                AttendanceRecord.registered_at,
+                AttendanceRecord.scan_type,
+            ),
+            joinedload(AttendanceRecord.attendance_class).load_only(
+                AttendanceClass.name,
+                AttendanceClass.date,
+                AttendanceClass.start_time,
+            ),
+        )
         .filter(AttendanceRecord.student_id == current_user_id)
         .all()
     )

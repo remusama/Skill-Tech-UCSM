@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from server_py.memoria.database import get_db, User, ExamResult, UserSkill
 from server_py.mentoria.models import MentorGroup, GroupStudent, MentorExam, MentorExamAssignment
 from server_py.auth.router import get_current_user_id
+from server_py.common.permisos import check_is_mentor
 
 router = APIRouter(prefix="/api/mentor", tags=["Mentor"])
 
@@ -67,34 +68,6 @@ def _get_completed_exams_by_student(db: Session, student_ids: List[int]):
             ].add(str(exam_id))
 
     return completed_map
-
-# ============================================================================
-# FUNCIONES AUXILIARES DE VERIFICACIÓN
-# ============================================================================
-
-def check_is_mentor(user_id: int, db: Session):
-    """Verifica si el usuario existe y si posee un rol con permisos de mentoría.
-    """
-    user = (
-        db.query(User)
-        .options(
-            load_only(
-                User.id,
-                User.role,
-            )
-        )
-        .filter(
-            User.id == user_id
-        )
-        .first()
-    )
-    if not user or user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(
-            status_code=403, 
-            detail="Acceso denegado: Se requiere rol de mentor."
-        )
-
-    return user
 
 # ============================================================================
 # ESQUEMAS DE PETICIÓN (PYDANTIC)

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session,joinedload,selectinload
 from server_py.auth.router import get_current_user_id
 from server_py.logic import informante_logic
 from server_py.memoria.database import User, get_db
+from server_py.common.permisos import check_is_mentor
 from server_py.mentoria.models import (
     Agent,
     GroupStudent,
@@ -25,25 +26,6 @@ router = APIRouter(prefix="/api", tags=["Mentor Exams"])
 # ============================================================================
 # FUNCIONES AUXILIARES Y AUTORIZACIÓN
 # ============================================================================
-
-def check_is_mentor(user_id: int, db: Session) -> User:
-    """Verifica que el usuario exista y tenga el rol permitido de mentor/profesor/admin.
-
-    Raises:
-        HTTPException: 403 si el rol no es válido, 404 si el usuario no existe.
-    """
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Usuario no encontrado."
-        )
-    if user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado: Se requiere rol de mentor."
-        )
-    return user
 
 def _find_or_create_assignment(db: Session, exam_id: int, student_id: int) -> MentorExamAssignment:
     """Busca o inicializa una asignación de examen para un estudiante específico."""
