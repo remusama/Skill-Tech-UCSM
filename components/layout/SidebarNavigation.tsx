@@ -197,6 +197,8 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     alt="Logo Liderazgo"
                     fill
                     sizes="64px"
+                    unoptimized
+                    priority
                     className="object-contain drop-shadow-[0_0_15px_rgba(13,151,31,0.6)]"
                   />
                 </div>
@@ -217,6 +219,8 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                     alt="SkillTech Logo"
                     fill
                     sizes="64px"
+                    unoptimized
+                    priority
                     className="object-contain drop-shadow-[0_0_15px_rgba(184,134,11,0.7)]"
                   />
                 </div>

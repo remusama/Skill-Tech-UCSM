@@ -97,6 +97,7 @@ export function MentorAttendance() {
             setCameraError(null);
 
             try {
+                // @ts-ignore
                 const { Html5Qrcode } = await import("html5-qrcode");
                 
                 if (!isMounted) return;
@@ -112,15 +113,15 @@ export function MentorAttendance() {
                     { facingMode: "environment" },
                     {
                         fps: 10,
-                        qrbox: (width, height) => {
+                        qrbox: (width: number, height: number) => {
                             const size = Math.min(width, height) * 0.7;
                             return { width: size, height: size };
                         }
                     },
-                    (decodedText) => {
+                    (decodedText: string) => {
                         handleScanToken(decodedText)
                     },
-                    (errorMessage) => {
+                    (errorMessage: string) => {
                         // Silent scanning noise
                     }
                 );

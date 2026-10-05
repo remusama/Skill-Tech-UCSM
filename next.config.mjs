@@ -18,9 +18,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    // Optimización activa: Next.js sirve WebP/AVIF automáticamente
-    formats: ["image/avif", "image/webp"],
-    unoptimized: false,
+    unoptimized: true,
   },
 };
 

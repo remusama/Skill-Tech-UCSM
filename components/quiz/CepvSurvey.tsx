@@ -13,7 +13,7 @@ function getAuthHeaders(): Record<string, string> {
   return { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) }
 }
 
-export function CepvSurvey({ onExit }: { onExit?: () => void }) {
+export function CepvSurvey({ onExit, onComplete }: { onExit?: () => void; onComplete?: (res: any) => void }) {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [openAns, setOpenAns] = useState<Record<number, string>>({})
   const [result, setResult] = useState<any>(null)
@@ -39,6 +39,7 @@ export function CepvSurvey({ onExit }: { onExit?: () => void }) {
     } finally {
       setSubmitting(false)
       setResult({ avg, openAns })
+      onComplete?.({ avg, openAns })
       window.dispatchEvent(new CustomEvent('refresh-skills'))
     }
   }

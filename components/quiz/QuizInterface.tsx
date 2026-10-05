@@ -537,6 +537,10 @@ export function QuizInterface({
         // Fetch updated skills in background
         const updatedSkills = await fetchUserSkills();
         setUserSkills(updatedSkills);
+
+        if (onComplete) {
+          onComplete(data.analysis?.nivel || 80, answers);
+        }
       } else {
         throw new Error("No data received from AI")
       }

@@ -18,7 +18,7 @@ function getAuthHeaders(): Record<string, string> {
   return { "Content-Type": "application/json", ...(t ? { Authorization: `Bearer ${t}` } : {}) };
 }
 
-export function NeoPiRTest({ onExit }: { onExit?: () => void }) {
+export function NeoPiRTest({ onExit, onComplete }: { onExit?: () => void; onComplete?: (res: any) => void }) {
   const [gender, setGender] = useState<"M" | "F" | "">("");
   const [answers, setAnswers] = useState<Record<number, LikertValue>>({});
   const [result, setResult] = useState<any>(null);
@@ -49,12 +49,18 @@ export function NeoPiRTest({ onExit }: { onExit?: () => void }) {
       });
       if (res.ok) { 
         const data = await res.json(); 
-        setResult({ ...payload, ...data, gender }); 
+        const full = { ...payload, ...data, gender };
+        setResult(full); 
+        onComplete?.(full);
       } else { 
-        setResult({ ...payload, gender }); 
+        const full = { ...payload, gender };
+        setResult(full); 
+        onComplete?.(full);
       }
     } catch { 
-      setResult({ ...payload, gender, offline: true }); 
+      const full = { ...payload, gender, offline: true };
+      setResult(full); 
+      onComplete?.(full);
     } finally { 
       setSubmitting(false); 
     }
