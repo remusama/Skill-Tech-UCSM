@@ -12,6 +12,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
+    Index,
 )
 from sqlalchemy.orm import Mapped, relationship
 
@@ -113,6 +115,14 @@ class MentorExamQuestion(Base):
 class MentorExamAssignment(Base):
     """Asignación de un examen a un estudiante individual o a un grupo."""
     __tablename__ = "mentor_exam_assignments"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "exam_id",
+            "student_id",
+            name="uq_mentor_exam_assignment_exam_student",
+        ),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     exam_id = Column(Integer, ForeignKey("mentor_exams.id"))
@@ -132,6 +142,14 @@ class MentorExamAssignment(Base):
 class MentorExamAnswer(Base):
     """Respuesta registrada de un estudiante para una pregunta específica."""
     __tablename__ = "mentor_exam_answers"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "assignment_id",
+            "question_id",
+            name="uq_mentor_exam_answer_assignment_question",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     assignment_id = Column(Integer, ForeignKey("mentor_exam_assignments.id"))
@@ -161,7 +179,7 @@ class AttendanceClass(Base):
     start_time = Column(String)
     late_time = Column(String)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=_utc_now)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
     # Relaciones
     mentor = relationship("User", foreign_keys=[mentor_id])
@@ -172,6 +190,18 @@ class AttendanceClass(Base):
 class AttendanceRecord(Base):
     """Registro individual de asistencia de un estudiante a una clase."""
     __tablename__ = "attendance_records"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "class_id",
+            "student_id",
+            name="uq_attendance_records_class_student",
+        ),
+        Index(
+            "ix_attendance_records_student_id",
+            "student_id",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     class_id = Column(Integer, ForeignKey("attendance_classes.id"))

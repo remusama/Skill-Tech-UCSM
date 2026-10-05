@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from server_py.auth.router import get_current_user_id
 from server_py.memoria.database import User, get_db
 from server_py.mentoria.models import Agent
+from server_py.common.permisos import check_is_mentor
 
 router = APIRouter(prefix="/api/mentor", tags=["Mentor Agents"])
 
@@ -68,26 +69,6 @@ BASE_AGENTS: List[Dict[str, Any]] =[
 # ============================================================================
 # FUNCIONES AUXILIARES Y AUTORIZACIÓN
 # ============================================================================
-
-def check_is_mentor(user_id: int, db: Session) -> User:
-    """Verifica si el usuario existe y posee un rol con permisos de mentoría.
-
-    Raises:
-        HTTPException: 404 si no existe, 403 si carece de rol adecuado.
-    """
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Usuario no encontrado."
-        )
-    if user.role not in ["teacher", "admin", "mentor"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Acceso denegado: Se requiere rol de mentor."
-        )
-    return user
-
 
 def seed_base_agents(db: Session)-> None:
     """Inserta las plantillas base de agentes si aún no existen en la BD."""
