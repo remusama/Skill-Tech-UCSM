@@ -179,7 +179,7 @@ class AttendanceClass(Base):
     start_time = Column(String)
     late_time = Column(String)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=_utc_now, index=True)
 
     # Relaciones
     mentor = relationship("User", foreign_keys=[mentor_id])

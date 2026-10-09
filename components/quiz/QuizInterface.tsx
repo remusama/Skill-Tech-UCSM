@@ -17,6 +17,8 @@ import { API_BASE_URL } from "@/lib/config"
 // Importamos el nuevo componente de diagnóstico y el grafo natural
 import { NaturalWorkflow } from "./NaturalWorkflow"
 import { DiagnosisEleonorOverlay } from "./DiagnosisEleonorOverlay"
+import { SaveProgressExitModal } from "./shared/SaveProgressExitModal"
+import { saveExamDraft, clearExamDraft } from "@/lib/utils/examDraftStorage"
 
 interface QuizInterfaceProps {
   questions: Question[]
@@ -82,6 +84,44 @@ export function QuizInterface({
         timeRemaining: time
       }))
     }
+  }
+
+  const [showExitModal, setShowExitModal] = useState(false)
+
+  const handleRequestExit = () => {
+    const answeredCount = Object.keys(answers).length + (inputText?.trim() ? 1 : 0)
+    if (answeredCount > 0) {
+      setShowExitModal(true)
+    } else {
+      onExit()
+    }
+  }
+
+  const handleSaveAndExit = () => {
+    const finalAnswers = { ...answers }
+    if (question && (question.type === "input-text" || question.type === "open-ended")) {
+      finalAnswers[question.id] = inputText
+    }
+    saveProgress(finalAnswers, currentQuestionIndex, timeRemaining)
+    if (!examId) {
+      saveExamDraft(area || "quiz", {
+        answers: finalAnswers,
+        currentIndex: currentQuestionIndex,
+        extra: { timeRemaining }
+      })
+    }
+    setShowExitModal(false)
+    onExit()
+  }
+
+  const handleDiscardAndExit = () => {
+    if (examId) {
+      localStorage.removeItem(`mentor_exam_progress_${examId}`)
+    } else {
+      clearExamDraft(area || "quiz")
+    }
+    setShowExitModal(false)
+    onExit()
   }
 
   // --- CSAT & RAGE CLICKS (Phase 3) ---
@@ -689,22 +729,13 @@ export function QuizInterface({
             </div>
           </div>
           <div className="flex items-center gap-4 self-end md:self-auto">
-            {examId && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const finalAnswers = { ...answers }
-                  if (question && (question.type === "input-text" || question.type === "open-ended")) {
-                    finalAnswers[question.id] = inputText
-                  }
-                  saveProgress(finalAnswers)
-                  onExit()
-                }}
-                className="border-purple-500/30 text-purple-300 hover:bg-[#bf00ff]/10 hover:text-white rounded-xl px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
-              >
-                Guardar y Salir
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              onClick={handleRequestExit}
+              className="border-purple-500/30 text-purple-300 hover:bg-[#bf00ff]/10 hover:text-white rounded-xl px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
+            >
+              Salir
+            </Button>
             <div className="flex flex-col items-end">
               <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Tiempo Restante</span>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-xl border border-white/10 backdrop-blur-md">
@@ -984,6 +1015,16 @@ export function QuizInterface({
           )}
         </div>
       </div>
+
+      <SaveProgressExitModal
+        isOpen={showExitModal}
+        totalQuestions={questions?.length || 0}
+        answeredCount={Object.keys(answers).length}
+        examTitle={title}
+        onSaveAndExit={handleSaveAndExit}
+        onDiscardAndExit={handleDiscardAndExit}
+        onCancel={() => setShowExitModal(false)}
+      />
     </div>
   )
 }

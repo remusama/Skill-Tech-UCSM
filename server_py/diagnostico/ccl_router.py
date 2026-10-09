@@ -81,7 +81,8 @@ async def submit_ccl(
             f"Reforzar la competencia de {label}" for label in areas_desarrollo
         ] or ["Mantener el desarrollo equilibrado de las 6 competencias"],
     }
-    update_user_skills(db, area="liderazgo", ai_diagnosis=ai_diag, user_id=user_id)
+    update_user_skills(db, area="liderazgo_ccl", ai_diagnosis=ai_diag, user_id=user_id)
+    update_user_skills(db, area="ccl", ai_diagnosis=ai_diag, user_id=user_id)
     update_user_skills(db, area="psicometria", ai_diagnosis=ai_diag, user_id=user_id)
     return {
         "scores": scores,

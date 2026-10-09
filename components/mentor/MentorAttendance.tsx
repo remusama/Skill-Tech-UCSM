@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
     fetchMentorClasses, fetchClassDetails, createClass, scanAttendance,
-    fetchStudentAttendanceStats, AttendanceClass, AttendanceRecord
+    fetchStudentAttendanceStats, fetchServerTime, updateClass, deleteClass,
+    AttendanceClass, AttendanceRecord
 } from "@/lib/api/attendance"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
@@ -27,11 +28,19 @@ export function MentorAttendance() {
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
 
+    // Clock synchronization states
+    const [serverTimeStr, setServerTimeStr] = useState<string>("")
+    const [syncStatus, setSyncStatus] = useState<"syncing" | "synced" | "local">("syncing")
+    const serverOffsetRef = useRef<number>(0)
+
     // Form states
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [className, setClassName] = useState("")
     const [selectedGroupId, setSelectedGroupId] = useState<string>("")
-    const [classDate, setClassDate] = useState(new Date().toISOString().split("T")[0])
+    const [classDate, setClassDate] = useState(() => {
+        const d = new Date()
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+    })
     const [startTime, setStartTime] = useState("08:00")
     const [lateTime, setLateTime] = useState("08:15")
     const [submitting, setSubmitting] = useState(false)
@@ -83,6 +92,116 @@ export function MentorAttendance() {
     useEffect(() => {
         scannerStatusRef.current = scannerStatus
     }, [scannerStatus])
+
+    // Sincronización continua de reloj con el servidor
+    useEffect(() => {
+        let isMounted = true;
+        const syncClock = async () => {
+            const startReq = Date.now();
+            const res = await fetchServerTime();
+            if (res && isMounted) {
+                const endReq = Date.now();
+                const latency = Math.round((endReq - startReq) / 2);
+                const offset = res.timestamp_ms - (endReq - latency);
+                serverOffsetRef.current = offset;
+                setSyncStatus("synced");
+            } else if (isMounted) {
+                setSyncStatus("local");
+            }
+        };
+
+        syncClock();
+
+        const timer = setInterval(() => {
+            const nowSynced = new Date(Date.now() + serverOffsetRef.current);
+            const hours = String(nowSynced.getHours()).padStart(2, "0");
+            const minutes = String(nowSynced.getMinutes()).padStart(2, "0");
+            const seconds = String(nowSynced.getSeconds()).padStart(2, "0");
+            setServerTimeStr(`${hours}:${minutes}:${seconds}`);
+        }, 1000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(timer);
+        };
+    }, []);
+
+    // Funciones auxiliares de sincronización horaria
+    const getSyncedDate = () => {
+        const now = new Date(Date.now() + serverOffsetRef.current);
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    };
+
+    const getSyncedTime = (addMinutes = 0) => {
+        const now = new Date(Date.now() + serverOffsetRef.current + addMinutes * 60 * 1000);
+        const h = String(now.getHours()).padStart(2, "0");
+        const m = String(now.getMinutes()).padStart(2, "0");
+        return `${h}:${m}`;
+    };
+
+    const openCreateModal = () => {
+        setClassDate(getSyncedDate());
+        setStartTime(getSyncedTime(0));
+        setLateTime(getSyncedTime(15));
+        setClassName("");
+        setSelectedGroupId("");
+        setShowCreateModal(true);
+    };
+
+    const applyTolerance = (mins: number) => {
+        if (!startTime) return;
+        const [h, m] = startTime.split(":").map(Number);
+        if (isNaN(h) || isNaN(m)) return;
+        const d = new Date();
+        d.setHours(h, m + mins, 0, 0);
+        const newH = String(d.getHours()).padStart(2, "0");
+        const newM = String(d.getMinutes()).padStart(2, "0");
+        setLateTime(`${newH}:${newM}`);
+    };
+
+    const handleExtendTolerance = async (addMinutes: number) => {
+        if (!classDetail) return;
+        try {
+            const [h, m] = classDetail.late_time.split(":").map(Number);
+            const d = new Date();
+            d.setHours(h, m + addMinutes, 0, 0);
+            const newLateTime = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            await updateClass(classDetail.id, { late_time: newLateTime });
+            setClassDetail(prev => prev ? { ...prev, late_time: newLateTime } : null);
+            setClasses(prev => prev.map(c => c.id === classDetail.id ? { ...c, late_time: newLateTime } : c));
+        } catch (err: any) {
+            alert("Error al extender tolerancia: " + err.message);
+        }
+    };
+
+    const handleToggleClassActive = async () => {
+        if (!classDetail) return;
+        try {
+            const newActive = !classDetail.is_active;
+            await updateClass(classDetail.id, { is_active: newActive });
+            setClassDetail(prev => prev ? { ...prev, is_active: newActive } : null);
+            setClasses(prev => prev.map(c => c.id === classDetail.id ? { ...c, is_active: newActive } : c));
+        } catch (err: any) {
+            alert("Error al cambiar estado: " + err.message);
+        }
+    };
+
+    const handleDeleteClass = async (classId: number) => {
+        if (!confirm("¿Deseas eliminar esta clase de asistencia y sus registros?")) return;
+        try {
+            await deleteClass(classId);
+            if (selectedClassId === classId) {
+                setSelectedClassId(null);
+                setClassDetail(null);
+            }
+            setClasses(prev => prev.filter(c => c.id !== classId));
+        } catch (err: any) {
+            alert("Error al eliminar clase: " + err.message);
+        }
+    };
 
     // Manage QR Scanner Lifecycle
     useEffect(() => {
@@ -524,9 +643,23 @@ export function MentorAttendance() {
                             <MagicTitle variant="sparkles" className="text-4xl md:text-6xl tracking-[0.2em] font-black uppercase">
                                 ASISTENCIAS
                             </MagicTitle>
-                            <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl mt-2 w-fit">
-                                <Calendar size={14} className="text-[#0a6b17]" />
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Registro QR & NFC - Módulo Docente</span>
+                            <div className="flex flex-wrap items-center gap-3 mt-2">
+                                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl w-fit">
+                                    <Calendar size={14} className="text-[#0a6b17]" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Registro QR & NFC - Módulo Docente</span>
+                                </div>
+                                {serverTimeStr && (
+                                    <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-500/10 border border-emerald-500/25 rounded-full text-emerald-400 backdrop-blur-xl">
+                                        <span className="relative flex h-2 w-2">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                        </span>
+                                        <Clock size={12} className="text-emerald-400" />
+                                        <span className="text-[11px] font-mono font-bold tracking-wider">
+                                            Hora Oficial Perú: {serverTimeStr}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -539,7 +672,7 @@ export function MentorAttendance() {
                                 <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                             </Button>
                             <Button
-                                onClick={() => setShowCreateModal(true)}
+                                onClick={openCreateModal}
                                 className="bg-[#0a6b17] hover:bg-[#085512] text-white rounded-2xl h-12 px-6 font-black uppercase tracking-widest shadow-[0_0_20px_rgba(10,107,23,0.3)] transition-all active:scale-95 flex items-center gap-2"
                             >
                                 <Plus size={16} />
@@ -653,18 +786,55 @@ export function MentorAttendance() {
                                                         <span className="text-[9px] font-black uppercase text-[#0a6b17] tracking-[0.2em]">{classDetail.code}</span>
                                                         <h2 className="text-3xl font-black text-white italic uppercase tracking-tight mt-1">{classDetail.name}</h2>
                                                         <p className="text-xs text-gray-500 font-bold mt-1 uppercase">Clase para: {classDetail.group_name} ({classDetail.date})</p>
+                                                        <div className="flex flex-wrap items-center gap-2 mt-3 text-xs font-mono">
+                                                            <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-emerald-400">
+                                                                🕒 Inicio: {classDetail.start_time}
+                                                            </span>
+                                                            <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-amber-400">
+                                                                ⏱️ Puntual hasta: {classDetail.late_time}
+                                                            </span>
+                                                            <span className={`px-2.5 py-1 rounded-lg border text-[10px] uppercase font-bold tracking-wider ${classDetail.is_active ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-rose-500/10 border-rose-500/30 text-rose-400"}`}>
+                                                                {classDetail.is_active ? "● Abierta" : "○ Cerrada"}
+                                                            </span>
+                                                        </div>
                                                     </div>
 
-                                                    <Button
-                                                        onClick={() => {
-                                                            setScannedClassCode(classDetail.code)
-                                                            setActiveTab("scanner")
-                                                        }}
-                                                        className="bg-[#0a6b17] hover:bg-[#085512] text-white font-black uppercase tracking-widest rounded-2xl h-12 px-6 flex items-center gap-2 self-start md:self-auto"
-                                                    >
-                                                        <QrCode size={16} />
-                                                        Escanear esta clase
-                                                    </Button>
+                                                    <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
+                                                        <Button
+                                                            onClick={() => handleExtendTolerance(10)}
+                                                            variant="outline"
+                                                            title="Añadir 10 minutos más a la hora límite de puntualidad"
+                                                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30 font-bold uppercase tracking-wider text-[10px] rounded-xl h-11 px-3 flex items-center gap-1.5"
+                                                        >
+                                                            <Clock size={13} />
+                                                            +10 min Tolerancia
+                                                        </Button>
+                                                        <Button
+                                                            onClick={handleToggleClassActive}
+                                                            variant="outline"
+                                                            className="bg-white/5 hover:bg-white/10 text-white border-white/10 font-bold uppercase tracking-wider text-[10px] rounded-xl h-11 px-3"
+                                                        >
+                                                            {classDetail.is_active ? "Cerrar Sesión" : "Reabrir Sesión"}
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => {
+                                                                setScannedClassCode(classDetail.code)
+                                                                setActiveTab("scanner")
+                                                            }}
+                                                            className="bg-[#0a6b17] hover:bg-[#085512] text-white font-black uppercase tracking-widest rounded-xl h-11 px-5 flex items-center gap-2"
+                                                        >
+                                                            <QrCode size={15} />
+                                                            Escanear
+                                                        </Button>
+                                                        <Button
+                                                            onClick={() => handleDeleteClass(classDetail.id)}
+                                                            variant="outline"
+                                                            className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20 rounded-xl h-11 px-3"
+                                                            title="Eliminar clase"
+                                                        >
+                                                            <X size={15} />
+                                                        </Button>
+                                                    </div>
                                                 </div>
 
                                                 {/* Stats Cards grid */}
@@ -763,11 +933,27 @@ export function MentorAttendance() {
                                                     <option value="" className="bg-[#050A07] text-[#E2ECE8]">Selecciona una clase activa...</option>
                                                     {classes.map(c => (
                                                         <option key={c.id} value={c.code} className="bg-[#050A07] text-[#E2ECE8]">
-                                                            ${c.name} (${c.code}) - ${c.group_name}
+                                                            {c.name} ({c.code}) - {c.group_name} [{c.start_time} - {c.late_time}]
                                                         </option>
                                                     ))}
                                                 </select>
                                             </div>
+
+                                            {(() => {
+                                                const selectedClass = classes.find(c => c.code === scannedClassCode);
+                                                if (!selectedClass) return null;
+                                                return (
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-white/[0.03] border border-white/5 text-xs font-mono text-gray-300 mb-6">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-emerald-400 font-bold">🟢 Inicio: {selectedClass.start_time}</span>
+                                                            <span className="text-amber-400 font-bold">⏱️ Tolerancia: {selectedClass.late_time}</span>
+                                                        </div>
+                                                        {serverTimeStr && (
+                                                            <span className="text-[11px] text-white/50">Hora oficial: {serverTimeStr}</span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
 
                                             {/* Selector de metodo QR/NFC */}
                                             <div className="flex gap-3 mb-8 bg-[#050A07] p-1 rounded-2xl border border-white/10">
@@ -909,10 +1095,10 @@ export function MentorAttendance() {
                                                                 <Check size={36} className="text-black" />
                                                             </div>
                                                             <span className="text-[11px] font-black uppercase tracking-[0.3em] text-black/70">ASISTENCIA REGISTRADA</span>
-                                                            <h3 className="text-3xl font-black uppercase italic tracking-tighter text-black mt-1">${scanFeedback.student}</h3>
-                                                            <p className="text-sm text-black font-bold uppercase mt-2 tracking-wide">${scanFeedback.message}</p>
+                                                            <h3 className="text-3xl font-black uppercase italic tracking-tighter text-black mt-1">{scanFeedback.student}</h3>
+                                                            <p className="text-sm text-black font-bold uppercase mt-2 tracking-wide">{scanFeedback.message}</p>
                                                             <span className="text-[10px] font-black uppercase px-4 py-1.5 bg-black/10 text-black rounded-full mt-4 border border-black/10 tracking-widest">
-                                                                ${scanFeedback.status.toUpperCase()}
+                                                                {scanFeedback.status.toUpperCase()}
                                                             </span>
                                                         </motion.div>
                                                     )}
@@ -929,7 +1115,7 @@ export function MentorAttendance() {
                                                             </div>
                                                             <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white/80">ERROR DE VALIDACIÓN</span>
                                                             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white mt-2">DENEGADO</h3>
-                                                            <p className="text-xs text-white/90 font-bold uppercase mt-2 max-w-md leading-relaxed">${scanFeedback.message}</p>
+                                                            <p className="text-xs text-white/90 font-bold uppercase mt-2 max-w-md leading-relaxed">{scanFeedback.message}</p>
                                                             <Button
                                                                 onClick={() => setScannerStatus("idle")}
                                                                 variant="outline"
@@ -1235,7 +1421,14 @@ export function MentorAttendance() {
                             <div className="absolute bottom-[-20%] left-[-20%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[60px] pointer-events-none" />
 
                             <div className="flex items-center justify-between relative z-10">
-                                <h2 className="text-2xl font-black italic uppercase tracking-wide">Programar Clase</h2>
+                                <div>
+                                    <h2 className="text-2xl font-black italic uppercase tracking-wide">Programar Clase</h2>
+                                    {serverTimeStr && (
+                                        <span className="text-[10px] font-mono text-emerald-400 font-bold block mt-0.5">
+                                            Reloj Oficial Servidor: {serverTimeStr}
+                                        </span>
+                                    )}
+                                </div>
                                 <button onClick={() => setShowCreateModal(false)} className="p-2 hover:bg-white/10 rounded-xl text-gray-400 hover:text-white transition-all">
                                     <X className="w-5 h-5" />
                                 </button>
@@ -1272,7 +1465,7 @@ export function MentorAttendance() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Fecha</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Fecha (Perú)</label>
                                         <Input
                                             type="date"
                                             value={classDate}
@@ -1292,7 +1485,7 @@ export function MentorAttendance() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Límite de Tardanza</label>
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Puntual Hasta</label>
                                         <Input
                                             type="time"
                                             value={lateTime}
@@ -1301,6 +1494,46 @@ export function MentorAttendance() {
                                             required
                                         />
                                     </div>
+                                </div>
+
+                                {/* Quick tolerance buttons */}
+                                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2.5">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">Tolerancia Rápida:</span>
+                                        <div className="flex gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTolerance(5)}
+                                                className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/5 hover:bg-emerald-500/20 text-white hover:text-emerald-300 border border-white/10 transition-all"
+                                            >
+                                                +5 min
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTolerance(10)}
+                                                className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/5 hover:bg-emerald-500/20 text-white hover:text-emerald-300 border border-white/10 transition-all"
+                                            >
+                                                +10 min
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTolerance(15)}
+                                                className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/5 hover:bg-emerald-500/20 text-white hover:text-emerald-300 border border-white/10 transition-all"
+                                            >
+                                                +15 min
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => applyTolerance(30)}
+                                                className="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-white/5 hover:bg-emerald-500/20 text-white hover:text-emerald-300 border border-white/10 transition-all"
+                                            >
+                                                +30 min
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-white/50 leading-relaxed">
+                                        💡 Escaneos hasta las <strong className="text-emerald-400 font-mono">{lateTime || "--:--"}</strong> (+2 min de gracia técnica por sincronía de reloj) se registrarán como <strong className="text-emerald-400">PRESENTE</strong>. Posterior a esa hora se registrarán como <strong className="text-amber-400">TARDANZA</strong>.
+                                    </p>
                                 </div>
 
                                 <div className="flex gap-4 justify-end pt-4">

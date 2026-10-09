@@ -159,6 +159,7 @@ body {
   top: 0;
   left: 0;
   height: 100%;
+  pointer-events: none;
 }
 
 .zone-content {
@@ -193,6 +194,7 @@ body {
     height: 100vh;
     z-index: 30;
     width: 100%;
+    pointer-events: auto;
   }
 
   .zone-eleonor {

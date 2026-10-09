@@ -15,6 +15,7 @@ import {
   Search,
   Settings,
   Menu,
+  X,
   Brain,
   FileText,
   Compass,
@@ -49,10 +50,7 @@ const teacherNavItems = [
   { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
   { icon: PieChart, label: "Psicometría", page: "mentor-psicometria" },
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
-  { icon: Folder, label: "Grupos", page: "mentor-groups" },
-  { icon: FileText, label: "Exámenes", page: "mentor-exams" },
   { icon: MessageSquarePlus, label: "Ponencias", page: "mentor-ponencias" },
-  { icon: Settings, label: "Agentes IA", page: "mentor-agents" },
   { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
 
@@ -69,10 +67,30 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
   const { theme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isEdgeExpanded, setIsEdgeExpanded] = useState(false)
   const [userName, setUserName] = useState("Estudiante")
   const [userSubtitle, setUserSubtitle] = useState("Fundador")
   const sidebarRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const edgeTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const handleEdgeProximity = (expand: boolean) => {
+    if (edgeTimerRef.current) clearTimeout(edgeTimerRef.current)
+    if (expand) {
+      setIsEdgeExpanded(true)
+      edgeTimerRef.current = setTimeout(() => {
+        setIsEdgeExpanded(false)
+      }, 2800)
+    } else {
+      setIsEdgeExpanded(false)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (edgeTimerRef.current) clearTimeout(edgeTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     try {
@@ -129,6 +147,21 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
   }, [])
 
   useEffect(() => {
+    const handleOpen = () => setIsOpen(true)
+    const handleClose = () => setIsOpen(false)
+    const handleToggle = () => setIsOpen(prev => !prev)
+
+    window.addEventListener("open-sidebar", handleOpen)
+    window.addEventListener("close-sidebar", handleClose)
+    window.addEventListener("toggle-sidebar", handleToggle)
+    return () => {
+      window.removeEventListener("open-sidebar", handleOpen)
+      window.removeEventListener("close-sidebar", handleClose)
+      window.removeEventListener("toggle-sidebar", handleToggle)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!isOpen || isGuideActive) return
 
     function handleClickOutside(event: MouseEvent) {
@@ -148,21 +181,51 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
 
   return (
     <>
+      {/* Pestaña Inteligente Retráctil en el Borde Izquierdo: se sale de la pantalla, sigue el scroll y al estar cerca se inserta animada */}
       <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            ref={buttonRef}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            onClick={() => setIsOpen(true)}
-            style={theme !== 'dark' ? { backgroundColor: '#e8e8e6', color: '#b8860b' } : undefined}
-            className={`fixed top-6 left-6 z-50 backdrop-blur-2xl p-3 rounded-2xl border border-[#b8860b]/30 text-[#b8860b] shadow-2xl transition-all active:scale-95 group md:hidden ${
-              theme === 'dark' ? 'bg-[#032318]/80 hover:bg-[#3c5a21]/50' : 'bg-[#e8e8e6] border-slate-300 hover:bg-slate-200'
-            }`}
+        {!isOpen && isMobile && (
+          <motion.div
+            initial={{ x: -70, opacity: 0 }}
+            animate={{
+              x: isEdgeExpanded ? 0 : -62,
+              opacity: isEdgeExpanded ? 1 : 0.7,
+            }}
+            exit={{ x: -90, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 450, damping: 28 }}
+            onMouseEnter={() => handleEdgeProximity(true)}
+            onTouchStart={() => handleEdgeProximity(true)}
+            className="fixed left-0 top-32 z-40 md:hidden pointer-events-auto"
           >
-            <Menu size={24} className="group-hover:rotate-90 transition-transform duration-500" />
-          </motion.button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(true)
+                setIsEdgeExpanded(false)
+              }}
+              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-r-2xl bg-[hsl(161,65%,7%)]/90 backdrop-blur-2xl border-y border-r border-emerald-500/30 text-white shadow-[0_6px_25px_rgba(0,0,0,0.6)] cursor-pointer group active:scale-95 transition-all"
+              title="Abrir menú de navegación"
+            >
+              <div className="w-1.5 h-5 rounded-full bg-[hsl(74,100%,47%)] shadow-[0_0_8px_rgba(186,239,0,0.8)]" />
+              <Menu size={14} className="text-[hsl(74,100%,47%)] transition-transform group-hover:scale-110 flex-shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/90 pr-0.5">
+                Menú
+              </span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Backdrop oscuro para móvil cuando el menú está abierto */}
+      <AnimatePresence>
+        {isOpen && isMobile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] md:hidden cursor-pointer pointer-events-auto"
+          />
         )}
       </AnimatePresence>
 
@@ -181,9 +244,9 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
             style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
             className={`
               fixed md:sticky top-0 left-0 h-screen md:translate-x-0 md:opacity-100
-              backdrop-blur-[60px] border-r z-40 w-72 md:w-72 flex-shrink-0
+              backdrop-blur-[60px] border-r z-[100] md:z-30 w-72 md:w-72 flex-shrink-0 pointer-events-auto
               overflow-y-auto overflow-x-hidden ${isSidebarHighlighted ? 'border-r-[#b8860b]/50' : ''}
-              ${theme === 'dark' ? 'bg-white/5 border-white/5 text-white' : 'bg-[#e8e8e6] border-slate-300 text-[#063924]'}
+              ${theme === 'dark' ? 'bg-[hsl(161,67%,9%)]/95 md:bg-white/5 border-white/10 md:border-white/5 text-white shadow-2xl' : 'bg-[#e8e8e6] border-slate-300 text-[#063924]'}
             `}
           >
             <Meteors number={15} className="opacity-20" />
@@ -296,7 +359,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                         if (isMobile) setIsOpen(false)
                       }}
                       style={!isActive && theme !== 'dark' ? { backgroundColor: '#f4f7f5' } : undefined}
-                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-500 group relative border backdrop-blur-sm ${
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-200 group relative border backdrop-blur-sm ${
                         isActive 
                           ? (theme === 'dark' ? "text-white border-[#0d971f]" : "text-[#063924] border-[#0d971f] font-bold shadow-sm") 
                           : (theme === 'dark' ? "text-white/40 hover:text-white border-white/5" : "text-slate-700 hover:text-[#063924] border-slate-200")
@@ -309,15 +372,15 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
                         />
                       )}
 
-                      <div className={`p-2 rounded-xl transition-all duration-300 ${
+                      <div className={`p-2 rounded-xl transition-all duration-200 ${
                         isActive || isHighlighted 
                           ? "bg-[#0d971f] text-white shadow-[0_0_12px_rgba(13,151,31,0.6)]" 
                           : theme === 'dark' ? "bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white" : "bg-white text-slate-700 shadow-xs group-hover:text-[#0d971f]"
                       }`}>
-                        <item.icon size={18} className="transition-transform duration-300 group-hover:rotate-12" />
+                        <item.icon size={18} className="transition-transform duration-200 group-hover:rotate-12" />
                       </div>
 
-                      <span className={`text-xs font-black uppercase tracking-widest transition-all duration-500 ${isActive || isHighlighted ? 'translate-x-1' : ''}`}>
+                      <span className={`text-xs font-black uppercase tracking-widest transition-all duration-200 ${isActive || isHighlighted ? 'translate-x-1' : ''}`}>
                         {item.label}
                       </span>
                     </motion.button>

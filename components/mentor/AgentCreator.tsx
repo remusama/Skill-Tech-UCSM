@@ -96,9 +96,12 @@ const AgentCard = ({ agent, isTemplate, onTest }: { agent: Agent; isTemplate: bo
   )
 }
 
+// Caché en memoria para carga inmediata sin pantalla en blanco
+let cachedAgentsData: AgentsData | null = null
+
 export const AgentCreator = () => {
-  const [agentsData, setAgentsData] = useState<AgentsData>({ templates: [], custom: [] })
-  const [loading, setLoading] = useState(true)
+  const [agentsData, setAgentsData] = useState<AgentsData>(() => cachedAgentsData || { templates: [], custom: [] })
+  const [loading, setLoading] = useState(() => !cachedAgentsData)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
@@ -122,7 +125,11 @@ export const AgentCreator = () => {
       const res = await fetch(`${API_BASE_URL}/api/mentor/agents`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      if (res.ok) setAgentsData(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        cachedAgentsData = data
+        setAgentsData(data)
+      }
     } catch (err) {
       console.error("Error fetching agents:", err)
     } finally {

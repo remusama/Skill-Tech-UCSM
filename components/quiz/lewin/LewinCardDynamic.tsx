@@ -9,11 +9,21 @@ type Props = {
   items: LewinItem[];
   answers: Record<number, "A" | "D">;
   onAnswer: (id: number, value: "A" | "D") => void;
+  initialIndex?: number;
+  onIndexChange?: (index: number) => void;
 };
 
-export function LewinCardDynamic({ items, answers, onAnswer }: Props) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export function LewinCardDynamic({ items, answers, onAnswer, initialIndex = 0, onIndexChange }: Props) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [direction, setDirection] = useState<1 | -1>(1);
+
+  const setIndex = (valOrFn: number | ((prev: number) => number)) => {
+    setCurrentIndex((prev) => {
+      const next = typeof valOrFn === "function" ? valOrFn(prev) : valOrFn;
+      onIndexChange?.(next);
+      return next;
+    });
+  };
 
   const item = items[currentIndex];
   const isLast = currentIndex === items.length - 1;
@@ -24,19 +34,19 @@ export function LewinCardDynamic({ items, answers, onAnswer }: Props) {
     onAnswer(item.id, value);
     if (!isLast) {
       setDirection(1);
-      setTimeout(() => setCurrentIndex((i) => Math.min(i + 1, items.length - 1)), 260);
+      setTimeout(() => setIndex((i) => Math.min(i + 1, items.length - 1)), 260);
     }
   }
 
   function goPrev() {
     setDirection(-1);
-    setCurrentIndex((i) => Math.max(i - 1, 0));
+    setIndex((i) => Math.max(i - 1, 0));
   }
 
   function goNext() {
     if (!currentAnswer) return;
     setDirection(1);
-    setCurrentIndex((i) => Math.min(i + 1, items.length - 1));
+    setIndex((i) => Math.min(i + 1, items.length - 1));
   }
 
   if (!item) return null;

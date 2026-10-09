@@ -29,6 +29,15 @@ def generate_secure_token() -> str:
     """Genera una credencial única formateada para alumnos."""
     return f"SKILL-{uuid.uuid4().hex[:12].upper()}"
 
+
+def get_peru_now() -> datetime.datetime:
+    """Retorna la fecha y hora actual en la zona horaria de Perú (America/Lima, UTC-5)."""
+    try:
+        peru_tz = ZoneInfo("America/Lima")
+        return datetime.datetime.now(peru_tz)
+    except Exception:
+        return datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-5)))
+
 # ============================================================================
 # PYDANTIC SCHEMAS
 # ============================================================================
@@ -41,10 +50,37 @@ class CreateClassRequest(BaseModel):
     late_time: str = Field(..., description="Hora límite para marcar presente (HH:MM)")
 
 
+class UpdateClassRequest(BaseModel):
+    name: Optional[str] = Field(None, description="Nombre de la sesión")
+    start_time: Optional[str] = Field(None, description="Hora de inicio en formato HH:MM")
+    late_time: Optional[str] = Field(None, description="Hora límite de puntualidad (HH:MM)")
+    is_active: Optional[bool] = Field(None, description="Estado de apertura de la clase")
+
+
 class ScanRequest(BaseModel):
     class_code: str = Field(..., description="Código único de la clase")
     secure_token: str = Field(..., description="Token de credencial QR/NFC del estudiante")
     scan_type: str = Field(..., description="Método de escaneo utilizado ('qr' o 'nfc')")
+
+
+# ============================================================================
+# ENDPOINTS: SINCRONIZACIÓN DE RELOJ Y TIEMPO DEL SERVIDOR
+# ============================================================================
+
+@router.get("/server-time")
+def get_server_time():
+    """Retorna la hora y fecha sincronizada del servidor en zona horaria de Perú.
+    Permite al frontend alinear su reloj con el backend para evitar desincronías.
+    """
+    now = get_peru_now()
+    return {
+        "server_time": now.isoformat(),
+        "date_str": now.strftime("%Y-%m-%d"),
+        "time_str": now.strftime("%H:%M"),
+        "time_full_str": now.strftime("%H:%M:%S"),
+        "timezone": "America/Lima (UTC-5)",
+        "timestamp_ms": int(now.timestamp() * 1000)
+    }
 
 # ============================================================================
 # ENDPOINTS: GESTIÓN DE CLASES Y ASISTENCIA (DOCENTES / MENTORES)
@@ -281,6 +317,66 @@ def get_class_details(
     }
 
 
+@router.patch("/classes/{class_id}")
+def update_attendance_class(
+    class_id: int,
+    req: UpdateClassRequest,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Permite al mentor actualizar el nombre, horario, límite de tardanza o estado activo de una clase."""
+    check_is_mentor(current_user_id, db)
+    c = db.query(AttendanceClass).filter(AttendanceClass.id == class_id).first()
+    if not c:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Clase no encontrada."
+        )
+
+    if req.name is not None:
+        c.name = req.name.strip()
+    if req.start_time is not None:
+        c.start_time = req.start_time.strip()
+    if req.late_time is not None:
+        c.late_time = req.late_time.strip()
+    if req.is_active is not None:
+        c.is_active = req.is_active
+
+    db.commit()
+    db.refresh(c)
+
+    return {
+        "message": "Clase actualizada exitosamente.",
+        "id": c.id,
+        "name": c.name,
+        "start_time": c.start_time,
+        "late_time": c.late_time,
+        "is_active": c.is_active
+    }
+
+
+@router.delete("/classes/{class_id}")
+def delete_attendance_class(
+    class_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
+    """Permite al mentor eliminar una clase y sus registros asociados."""
+    check_is_mentor(current_user_id, db)
+    c = db.query(AttendanceClass).filter(AttendanceClass.id == class_id).first()
+    if not c:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Clase no encontrada."
+        )
+
+    db.query(AttendanceRecord).filter(AttendanceRecord.class_id == class_id).delete()
+    db.delete(c)
+    db.commit()
+
+    return {"message": "Clase eliminada exitosamente."}
+
+
 @router.post("/scan")
 def scan_attendance(
     req: ScanRequest,
@@ -356,8 +452,7 @@ def scan_attendance(
             )
 
     # Determinar fecha y hora actual usando explícitamente la zona horaria de Perú
-    peru_tz = ZoneInfo("America/Lima")
-    now = datetime.datetime.now(peru_tz)
+    now = get_peru_now()
 
     # Convertir la fecha configurada de la clase
     try:
@@ -376,8 +471,8 @@ def scan_attendance(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                f"La asistencia solo puede registrarse el día de la clase "
-                f"({c.date})."
+                f"La asistencia solo puede registrarse el día de la clase ({c.date}). "
+                f"Fecha actual en Perú: {now.strftime('%Y-%m-%d')}."
             )
         )
 
@@ -398,20 +493,35 @@ def scan_attendance(
             detail="La hora de inicio o límite de tardanza no tiene un formato válido."
         )
 
-    current_time = now.time().replace(second=0, microsecond=0)
+    # Construir datetimes completos conscientes de la zona horaria
+    tz = now.tzinfo
+    start_dt = datetime.datetime.combine(class_date, start_time).replace(tzinfo=tz)
+    late_dt = datetime.datetime.combine(class_date, late_time).replace(tzinfo=tz)
 
-    # Antes del inicio de la clase todavía no corresponde registrar asistencia
-    if current_time < start_time:
+    # Soporte para clases nocturnas que pasan de medianoche (ej: 23:30 -> 00:30)
+    if late_dt < start_dt:
+        late_dt += datetime.timedelta(days=1)
+
+    # Margen de apertura previa: Permitir registrar asistencia hasta 60 minutos antes
+    # de la hora de inicio oficial de la clase (llegar temprano es puntualidad válida)
+    early_allowed_dt = start_dt - datetime.timedelta(minutes=60)
+    if now < early_allowed_dt:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
                 f"La asistencia todavía no está habilitada. "
-                f"La clase inicia a las {c.start_time}."
+                f"La clase inicia a las {c.start_time} (habilitada desde las {early_allowed_dt.strftime('%H:%M')})."
             )
         )
 
-    # Desde la hora de inicio hasta la hora límite: presente
-    if current_time <= late_time:
+    # Margen de gracia técnico (120 segundos / 2 minutos):
+    # Protege contra desincronización de reloj entre cliente y servidor,
+    # latencia de red y lecturas QR en el segundo exacto del límite.
+    late_grace_dt = late_dt + datetime.timedelta(seconds=120)
+
+    # Desde la habilitación previa hasta el límite de puntualidad (+2 min gracia): PRESENTE
+    # Pasado el límite con gracia: TARDANZA
+    if now <= late_grace_dt:
         status_attendance = "presente"
     else:
         status_attendance = "tardanza"

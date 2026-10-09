@@ -183,3 +183,63 @@ export async function fetchMyAttendanceStats(): Promise<StudentAttendanceRespons
         return null;
     }
 }
+
+export interface ServerTimeResponse {
+    server_time: string;
+    date_str: string;
+    time_str: string;
+    time_full_str: string;
+    timezone: string;
+    timestamp_ms: number;
+}
+
+export async function fetchServerTime(): Promise<ServerTimeResponse | null> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/attendance/server-time`, {
+            headers: getAuthHeaders()
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (error) {
+        console.error("Error fetching server time:", error);
+        return null;
+    }
+}
+
+export async function updateClass(
+    classId: number,
+    payload: { name?: string; start_time?: string; late_time?: string; is_active?: boolean }
+): Promise<any> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/attendance/classes/${classId}`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || "Error al actualizar clase");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error updating class:", error);
+        throw error;
+    }
+}
+
+export async function deleteClass(classId: number): Promise<any> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/attendance/classes/${classId}`, {
+            method: "DELETE",
+            headers: getAuthHeaders()
+        });
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail || "Error al eliminar clase");
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error deleting class:", error);
+        throw error;
+    }
+}

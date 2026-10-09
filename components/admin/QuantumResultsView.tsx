@@ -4,6 +4,7 @@ import { ArrowLeft, Brain, Zap, Activity, Target, Sparkles, TrendingUp, Calendar
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, BarChart, Bar } from 'recharts'
 import { API_BASE_URL } from "@/lib/config"
 import { getStudentHouseProfile, CASAS_INFO, playStudentHouseAudio } from "@/lib/casasData"
+import { StudentHouseAvatar } from "@/components/avatar/StudentHouseAvatar"
 import { LewinResults } from "../quiz/LewinResults"
 import { NeoPiRResults } from "../quiz/NeoPiRResults"
 import { CepvResults } from "../quiz/CepvResults"
@@ -316,6 +317,7 @@ export const QuantumResultsView = ({
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </motion.button>
+                    <StudentHouseAvatar studentName={studentName} size="lg" />
                     <div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[10px] text-[hsl(74,100%,47%)] font-black uppercase tracking-[0.3em]">

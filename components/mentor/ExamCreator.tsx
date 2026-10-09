@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Bot, FileText, Users, Check, Plus, Trash2, ChevronRight, Send, X, ChevronDown } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
+import { StudentHouseAvatar } from "@/components/avatar/StudentHouseAvatar"
 
 interface Agent {
   id: number
@@ -603,11 +604,7 @@ export const ExamCreator = () => {
                     className={`p-4 rounded-xl border cursor-pointer flex items-center gap-3 transition-all ${isSelected ? "" : "bg-white/3 border-white/5 hover:border-white/15"}`}
                     style={isSelected ? { backgroundColor: 'rgba(186, 239, 0, 0.1)', borderColor: 'rgba(186, 239, 0, 0.3)' } : undefined}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 ${isSelected ? "text-black" : "bg-white/10 text-gray-400"}`}
-                      style={{ backgroundColor: isSelected ? '#baef00' : undefined }}
-                    >
-                      {s.full_name.charAt(0)}
-                    </div>
+                    <StudentHouseAvatar studentName={s.full_name} username={s.username} size="sm" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm text-white">{s.full_name}</p>
                       <p className="text-xs text-gray-500">@{s.username}</p>
