@@ -22,7 +22,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 export function MentorAttendance() {
     const [activeTab, setActiveTab] = useState<"classes" | "scanner" | "benchmarking">("classes")
     const [classes, setClasses] = useState<AttendanceClass[]>([])
-    const [groups, setGroups] = useState<any[]>([])
     const [students, setStudents] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [refreshKey, setRefreshKey] = useState(0)
@@ -30,7 +29,6 @@ export function MentorAttendance() {
     // Form states
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [className, setClassName] = useState("")
-    const [selectedGroupId, setSelectedGroupId] = useState<string>("")
     const [classDate, setClassDate] = useState(new Date().toISOString().split("T")[0])
     const [startTime, setStartTime] = useState("08:00")
     const [lateTime, setLateTime] = useState("08:15")
@@ -175,14 +173,6 @@ export function MentorAttendance() {
                 const classesData = await fetchMentorClasses()
                 setClasses(classesData)
 
-                // Fetch groups for class creation dropdown
-                const groupsRes = await fetch(`${API_URL}/mentor/groups`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
-                if (groupsRes.ok) {
-                    setGroups(await groupsRes.json())
-                }
-
                 // Fetch all students for simulator dropdown
                 const studentsRes = await fetch(`${API_URL}/mentor/students`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -298,14 +288,12 @@ export function MentorAttendance() {
         try {
             await createClass({
                 name: className,
-                group_id: selectedGroupId ? parseInt(selectedGroupId) : null,
                 date: classDate,
                 start_time: startTime,
                 late_time: lateTime
             })
             setShowCreateModal(false)
             setClassName("")
-            setSelectedGroupId("")
             setRefreshKey(prev => prev + 1)
         } catch (err) {
             alert("Error al crear clase: " + (err as Error).message)
@@ -499,7 +487,7 @@ export function MentorAttendance() {
         {
             name: "Asistencia",
             "Estudiante": studentStats.stats.rate,
-            "Media Grupal": studentStats.stats.group_average
+            "Media Global": studentStats.stats.group_average
         }
     ] : []
 
@@ -1105,7 +1093,7 @@ export function MentorAttendance() {
                                                     </div>
 
                                                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-8 leading-normal">
-                                                        Rendimiento relativo de asistencia de <span className="text-white">{studentStats.student_name}</span> frente a la media del grupo o sistema de SkillTech.
+                                                        Rendimiento relativo de asistencia de <span className="text-white">{studentStats.student_name}</span> frente a la media global o sistema de SkillTech.
                                                     </p>
 
                                                     <div className="h-[250px] w-full mt-4">
@@ -1134,7 +1122,7 @@ export function MentorAttendance() {
                                                                     barSize={60}
                                                                 />
                                                                 <Bar
-                                                                    dataKey="Media Grupal"
+                                                                    dataKey="Media Global"
                                                                     fill="rgba(255,255,255,0.08)"
                                                                     radius={[12, 12, 0, 0]}
                                                                     barSize={60}
@@ -1251,24 +1239,6 @@ export function MentorAttendance() {
                                         required
                                     />
                                 </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Asignar Grupo</label>
-                                    <select
-                                        value={selectedGroupId}
-                                        onChange={(e) => setSelectedGroupId(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 text-sm text-white font-bold h-12"
-                                        required
-                                    >
-                                        <option value="" className="bg-[#051c14] text-white">Selecciona el grupo de alumnos...</option>
-                                        {groups.map(g => (
-                                            <option key={g.id} value={g.id} className="bg-[#051c14] text-white">
-                                                {g.name} ({g.student_count} alumnos)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-white/40 ml-2">Fecha</label>
