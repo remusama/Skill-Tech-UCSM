@@ -1,4 +1,4 @@
-d"use client"
+"use client"
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -147,7 +147,6 @@ export function MentorAttendance() {
         setStartTime(getSyncedTime(0));
         setLateTime(getSyncedTime(15));
         setClassName("");
-        setSelectedGroupId("");
         setShowCreateModal(true);
     };
 
@@ -609,7 +608,7 @@ export function MentorAttendance() {
         {
             name: "Asistencia",
             "Estudiante": studentStats.stats.rate,
-            "Media Global": studentStats.stats.group_average
+            "Media Global": studentStats.stats.global_average
         }
     ] : []
 
@@ -735,7 +734,7 @@ export function MentorAttendance() {
                                                                 <div>
                                                                     <span className="text-[9px] font-black uppercase text-[#0a6b17] tracking-wider bg-[#0a6b17]/10 px-2.5 py-0.5 rounded-full border border-[#0a6b17]/20">{c.code}</span>
                                                                     <h4 className="font-black text-white text-base tracking-wide italic mt-1.5 uppercase">{c.name}</h4>
-                                                                    <p className="text-xs text-gray-400 font-bold mt-1 uppercase">{c.group_name}</p>
+                                                                    <p className="text-xs text-gray-400 font-bold mt-1 uppercase">{c.date}</p>
                                                                 </div>
                                                                 {c.is_active ? (
                                                                     <span className="w-2 h-2 rounded-full bg-[#0a6b17] animate-pulse shadow-[0_0_8px_rgba(10,107,23,0.5)]" />
@@ -775,7 +774,7 @@ export function MentorAttendance() {
                                                     <div>
                                                         <span className="text-[9px] font-black uppercase text-[#0a6b17] tracking-[0.2em]">{classDetail.code}</span>
                                                         <h2 className="text-3xl font-black text-white italic uppercase tracking-tight mt-1">{classDetail.name}</h2>
-                                                        <p className="text-xs text-gray-500 font-bold mt-1 uppercase">Clase para: {classDetail.group_name} ({classDetail.date})</p>
+                                                        <p className="text-xs text-gray-500 font-bold mt-1 uppercase">Fecha: {classDetail.date}</p>
                                                         <div className="flex flex-wrap items-center gap-2 mt-3 text-xs font-mono">
                                                             <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-emerald-400">
                                                                 🕒 Inicio: {classDetail.start_time}
@@ -923,7 +922,7 @@ export function MentorAttendance() {
                                                     <option value="" className="bg-[#050A07] text-[#E2ECE8]">Selecciona una clase activa...</option>
                                                     {classes.map(c => (
                                                         <option key={c.id} value={c.code} className="bg-[#050A07] text-[#E2ECE8]">
-                                                            {c.name} ({c.code}) - {c.group_name} [{c.start_time} - {c.late_time}]
+                                                            {c.name} ({c.code}) [{c.start_time} - {c.late_time}]
                                                         </option>
                                                     ))}
                                                 </select>
