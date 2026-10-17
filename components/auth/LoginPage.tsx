@@ -225,6 +225,9 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                 src="/new-logo.png"
                 alt="SkillTech Logo"
                 fill
+                sizes="80px"
+                unoptimized
+                priority
                 className="object-contain drop-shadow-[0_0_20px_rgba(208,176,77,0.6)]"
               />
             </div>
@@ -242,6 +245,9 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
                 src="/Logo.png"
                 alt="Logo institucional"
                 fill
+                sizes="210px"
+                unoptimized
+                priority
                 className="object-contain"
               />
             </div>

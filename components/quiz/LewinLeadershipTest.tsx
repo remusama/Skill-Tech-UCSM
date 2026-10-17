@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BackgroundAnimation } from "../shared/BackgroundAnimation";
@@ -9,7 +9,10 @@ import { kurtLewinItems } from "@/components/exams/personales/psicometria/kurtLe
 import { scoreLewinTest, LewinAnswer } from "@/components/exams/personales/psicometria/kurtLewinScoring";
 import { LewinCardDynamic } from "./lewin/LewinCardDynamic";
 import { LewinResults } from "./LewinResults";
+import { SaveProgressExitModal } from "./shared/SaveProgressExitModal";
+import { saveExamDraft, loadExamDraft, clearExamDraft } from "@/lib/utils/examDraftStorage";
 import { API_URL } from "@/lib/config";
+import { RotateCcw, BookmarkCheck } from "lucide-react";
 
 function getAuthHeaders(): Record<string, string> {
   const token = typeof window !== "undefined" ? localStorage.getItem("eleonor_token") : null;
@@ -18,15 +21,75 @@ function getAuthHeaders(): Record<string, string> {
 
 export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => void; onComplete?: (score: any) => void }) {
   const [answers, setAnswers] = useState<Record<number, "A" | "D">>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasRestoredDraft, setHasRestoredDraft] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
+
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+
+  // Restore draft on mount
+  useEffect(() => {
+    const draft = loadExamDraft<Record<number, "A" | "D">>("lewin-33");
+    if (draft && draft.answers && Object.keys(draft.answers).length > 0) {
+      setAnswers(draft.answers);
+      if (typeof draft.currentIndex === "number") {
+        setCurrentIndex(Math.min(draft.currentIndex, kurtLewinItems.length - 1));
+      }
+      setHasRestoredDraft(true);
+    }
+  }, []);
+
+  // Auto-save draft on changes
+  useEffect(() => {
+    if (Object.keys(answers).length > 0) {
+      saveExamDraft("lewin-33", {
+        answers,
+        currentIndex,
+      });
+    }
+  }, [answers, currentIndex]);
 
   const answered = Object.keys(answers).length;
   const progress = Math.round((answered / 33) * 100);
 
   function setAns(id: number, v: "A" | "D") {
     setAnswers((p) => ({ ...p, [id]: v }));
+  }
+
+  function handleResetProgress() {
+    clearExamDraft("lewin-33");
+    setAnswers({});
+    setCurrentIndex(0);
+    setHasRestoredDraft(false);
+  }
+
+  function handleRequestExit() {
+    if (answered > 0) {
+      setShowExitModal(true);
+    } else {
+      onExit?.();
+    }
+  }
+
+  function handleSaveAndExit() {
+    saveExamDraft("lewin-33", {
+      answers: answersRef.current,
+      currentIndex: currentIndexRef.current,
+    });
+    setShowExitModal(false);
+    onExit?.();
+  }
+
+  function handleDiscardAndExit() {
+    clearExamDraft("lewin-33");
+    setShowExitModal(false);
+    onExit?.();
   }
 
   async function handleSubmit() {
@@ -47,9 +110,11 @@ export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => voi
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       const merged = { ...data, local };
+      clearExamDraft("lewin-33");
       setResult(merged);
       onComplete?.(merged);
     } catch (e: any) {
+      clearExamDraft("lewin-33");
       setResult({ counts: { autoritario: local.autoritario, democratico: local.democratico, "laissez-faire": local["laissez-faire"] }, dominant: local.dominant, isTied: local.isTied, offline: true });
     } finally {
       setSubmitting(false);
@@ -62,9 +127,29 @@ export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => voi
     <div className="relative min-h-screen w-full flex flex-col pt-6 overflow-hidden bg-gradient-to-b from-[#012216] via-[#023320] via-40% to-[#3c5a21]">
       <BackgroundAnimation />
       <div className="max-w-4xl mx-auto w-full px-6 flex-1 flex flex-col relative z-10">
-        <div className="mb-6">
-          <h2 className="text-2xl font-black italic text-white uppercase">Test de Liderazgo — Kurt Lewin</h2>
-          <p className="text-xs text-white/50 uppercase tracking-widest mt-1">33 afirmaciones — Elige la carta roja (Espera / Desacuerdo) o verde (Adelante / Acuerdo) — Determinístico</p>
+        <div className="mb-4">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="text-2xl font-black italic text-white uppercase">Test de Liderazgo — Kurt Lewin</h2>
+              <p className="text-xs text-white/50 uppercase tracking-widest mt-1">33 afirmaciones — Elige la carta roja (Espera / Desacuerdo) o verde (Adelante / Acuerdo) — Determinístico</p>
+            </div>
+
+            {hasRestoredDraft && (
+              <div className="flex items-center gap-2 bg-[#22c55e]/15 border border-[#22c55e]/30 px-3 py-1.5 rounded-xl">
+                <BookmarkCheck className="w-4 h-4 text-[#4ade80]" />
+                <span className="text-[11px] font-bold text-white/90">Avance restaurado</span>
+                <button
+                  type="button"
+                  onClick={handleResetProgress}
+                  className="ml-2 flex items-center gap-1 text-[10px] text-red-400 hover:text-red-300 font-bold uppercase underline"
+                  title="Borrar progreso y comenzar de nuevo"
+                >
+                  <RotateCcw className="w-3 h-3" /> Reiniciar
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="mt-4">
             <div className="flex justify-between text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">
               <span>{answered}/33 respondidas</span><span>{progress}%</span>
@@ -73,7 +158,13 @@ export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => voi
           </div>
         </div>
         
-        <LewinCardDynamic items={kurtLewinItems} answers={answers} onAnswer={setAns} />
+        <LewinCardDynamic
+          items={kurtLewinItems}
+          answers={answers}
+          onAnswer={setAns}
+          initialIndex={currentIndex}
+          onIndexChange={setCurrentIndex}
+        />
         
         {error && <p className="text-xs text-red-400 text-center mb-2">{error}</p>}
         
@@ -81,7 +172,7 @@ export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => voi
           {onExit && (
             <Button 
               variant="outline" 
-              onClick={onExit} 
+              onClick={handleRequestExit} 
               className="bg-[#0b3320]/80 border-[#14532d] text-white/70 hover:bg-[#114d2e] hover:text-white rounded-xl text-xs font-black uppercase tracking-widest px-6"
             >
               Salir
@@ -96,6 +187,16 @@ export function LewinLeadershipTest({ onExit, onComplete }: { onExit?: () => voi
           </Button>
         </div>
       </div>
+
+      <SaveProgressExitModal
+        isOpen={showExitModal}
+        totalQuestions={33}
+        answeredCount={answered}
+        examTitle="Test de Liderazgo — Kurt Lewin"
+        onSaveAndExit={handleSaveAndExit}
+        onDiscardAndExit={handleDiscardAndExit}
+        onCancel={() => setShowExitModal(false)}
+      />
     </div>
   );
 }

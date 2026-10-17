@@ -718,8 +718,8 @@ const AvatarDisplay = () => {
                 // 350 en DIAGNOSIS (Encima de los overlays de datos z-140)
                 zIndex: isHistoryOpen
                     ? 40
-                    : presence === 'INTERVENTION'
-                        ? 550
+                    : (presence === 'INTERVENTION' || currentPage === 'assistant')
+                        ? 15 // Estrictamente detrás de toda la interfaz del chat (z-30 a z-70)
                         : presence === 'GUIDE_ACTIVE'
                             ? (isMobile ? 311 : 250)
                             : presence === 'INTRO_ACTIVE'
