@@ -4,8 +4,15 @@ from pydantic import BaseModel
 from typing import Dict
 from sqlalchemy.orm import Session
 
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment
+    HAS_OPENPYXL = True
+except ImportError:
+    Workbook = None
+    Font = None
+    Alignment = None
+    HAS_OPENPYXL = False
 
 from io import StringIO, BytesIO
 import csv
@@ -199,6 +206,12 @@ async def export_cepv_excel(
         raise HTTPException(
             status_code=404,
             detail="No existen resultados CEPV-20 para exportar."
+        )
+
+    if not HAS_OPENPYXL or Workbook is None:
+        raise HTTPException(
+            status_code=500,
+            detail="La librería openpyxl no está instalada en el servidor para generar exportaciones en formato Excel."
         )
 
     wb = Workbook()
