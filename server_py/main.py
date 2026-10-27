@@ -23,6 +23,7 @@ from server_py.routers import mentor_agents  # noqa: E402
 from server_py.routers import mentor_exams  # noqa: E402
 from server_py.routers import attendance  # noqa: E402
 from server_py.routers import ponencias  # noqa: E402
+from server_py.memories import router as memories_router  # noqa: E402
 from server_py.memoria.database import init_db  # noqa: E402
 from server_py.scripts.auto_migrate import run_auto_migrations  # noqa: E402
 from server_py.scripts.auto_seed_students import auto_seed_students  # noqa: E402
@@ -89,6 +90,7 @@ app.include_router(mentor_agents.router)
 app.include_router(mentor_exams.router)
 app.include_router(attendance.router)
 app.include_router(ponencias.router)
+app.include_router(memories_router.router)
 
 
 @app.get("/health")

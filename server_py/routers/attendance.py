@@ -15,8 +15,6 @@ from server_py.common.permisos import check_is_mentor
 from server_py.mentoria.models import (
     AttendanceClass,
     AttendanceRecord,
-    GroupStudent,
-    MentorGroup,
 )
 
 router = APIRouter(prefix="/api/attendance", tags=["Attendance"])
@@ -44,7 +42,6 @@ def get_peru_now() -> datetime.datetime:
 
 class CreateClassRequest(BaseModel):
     name: str = Field(..., description="Nombre de la asignatura o sesión")
-    group_id: Optional[int] = Field(None, description="ID del grupo de estudiantes asignado")
     date: str = Field(..., description="Fecha de la clase en formato YYYY-MM-DD")
     start_time: str = Field(..., description="Hora de inicio en formato HH:MM")
     late_time: str = Field(..., description="Hora límite para marcar presente (HH:MM)")
@@ -93,7 +90,7 @@ def create_attendance_class(
     current_user_id: int = Depends(get_current_user_id)
 ):
     """Crea una nueva sesión de clase y genera automáticamente los registros
-    iniciales en estado 'falta' para todos los miembros del grupo asignado.
+    iniciales en estado 'falta' para todos los usuarios con rol de estudiante.
     """
     check_is_mentor(current_user_id, db)
     class_code = f"CLASS-{uuid.uuid4().hex[:6].upper()}"
@@ -101,7 +98,7 @@ def create_attendance_class(
     try:
         new_class = AttendanceClass(
             mentor_id=current_user_id,
-            group_id=req.group_id,
+            group_id=None,
             name=req.name,
             code=class_code,
             date=req.date,
@@ -112,27 +109,25 @@ def create_attendance_class(
         db.add(new_class)
         db.flush()  # Asigna el ID a new_class sin confirmar la transacción completa
 
-        # Inicialización en lote de asistencias si la clase pertenece a un grupo
-        if req.group_id:
-            student_ids = (
-                db.query(GroupStudent.student_id)
-                .filter(GroupStudent.group_id == req.group_id)
-                .all()
+        # Inicialización en lote de asistencias para todos los estudiantes
+        student_ids = (
+            db.query(User.id)
+            .filter(User.role == "student")
+            .all()
+        )
+
+        records = [
+            AttendanceRecord(
+                class_id=new_class.id,
+                student_id=student_id,
+                status="falta",
+                registered_at=None,
+                scan_type=None
             )
+            for (student_id,) in student_ids
+        ]
 
-            records = [
-                AttendanceRecord(
-                    class_id=new_class.id,
-                    student_id=student_id,
-                    status="falta",
-                    registered_at=None,
-                    scan_type=None
-                )
-                for (student_id,) in student_ids
-            ]
-
-            db.bulk_save_objects(records)
-
+        db.bulk_save_objects(records)
         db.commit()
 
         return {
@@ -188,16 +183,11 @@ def get_attendance_classes(
                 AttendanceClass.id,
                 AttendanceClass.name,
                 AttendanceClass.code,
-                AttendanceClass.group_id,
                 AttendanceClass.date,
                 AttendanceClass.start_time,
                 AttendanceClass.late_time,
                 AttendanceClass.is_active,
                 AttendanceClass.created_at,
-            ),
-            joinedload(AttendanceClass.group).load_only(
-                MentorGroup.id,
-                MentorGroup.name,
             ),
         )
         .group_by(AttendanceClass.id)
@@ -221,8 +211,6 @@ def get_attendance_classes(
             "id": c.id,
             "name": c.name,
             "code": c.code,
-            "group_id": c.group_id,
-            "group_name": c.group.name if c.group else "Sin Grupo",
             "date": c.date,
             "start_time": c.start_time,
             "late_time": c.late_time,
@@ -255,15 +243,10 @@ def get_class_details(
                 AttendanceClass.id,
                 AttendanceClass.name,
                 AttendanceClass.code,
-                AttendanceClass.group_id,
                 AttendanceClass.date,
                 AttendanceClass.start_time,
                 AttendanceClass.late_time,
                 AttendanceClass.is_active,
-            ),
-            joinedload(AttendanceClass.group).load_only(
-                MentorGroup.id,
-                MentorGroup.name,
             ),
             selectinload(AttendanceClass.records)
                 .load_only(
@@ -307,8 +290,6 @@ def get_class_details(
         "id": c.id,
         "name": c.name,
         "code": c.code,
-        "group_id": c.group_id,
-        "group_name": c.group.name if c.group else "Sin Grupo",
         "date": c.date,
         "start_time": c.start_time,
         "late_time": c.late_time,
@@ -392,7 +373,6 @@ def scan_attendance(
         .options(
             load_only(
                 AttendanceClass.id,
-                AttendanceClass.group_id,
                 AttendanceClass.code,
                 AttendanceClass.date,
                 AttendanceClass.start_time,
@@ -433,23 +413,6 @@ def scan_attendance(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Código de credencial QR/NFC inválido."
         )
-
-    # Verificar pertenencia al grupo
-    if c.group_id:
-        is_member = (
-            db.query(GroupStudent.student_id)
-            .filter(
-                GroupStudent.group_id == c.group_id,
-                GroupStudent.student_id == student.id
-            )
-            .first()
-        )
-
-        if not is_member:
-            raise HTTPException(
-                status_code=403,
-                detail=f"El estudiante {student.full_name or student.username} no está autorizado en esta clase/grupo."
-            )
 
     # Determinar fecha y hora actual usando explícitamente la zona horaria de Perú
     now = get_peru_now()
@@ -725,7 +688,7 @@ def calculate_student_stats(records: List[AttendanceRecord], db: Session):
         if r.class_id
     })
 
-    group_average = 0
+    global_average = 0
 
     if class_ids:
         total_class_records, total_class_attended = (
@@ -749,7 +712,7 @@ def calculate_student_stats(records: List[AttendanceRecord], db: Session):
         total_class_attended = total_class_attended or 0
 
         if total_class_records > 0:
-            group_average = round(
+            global_average = round(
                 (total_class_attended / total_class_records) * 100
             )
 
@@ -773,7 +736,7 @@ def calculate_student_stats(records: List[AttendanceRecord], db: Session):
             "tardy": tardy,
             "absent": absent,
             "rate": rate,
-            "group_average": group_average
+            "global_average": global_average
         },
         "history": history
     }

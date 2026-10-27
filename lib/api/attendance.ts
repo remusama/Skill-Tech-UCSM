@@ -24,8 +24,6 @@ export interface AttendanceClass {
     id: number;
     name: string;
     code: string;
-    group_id: number | null;
-    group_name: string;
     date: string;
     start_time: string;
     late_time: string;
@@ -46,7 +44,7 @@ export interface StudentStats {
     tardy: number;
     absent: number;
     rate: number;
-    group_average: number;
+    global_average: number;
 }
 
 export interface AttendanceHistoryItem {
@@ -92,7 +90,7 @@ export async function fetchClassDetails(classId: number): Promise<AttendanceClas
     }
 }
 
-export async function createClass(payload: { name: string; group_id: number | null; date: string; start_time: string; late_time: string }): Promise<any> {
+export async function createClass(payload: { name: string; date: string; start_time: string; late_time: string }): Promise<any> {
     try {
         const response = await fetch(`${API_BASE_URL}/attendance/classes`, {
             method: "POST",

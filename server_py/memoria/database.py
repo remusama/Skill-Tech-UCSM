@@ -269,6 +269,7 @@ def init_db():
 
     # Importa los modelos de mentoría para registrarlos en los metadatos.
     from server_py.mentoria import models as _mentoria_models  # noqa: F401
+    from server_py.memories import models as _memory_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
