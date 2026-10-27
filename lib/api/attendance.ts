@@ -44,7 +44,7 @@ export interface StudentStats {
     tardy: number;
     absent: number;
     rate: number;
-    group_average: number;
+    global_average: number;
 }
 
 export interface AttendanceHistoryItem {
