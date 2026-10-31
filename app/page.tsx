@@ -22,8 +22,6 @@ const PsicometriaDashboard = dynamic(() => import("@/components/mentor/Psicometr
 const AvatarDisplay = dynamic(() => import("@/components/avatar/AvatarDisplay"), { ssr: false })
 const PonenciasPanel = dynamic(() => import("@/components/quiz/PonenciasPanel").then(mod => mod.PonenciasPanel), { ssr: false })
 const PonenciasManagerPanel = dynamic(() => import("@/components/mentor/PonenciasManagerPanel").then(mod => mod.PonenciasManagerPanel), { ssr: false })
-const MylStudentPlatform = dynamic(() => import("@/components/myl/MylStudentPlatform").then(mod => mod.MylStudentPlatform), { ssr: false })
-const MylManagerConsole = dynamic(() => import("@/components/myl/MylManagerConsole").then(mod => mod.MylManagerConsole), { ssr: false })
 
 import { useEleonor } from "@/contexts/eleonor-context"
 import { API_BASE_URL } from "@/lib/config"
@@ -47,14 +45,12 @@ const PAGE_TITLE_MAP: Record<string, string> = {
   "mentor-ponencias": "Gestión Ponencias",
   "mentor-archives": "Archivos",
   "mentor-agents": "Agentes",
-  "myl-economy": "Tokenomía MYL",
-  "mentor-myl": "Banco Central MYL",
 }
 
 // Importar AvatarDisplay lazy para usarlo en el grid ya definido arriba
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false) 
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [currentPage, setCurrentPage] = useState("skillmap")
   const [isLoaded, setIsLoaded] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -78,11 +74,11 @@ export default function Home() {
           // Si está cerca del tope (< 45px), siempre visible
           if (currentY < 45) {
             setIsNavVisible(true)
-          } 
+          }
           // Si hace scroll hacia abajo más de 8px y pasó el inicio, ocultar fuera de pantalla
           else if (delta > 8 && currentY > 60) {
             setIsNavVisible(false)
-          } 
+          }
           // Si hace scroll hacia arriba (más de 6px), reinsertar con animación
           else if (delta < -6) {
             setIsNavVisible(true)
@@ -264,11 +260,10 @@ export default function Home() {
             />
 
             <header
-              className={`md:hidden fixed top-2.5 inset-x-3.5 z-40 max-w-sm mx-auto h-10 px-2.5 py-1 rounded-full bg-[hsl(161,65%,7%)]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-between transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                isNavVisible
+              className={`md:hidden fixed top-2.5 inset-x-3.5 z-40 max-w-sm mx-auto h-10 px-2.5 py-1 rounded-full bg-[hsl(161,65%,7%)]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-between transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${isNavVisible
                   ? "translate-y-0 opacity-100 scale-100 pointer-events-auto"
                   : "-translate-y-16 opacity-0 scale-95 pointer-events-none"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <button
@@ -313,22 +308,21 @@ export default function Home() {
                 currentPage === "mentor-archives" ||
                 currentPage === "mentor-agents"
               ) && (
-                <MentorDashboard
-                  view={
-                    (currentPage === "mentor-archives" || currentPage === "mentor-agents")
-                      ? "archives"
-                      : (currentPage === "mentor-students" || currentPage === "mentor-groups")
-                      ? "students"
-                      : "dashboard"
-                  }
-                  initialSubTab="groups"
-                  initialArchiveTab={currentPage === "mentor-agents" ? "agents" : "presentations"}
-                />
-              )}
+                  <MentorDashboard
+                    view={
+                      (currentPage === "mentor-archives" || currentPage === "mentor-agents")
+                        ? "archives"
+                        : (currentPage === "mentor-students" || currentPage === "mentor-groups")
+                          ? "students"
+                          : "dashboard"
+                    }
+                    initialSubTab="groups"
+                    initialArchiveTab={currentPage === "mentor-agents" ? "agents" : "presentations"}
+                  />
+                )}
               {currentPage === "mentor-attendance" && <MentorAttendance />}
               {currentPage === "mentor-psicometria" && <PsicometriaDashboard />}
               {currentPage === "mentor-ponencias" && <PonenciasManagerPanel />}
-              {currentPage === "mentor-myl" && <MylManagerConsole />}
             </>
           ) : (
             <>
@@ -340,7 +334,6 @@ export default function Home() {
               {currentPage === "diagnosis" && <ResultsPage />}
               {currentPage === "settings" && <Settings />}
               {currentPage === "ponencias" && <PonenciasPanel />}
-              {currentPage === "myl-economy" && <MylStudentPlatform />}
             </>
           )}
         </div>
