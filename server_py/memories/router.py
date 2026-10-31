@@ -1,6 +1,12 @@
 import os
 import uuid
+import logging
+import jwt
+from fastapi import Query
+
 from pathlib import Path
+from fastapi import Request, Response
+from PIL import Image, UnidentifiedImageError
 
 from fastapi import (
     APIRouter,
@@ -13,13 +19,21 @@ from fastapi import (
     status,
 )
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta, timezone
 
+from server_py.auth.router import ALGORITHM, SECRET_KEY
 from server_py.auth.router import get_current_user_id
 from server_py.common.permisos import check_is_mentor
 from server_py.memoria.database import get_db
 from server_py.memories.models import MemoryAsset
+from server_py.memories.upload_validation import (
+    validate_nonphoto_upload,
+)
 
 from fastapi.responses import FileResponse
+
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -67,6 +81,65 @@ MAX_FILE_SIZES = {
 
 
 CHUNK_SIZE = 1024 * 1024
+
+
+PHOTO_FORMATS = {
+    ".jpg": ("JPEG", "image/jpeg"),
+    ".jpeg": ("JPEG", "image/jpeg"),
+    ".png": ("PNG", "image/png"),
+    ".webp": ("WEBP", "image/webp"),
+}
+
+MAX_PHOTO_PIXELS = 30_000_000
+
+
+def validate_photo(file_path: Path, extension: str) -> str:
+    """
+    Valida el formato real, integridad y dimensiones
+    de una fotografía subida al servidor.
+
+    Devuelve el MIME real de la imagen.
+    """
+
+    expected_format, content_type = PHOTO_FORMATS[extension]
+
+    try:
+        with Image.open(file_path) as image:
+            if image.format != expected_format:
+                raise ValueError("El formato no coincide.")
+
+            width, height = image.size
+
+            if width * height > MAX_PHOTO_PIXELS:
+                raise ValueError("Imagen demasiado grande.")
+
+            if getattr(image, "is_animated", False):
+                raise ValueError(
+                    "No se permiten imágenes animadas."
+                )
+
+            image.verify()
+
+        # Reabrir para comprobar también la decodificación.
+        with Image.open(file_path) as image:
+            image.load()
+
+    except (
+        UnidentifiedImageError,
+        OSError,
+        ValueError,
+        SyntaxError,
+        Image.DecompressionBombError,
+    ) as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "La imagen no es válida, está dañada "
+                "o no coincide con su extensión."
+            ),
+        ) from error
+
+    return content_type
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -156,6 +229,29 @@ def upload_memory(
 
                 output.write(chunk)
 
+        if total_size == 0:
+            destination.unlink(missing_ok=True)
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se permiten archivos vacíos.",
+            )
+
+        validated_content_type = file.content_type
+
+        if normalized_type == "photo":
+            validated_content_type = validate_photo(
+                destination,
+                extension,
+            )
+
+        elif normalized_type in ("video", "document"):
+            validated_content_type = validate_nonphoto_upload(
+                destination,
+                normalized_type,
+                extension,
+            )
+
         memory = MemoryAsset(
             uploader_id=current_user_id,
             title=clean_title,
@@ -167,7 +263,7 @@ def upload_memory(
             media_type=normalized_type,
             original_filename=original_filename,
             stored_filename=stored_filename,
-            content_type=file.content_type,
+            content_type=validated_content_type,
             size_bytes=total_size,
         )
 
@@ -176,6 +272,8 @@ def upload_memory(
         db.refresh(memory)
 
     except HTTPException:
+        db.rollback()
+        destination.unlink(missing_ok=True)
         raise
 
     except Exception:
@@ -310,5 +408,249 @@ def get_memory_file(
         path=file_path,
         media_type=memory.content_type or "application/octet-stream",
         filename=memory.original_filename,
+        content_disposition_type="attachment",
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "private, no-store",
+        },
+    )
+
+
+@router.delete(
+    "/{memory_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_memory(
+    memory_id: int,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Elimina permanentemente un recuerdo.
+
+    Solo docentes o mentores autorizados pueden eliminar.
+    """
+
+    check_is_mentor(current_user_id, db)
+
+    memory = (
+        db.query(MemoryAsset)
+        .filter(MemoryAsset.id == memory_id)
+        .first()
+    )
+
+    if memory is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Recuerdo no encontrado.",
+        )
+
+    # Evitar rutas de archivo manipuladas.
+    stored_filename = memory.stored_filename
+
+    if (
+        not stored_filename
+        or Path(stored_filename).name != stored_filename
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Nombre de archivo almacenado inválido.",
+        )
+
+    file_path = MEMORIES_DIR / stored_filename
+
+    # Primero eliminar el registro de la base de datos.
+    try:
+        db.delete(memory)
+        db.commit()
+
+    except Exception:
+        db.rollback()
+
+        logger.exception(
+            "Error al eliminar el recuerdo %s de la BD",
+            memory_id,
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo eliminar el recuerdo.",
+        )
+
+    # Después retirar el archivo físico.
+    try:
+        file_path.unlink(missing_ok=True)
+
+    except OSError:
+        logger.exception(
+            "No se pudo eliminar el archivo físico del recuerdo %s",
+            memory_id,
+        )
+
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+
+
+# Tiempo máximo de validez del acceso temporal.
+VIDEO_STREAM_TOKEN_MINUTES = 15
+
+VIDEO_CONTENT_TYPES = {
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+}
+
+
+@router.post("/{memory_id}/stream-access")
+def create_video_stream_access(
+    memory_id: int,
+    response: Response,
+    current_user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """
+    Genera un acceso temporal para reproducir un video.
+
+    Disponible para estudiantes y docentes autenticados.
+    """
+
+    memory = db.get(MemoryAsset, memory_id)
+
+    if memory is None or memory.media_type != "video":
+        raise HTTPException(
+            status_code=404,
+            detail="Video no encontrado.",
+        )
+
+    now = datetime.now(timezone.utc)
+
+    payload = {
+        "purpose": "memory-video-stream",
+        "memory_id": memory.id,
+        "sub": str(current_user_id),
+        "iat": now,
+        "exp": now + timedelta(
+            minutes=VIDEO_STREAM_TOKEN_MINUTES
+        ),
+    }
+
+    stream_token = jwt.encode(
+        payload,
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+
+    response.set_cookie(
+        key=f"memory_stream_{memory_id}",
+        value=stream_token,
+        max_age=VIDEO_STREAM_TOKEN_MINUTES * 60,
+        path=f"/api/memories/{memory_id}/stream",
+        httponly=True,
+        secure=os.getenv(
+            "MEMORY_COOKIE_SECURE", "false"
+        ).lower() == "true",
+        samesite="lax",
+    )
+
+    response.headers["Cache-Control"] = "no-store"
+
+    return {
+        "expires_in": VIDEO_STREAM_TOKEN_MINUTES * 60,
+    }
+
+
+@router.get("/{memory_id}/stream")
+def stream_memory_video(
+    memory_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """
+    Reproduce videos mediante FileResponse.
+
+    El acceso requiere un token temporal firmado,
+    limitado al video solicitado.
+    """
+
+    stream_token = request.cookies.get(
+        f"memory_stream_{memory_id}"
+    )
+
+    if not stream_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Acceso temporal no disponible.",
+        )
+
+    try:
+        payload = jwt.decode(
+            stream_token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"require": ["exp"]},
+        )
+
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=401,
+            detail="Acceso de video inválido o expirado.",
+        )
+
+    if (
+        payload.get("purpose") != "memory-video-stream"
+        or payload.get("memory_id") != memory_id
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Acceso no autorizado para este video.",
+        )
+
+    memory = db.get(MemoryAsset, memory_id)
+
+    if memory is None or memory.media_type != "video":
+        raise HTTPException(
+            status_code=404,
+            detail="Video no encontrado.",
+        )
+
+    # Restringir la ruta al directorio de recuerdos.
+    base_dir = MEMORIES_DIR.resolve()
+
+    file_path = (
+        base_dir / memory.stored_filename
+    ).resolve()
+
+    if file_path.parent != base_dir:
+        raise HTTPException(
+            status_code=500,
+            detail="Ruta de archivo inválida.",
+        )
+
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="El archivo de video no existe.",
+        )
+
+    media_type = VIDEO_CONTENT_TYPES.get(
+        file_path.suffix.lower()
+    )
+
+    if media_type is None:
+        raise HTTPException(
+            status_code=415,
+            detail="Formato de video no compatible.",
+        )
+
+    return FileResponse(
+        path=file_path,
+        media_type=media_type,
+        filename=memory.original_filename,
         content_disposition_type="inline",
+        headers={
+            "Cache-Control": "private, no-store",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+        },
     )
