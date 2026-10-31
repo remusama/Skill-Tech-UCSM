@@ -24,7 +24,9 @@ import {
   Archive,
   Calendar,
   PieChart,
-  Coins
+  Coins,
+  Landmark,
+  Images
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -44,15 +46,18 @@ const navItems = [
   { icon: Brain, label: "Liderómetro", page: "diagnosis" },
   { icon: MessageSquare, label: "Moya", page: "assistant" },
   { icon: MessageSquarePlus, label: "Ponencias", page: "ponencias" },
+  { icon: Images, label: "Mis recuerdos", page: "memories" },
   { icon: Settings, label: "Configuración", page: "settings" },
 ]
 
 const teacherNavItems = [
   { icon: BarChart2, label: "Dashboard", page: "mentor-dashboard" },
+  { icon: Landmark, label: "Banco MYL", page: "mentor-myl" },
   { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
   { icon: PieChart, label: "Psicometría", page: "mentor-psicometria" },
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
   { icon: MessageSquarePlus, label: "Ponencias", page: "mentor-ponencias" },
+  { icon: Images, label: "Mis recuerdos", page: "memories" },
   { icon: Archive, label: "Archivos", page: "mentor-archives" },
 ]
 

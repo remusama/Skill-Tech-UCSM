@@ -22,6 +22,9 @@ const PsicometriaDashboard = dynamic(() => import("@/components/mentor/Psicometr
 const AvatarDisplay = dynamic(() => import("@/components/avatar/AvatarDisplay"), { ssr: false })
 const PonenciasPanel = dynamic(() => import("@/components/quiz/PonenciasPanel").then(mod => mod.PonenciasPanel), { ssr: false })
 const PonenciasManagerPanel = dynamic(() => import("@/components/mentor/PonenciasManagerPanel").then(mod => mod.PonenciasManagerPanel), { ssr: false })
+const MylStudentPlatform = dynamic(() => import("@/components/myl/MylStudentPlatform").then(mod => mod.MylStudentPlatform), { ssr: false })
+const MylManagerConsole = dynamic(() => import("@/components/myl/MylManagerConsole").then(mod => mod.MylManagerConsole), { ssr: false })
+const Memories = dynamic(() => import("@/components/memories/Memories").then(mod => mod.Memories), { ssr: false })
 
 import { useEleonor } from "@/contexts/eleonor-context"
 import { API_BASE_URL } from "@/lib/config"
@@ -45,6 +48,9 @@ const PAGE_TITLE_MAP: Record<string, string> = {
   "mentor-ponencias": "Gestión Ponencias",
   "mentor-archives": "Archivos",
   "mentor-agents": "Agentes",
+  "myl-economy": "Tokenomía MYL",
+  "mentor-myl": "Banco Central MYL",
+  "memories": "Mis recuerdos",
 }
 
 // Importar AvatarDisplay lazy para usarlo en el grid ya definido arriba
@@ -323,6 +329,8 @@ export default function Home() {
               {currentPage === "mentor-attendance" && <MentorAttendance />}
               {currentPage === "mentor-psicometria" && <PsicometriaDashboard />}
               {currentPage === "mentor-ponencias" && <PonenciasManagerPanel />}
+              {currentPage === "mentor-myl" && <MylManagerConsole />}
+              {currentPage === "memories" && <Memories role="mentor" />}
             </>
           ) : (
             <>
@@ -334,6 +342,8 @@ export default function Home() {
               {currentPage === "diagnosis" && <ResultsPage />}
               {currentPage === "settings" && <Settings />}
               {currentPage === "ponencias" && <PonenciasPanel />}
+              {currentPage === "myl-economy" && <MylStudentPlatform />}
+              {currentPage === "memories" && <Memories role="student" />}
             </>
           )}
         </div>
