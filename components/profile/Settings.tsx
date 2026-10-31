@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { User, Lock, Save, KeyRound, ShieldCheck, ChevronRight, UserCheck, School, BookOpen } from "lucide-react"
+import { User, Lock, Save, KeyRound, ShieldCheck, ChevronRight, UserCheck, School, BookOpen, Trash2, AlertTriangle } from "lucide-react"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { MagicCard } from "@/components/ui/magic-card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -32,6 +32,12 @@ export function Settings() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [passLoading, setPassLoading] = useState(false)
   const [passMessage, setPassMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  // Formulario de eliminación de cuenta
+  const [deletePassword, setDeletePassword] = useState("")
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -92,6 +98,50 @@ export function Settings() {
     }
   }
 
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setDeleteError(null)
+
+    if (deleteConfirmText.trim().toUpperCase() !== "ELIMINAR") {
+      setDeleteError("Escribe exactamente 'ELIMINAR' para confirmar.")
+      return
+    }
+
+    if (!confirm("ADVERTENCIA FINAL: ¿Seguro que deseas eliminar tu cuenta? Esta acción es irreversible y borrará todas tus clases, asistencias, historial y progreso.")) {
+      return
+    }
+
+    setDeleteLoading(true)
+    try {
+      const token = localStorage.getItem("eleonor_token")
+      const resp = await fetch(`${API_BASE_URL}/api/user/account`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          password: deletePassword || undefined,
+          confirmation: deleteConfirmText
+        })
+      })
+
+      const data = await resp.json()
+      if (!resp.ok) {
+        throw new Error(data.detail || "Error al eliminar la cuenta.")
+      }
+
+      alert("Tu cuenta ha sido eliminada permanentemente de la base de datos.")
+      localStorage.removeItem("eleonor_token")
+      localStorage.removeItem("eleonor_user")
+      window.location.href = "/"
+    } catch (err: any) {
+      setDeleteError(err.message || "Error al eliminar la cuenta.")
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   const displayName = userData.full_name || userData.username || "Estudiante"
   const initials = displayName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "ST"
 
@@ -138,6 +188,15 @@ export function Settings() {
                 >
                   <Lock size={18} className="group-hover:scale-110 transition-transform flex-shrink-0" />
                   <span className="text-left truncate">Cambiar Contraseña</span>
+                  <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100 flex-shrink-0" />
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value="danger"
+                  className="w-full flex items-center justify-start gap-4 h-14 rounded-2xl px-5 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 border border-transparent text-rose-300/80 data-[state=active]:bg-rose-600 data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(225,29,72,0.4)] hover:bg-rose-500/10 group"
+                >
+                  <Trash2 size={18} className="group-hover:scale-110 transition-transform flex-shrink-0 text-rose-400 group-data-[state=active]:text-white" />
+                  <span className="text-left truncate">Eliminar Cuenta</span>
                   <ChevronRight size={14} className="ml-auto opacity-20 group-data-[state=active]:opacity-100 flex-shrink-0" />
                 </TabsTrigger>
               </TabsList>
@@ -272,6 +331,71 @@ export function Settings() {
                         {passLoading ? "Guardando..." : "Actualizar Contraseña"}
                       </Button>
                     </form>
+                  </MagicCard>
+                )}
+
+                {/* --- TAB 3: ELIMINAR CUENTA (ZONA DE PELIGRO) --- */}
+                {activeTab === "danger" && (
+                  <MagicCard className="p-8 md:p-10 rounded-[3rem] bg-rose-950/20 backdrop-blur-3xl border border-rose-500/20 shadow-2xl">
+                    <div className="flex items-center gap-4 mb-8 pb-6 border-b border-rose-500/10">
+                      <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+                        <AlertTriangle size={24} />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-rose-400 uppercase tracking-wider">Zona de Peligro</h3>
+                        <p className="text-xs text-rose-200/50 font-bold uppercase tracking-widest mt-0.5">Eliminación permanente y definitiva de tu cuenta y datos.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6 max-w-lg">
+                      <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-200 leading-relaxed">
+                        <p className="font-bold text-rose-300 uppercase tracking-wide mb-1">¡Esta acción no se puede deshacer!</p>
+                        Se borrarán permanentemente tu perfil, diagnósticos cognitivos, historial de conversaciones con Eleonor, asistencias registradas, evaluaciones y resultados de la base de datos.
+                      </div>
+
+                      {deleteError && (
+                        <div className="p-4 rounded-2xl bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold uppercase tracking-wider">
+                          {deleteError}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleDeleteAccount} className="space-y-5">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-white/50 ml-2">
+                            Contraseña (opcional si usaste Google)
+                          </Label>
+                          <Input
+                            type="password"
+                            placeholder="Tu contraseña actual"
+                            value={deletePassword}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                            className="h-14 rounded-2xl bg-white/5 border-white/10 text-white font-bold focus:border-rose-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-rose-400 ml-2">
+                            Escribe <span className="underline font-mono">ELIMINAR</span> para confirmar:
+                          </Label>
+                          <Input
+                            type="text"
+                            placeholder="ELIMINAR"
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            className="h-14 rounded-2xl bg-white/5 border-rose-500/30 text-white font-mono font-bold focus:border-rose-500"
+                          />
+                        </div>
+
+                        <Button
+                          type="submit"
+                          disabled={deleteLoading || deleteConfirmText.trim().toUpperCase() !== "ELIMINAR"}
+                          className="w-full h-14 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-widest shadow-[0_0_25px_rgba(225,29,72,0.4)] transition-all active:scale-95 disabled:opacity-40"
+                        >
+                          <Trash2 size={16} className="mr-2" />
+                          {deleteLoading ? "Eliminando cuenta..." : "Eliminar mi cuenta definitivamente"}
+                        </Button>
+                      </form>
+                    </div>
                   </MagicCard>
                 )}
 

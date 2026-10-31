@@ -287,31 +287,43 @@ export function MentorAttendance() {
     }, [activeTab, scanMethod, scannedClassCode]);
 
     // Load Initial Data
+    const [loadError, setLoadError] = useState<string | null>(null)
+
     useEffect(() => {
         const loadInitialData = async () => {
             setLoading(true)
+            setLoadError(null)
             const token = localStorage.getItem("eleonor_token")
             try {
                 const classesData = await fetchMentorClasses()
                 setClasses(classesData)
 
                 // Fetch groups for class creation dropdown
-                const groupsRes = await fetch(`${API_URL}/mentor/groups`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
-                if (groupsRes.ok) {
-                    setGroups(await groupsRes.json())
+                try {
+                    const groupsRes = await fetch(`${API_URL}/mentor/groups`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                    if (groupsRes.ok) {
+                        setGroups(await groupsRes.json())
+                    }
+                } catch (gErr) {
+                    console.warn("Could not fetch groups:", gErr)
                 }
 
                 // Fetch all students for simulator dropdown
-                const studentsRes = await fetch(`${API_URL}/mentor/students`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
-                if (studentsRes.ok) {
-                    setStudents(await studentsRes.json())
+                try {
+                    const studentsRes = await fetch(`${API_URL}/mentor/students`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                    if (studentsRes.ok) {
+                        setStudents(await studentsRes.json())
+                    }
+                } catch (sErr) {
+                    console.warn("Could not fetch students:", sErr)
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Error loading initial data:", err)
+                setLoadError("No se pudo conectar con el servidor backend.")
             } finally {
                 setLoading(false)
             }
@@ -638,15 +650,15 @@ export function MentorAttendance() {
             <div className="max-w-7xl mx-auto relative z-10 space-y-12 pb-20">
                 {/* Header */}
                 <BlurFade delay={0.1} inView>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pl-20 md:pl-0">
-                        <div>
-                            <MagicTitle variant="sparkles" className="text-4xl md:text-6xl tracking-[0.2em] font-black uppercase">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div className="max-w-full overflow-hidden">
+                            <MagicTitle variant="sparkles" className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-[0.1em] sm:tracking-[0.2em] font-black uppercase break-words">
                                 ASISTENCIAS
                             </MagicTitle>
                             <div className="flex flex-wrap items-center gap-3 mt-2">
                                 <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full self-start backdrop-blur-xl w-fit">
                                     <Calendar size={14} className="text-[#0a6b17]" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">Registro QR & NFC - Módulo Docente</span>
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Registro QR & NFC - Módulo Docente</span>
                                 </div>
                                 {serverTimeStr && (
                                     <div className="flex items-center gap-2 px-3.5 py-1.5 bg-emerald-500/10 border border-emerald-500/25 rounded-full text-emerald-400 backdrop-blur-xl">
@@ -684,24 +696,24 @@ export function MentorAttendance() {
 
                 {/* Tabs */}
                 <div className="w-full">
-                    <div className="mb-12 bg-white/5 border border-white/5 p-1.5 rounded-[2.5rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full">
+                    <div className="mb-8 md:mb-12 bg-white/5 border border-white/5 p-1.5 rounded-[2rem] sm:rounded-[2.5rem] flex flex-wrap sm:flex-nowrap overflow-x-auto h-auto gap-2 backdrop-blur-3xl w-full sm:w-auto sm:inline-flex max-w-full">
                         <button
                             onClick={() => { setActiveTab("classes"); setSelectedClassId(null); setClassDetail(null) }}
-                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "classes" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                            className={`flex items-center justify-center gap-2.5 rounded-[1.8rem] px-5 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent whitespace-nowrap flex-1 sm:flex-initial ${activeTab === "classes" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
                         >
                             <Calendar size={16} />
                             Clases y Sesiones
                         </button>
                         <button
                             onClick={() => setActiveTab("scanner")}
-                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "scanner" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                            className={`flex items-center justify-center gap-2.5 rounded-[1.8rem] px-5 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent whitespace-nowrap flex-1 sm:flex-initial ${activeTab === "scanner" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
                         >
                             <QrCode size={16} />
                             Escanear Entrada
                         </button>
                         <button
                             onClick={() => { setActiveTab("benchmarking"); setSelectedStudentId(null); setStudentStats(null) }}
-                            className={`flex items-center gap-2.5 rounded-[2rem] px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent ${activeTab === "benchmarking" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
+                            className={`flex items-center justify-center gap-2.5 rounded-[1.8rem] px-5 sm:px-8 py-3.5 sm:py-4 text-[10px] font-black uppercase tracking-widest transition-all duration-500 border border-transparent whitespace-nowrap flex-1 sm:flex-initial ${activeTab === "benchmarking" ? "bg-[#0a6b17] text-white shadow-[0_0_20px_rgba(10,107,23,0.4)]" : "text-white/40 hover:text-white hover:bg-white/5"}`}
                         >
                             <BarChart3 size={16} />
                             Análisis / Benchmarking
@@ -725,6 +737,19 @@ export function MentorAttendance() {
                                         {loading ? (
                                             <div className="flex items-center justify-center py-20">
                                                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#0a6b17]" />
+                                            </div>
+                                        ) : loadError ? (
+                                            <div className="text-center py-12 px-4 bg-rose-500/10 border border-rose-500/20 rounded-[2rem] text-rose-300 text-xs space-y-3">
+                                                <AlertTriangle size={24} className="mx-auto text-rose-400" />
+                                                <p className="font-bold">{loadError}</p>
+                                                <p className="text-[11px] text-white/50">Asegúrate de que el backend de FastAPI esté iniciado o las variables de entorno configuradas.</p>
+                                                <Button
+                                                    onClick={() => setRefreshKey(prev => prev + 1)}
+                                                    variant="outline"
+                                                    className="text-xs rounded-xl bg-white/5 border-white/10 hover:bg-white/10 text-white mt-2"
+                                                >
+                                                    <RefreshCw size={12} className="mr-1.5" /> Reintentar
+                                                </Button>
                                             </div>
                                         ) : classes.length === 0 ? (
                                             <div className="text-center py-20 bg-white/5 border border-white/5 rounded-[2rem] text-gray-500 text-sm">

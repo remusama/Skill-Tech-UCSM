@@ -136,3 +136,69 @@ async def update_settings(
 
     db.commit()
     return {"status": "ok", "preferences": user.preferences}
+
+
+class DeleteAccountRequest(BaseModel):
+    """Modelo para confirmar la eliminación de la cuenta."""
+    password: Optional[str] = None
+    confirmation: Optional[str] = None
+
+
+@router.delete("/account")
+async def delete_my_account(
+    req: Optional[DeleteAccountRequest] = None,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Elimina permanentemente la cuenta del usuario autenticado y todos sus datos relacionados.
+    """
+    import bcrypt
+    from server_py.user.service import delete_user_account
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Si el usuario tiene contraseña configurada y envió contraseña, verificarla
+    if user.hashed_password and req and req.password:
+        if not bcrypt.checkpw(req.password.encode("utf-8"), user.hashed_password.encode("utf-8")):
+            raise HTTPException(status_code=400, detail="Contraseña incorrecta")
+
+    success = delete_user_account(db, user_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="No se pudo completar la eliminación de la cuenta")
+
+    return {"status": "ok", "message": "Cuenta y datos asociados eliminados exitosamente"}
+
+
+@router.delete("/{target_user_id}")
+async def admin_delete_user(
+    target_user_id: str,
+    username: Optional[str] = None,
+    email: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user_id: Optional[int] = Depends(get_current_user_id),
+):
+    """
+    Endpoint para administradores y mentores: elimina TOTALMENTE a un usuario y
+    todos sus registros vinculados (todas sus notas, exámenes, habilidades, asistencias,
+    evaluaciones de línea de tiempo y cuenta).
+    """
+    from server_py.user.service import delete_user_account
+
+    # Validar permisos
+    if current_user_id:
+        current_user = db.query(User).filter(User.id == current_user_id).first()
+        if current_user and current_user.role not in ("admin", "teacher"):
+            raise HTTPException(status_code=403, detail="No tienes permisos para eliminar este usuario")
+
+    purged_info = delete_user_account(db, target_user_id, username=username, email=email)
+    if not purged_info:
+        raise HTTPException(status_code=404, detail="Usuario objetivo no encontrado en la base de datos")
+
+    return {
+        "status": "ok",
+        "message": f"Usuario {target_user_id} y todos sus datos relacionados (notas, habilidades, asistencias y cuenta) han sido eliminados permanentemente",
+        "purged_records": purged_info
+    }

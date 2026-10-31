@@ -1,0 +1,337 @@
+﻿ID_Snapshot,ID_Estudiante,Nombre_Estudiante,Casa,Fecha_Evaluacion,Hora_Evaluacion,Competencia_ID,Competencia_Nombre,Puntuacion_Likert,Nivel_Desempeno,Promedio_Momento,Timestamp_Extraccion
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,3.97,2026-10-29 18:27:10
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,3.97,2026-10-29 18:27:10
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,3.97,2026-10-29 18:27:10
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.9,Competente,3.97,2026-10-29 18:27:10
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.4,Competente,3.97,2026-10-29 18:27:10
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,3.97,2026-10-29 18:27:10
+snap-1-init,1,Alyce Nayeli Valdivia Sanz,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.9,Competente,3.97,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.19,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.19,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,4.19,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.3,Competente,4.19,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.8,Competente,4.19,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.19,2026-10-29 18:27:10
+snap-2-init,2,Brescia Avril Oviedo Rodríguez,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.0,Competente,4.19,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.16,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.16,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,4.16,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.7,Sobresaliente,4.16,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.5,Sobresaliente,4.16,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.16,2026-10-29 18:27:10
+snap-3-init,3,César Alejandro Campos García,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.1,Competente,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.6,Aceptable,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.9,Competente,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.16,2026-10-29 18:27:10
+snap-4-init,4,Daniel Elías Zapana Daza,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.2,Competente,4.16,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,4.13,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.13,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.13,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.0,Competente,4.13,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.6,Sobresaliente,4.13,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,4.13,2026-10-29 18:27:10
+snap-5-init,5,Fernanda Josselyn Rodríguez Del Carpio,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.3,Competente,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.4,Competente,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.0,Competente,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.13,2026-10-29 18:27:10
+snap-6-init,6,Keith Vladimir Chura Díaz,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.4,Competente,4.13,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.33,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.33,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.6,Aceptable,4.33,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.8,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-7-init,7,Lucas Adriel Bustamante Mena,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.5,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.11,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.11,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,4.11,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.7,Aceptable,4.11,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.1,Competente,4.11,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.11,2026-10-29 18:27:10
+snap-8-init,8,Luciana Castillo Álvarez,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.6,Sobresaliente,4.11,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.3,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,4.3,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.1,Competente,4.3,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.8,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.3,2026-10-29 18:27:10
+snap-9-init,9,María José Limazca Quispe,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.7,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,4.09,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.09,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,4.09,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.5,Sobresaliente,4.09,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.2,Competente,4.09,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,4.09,2026-10-29 18:27:10
+snap-10-init,10,Mariel Dayana Millio Mendoza,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.8,Sobresaliente,4.09,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.49,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.49,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.49,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.9,Sobresaliente,4.49,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.9,Sobresaliente,4.49,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.49,2026-10-29 18:27:10
+snap-11-init,11,Ruth Evelyn Calli Choqque,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.9,Sobresaliente,4.49,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.1,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.1,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.1,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.8,Competente,4.1,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.3,Competente,4.1,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.1,2026-10-29 18:27:10
+snap-12-init,12,Stephano Samuel Pinto Rivera,APEX,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.8,Competente,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.2,Competente,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.7,Aceptable,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.1,2026-10-29 18:27:10
+snap-13-init,13,Dalessandra Cuervo Quispe,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.9,Competente,4.1,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.3,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.6,Aceptable,4.3,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.6,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.4,Competente,4.3,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.3,2026-10-29 18:27:10
+snap-14-init,14,Diana Sophia Chichizola Bustamante,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.0,Competente,4.3,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,3.66,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,3.66,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,3.66,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.5,Aceptable,3.66,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.8,Competente,3.66,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,3.66,2026-10-29 18:27:10
+snap-15-init,15,Edgar Miranda Ccolqque,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.1,Competente,3.66,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.06,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.06,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,4.06,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.9,Competente,4.06,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.5,Sobresaliente,4.06,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.06,2026-10-29 18:27:10
+snap-16-init,16,Fabricio André Espinoza Santander,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.2,Competente,4.06,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.27,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.27,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,4.27,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.3,Competente,4.27,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.9,Competente,4.27,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.27,2026-10-29 18:27:10
+snap-17-init,17,Gloria Mía Isabel Callenova Caceres,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.3,Competente,4.27,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.24,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.24,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.24,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.7,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.6,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.24,2026-10-29 18:27:10
+snap-18-init,18,James Stephano Alejandro Cosi Rosello,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.4,Competente,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.6,Aceptable,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.0,Competente,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.24,2026-10-29 18:27:10
+snap-19-init,19,Juan Francisco Herrera Vargas,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.5,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,4.21,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.21,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.0,Competente,4.21,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.7,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,4.21,2026-10-29 18:27:10
+snap-20-init,20,Mariajosé Talavera Cárdenas,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.6,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.01,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.01,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.6,Aceptable,4.01,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.4,Competente,4.01,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.1,Competente,4.01,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.01,2026-10-29 18:27:10
+snap-21-init,21,Piero Alexander Silvestre Gutierrez,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.7,Sobresaliente,4.01,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.41,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.41,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,4.41,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.8,Sobresaliente,4.41,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.8,Sobresaliente,4.41,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.41,2026-10-29 18:27:10
+snap-22-init,22,Rubí Alexandra Contreras Villarroel,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.8,Sobresaliente,4.41,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.2,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.2,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,4.2,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.7,Aceptable,4.2,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.2,Competente,4.2,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.2,2026-10-29 18:27:10
+snap-23-init,23,Sashenka Sofie Bernedo Ccanccapa,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.9,Sobresaliente,4.2,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.21,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,4.21,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.1,Competente,4.21,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.9,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.21,2026-10-29 18:27:10
+snap-24-init,24,Stefano López Flores,IGNIS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.8,Competente,4.21,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,4.0,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.0,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.0,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.5,Sobresaliente,4.0,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.3,Competente,4.0,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,4.0,2026-10-29 18:27:10
+snap-25-init,25,Camila Yamileth Beltrán Huanca,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.9,Competente,4.0,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.21,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.21,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.9,Sobresaliente,4.21,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.7,Aceptable,4.21,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.21,2026-10-29 18:27:10
+snap-26-init,26,Cristel Xiomara Umiyauri Huaylla,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.0,Competente,4.21,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.19,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.19,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.19,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.8,Competente,4.19,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.4,Competente,4.19,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.19,2026-10-29 18:27:10
+snap-27-init,27,Denis Arturo Yana Palazuelos,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.1,Competente,4.19,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,3.99,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,3.99,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.6,Aceptable,3.99,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.2,Competente,3.99,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.8,Competente,3.99,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,3.99,2026-10-29 18:27:10
+snap-28-init,28,Edison Omar Amanqui Galarza,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.2,Competente,3.99,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.39,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.39,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,4.39,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.6,Sobresaliente,4.39,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.5,Sobresaliente,4.39,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.39,2026-10-29 18:27:10
+snap-29-init,29,Ikerzon Herbeth Quispe Choquepuma,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.3,Competente,4.39,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,3.74,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,3.74,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,3.74,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.5,Aceptable,3.74,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.9,Competente,3.74,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,3.74,2026-10-29 18:27:10
+snap-30-init,30,Jimena Isabel Luque Berroa,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.4,Competente,3.74,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.14,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.14,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,4.14,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.9,Competente,4.14,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.6,Sobresaliente,4.14,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.14,2026-10-29 18:27:10
+snap-31-init,31,José Manuel Flor Cruz,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.5,Sobresaliente,4.14,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.36,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.36,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.36,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.3,Competente,4.36,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.0,Competente,4.36,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.36,2026-10-29 18:27:10
+snap-32-init,32,Julio Gabriel Rodríguez Valdivia,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.6,Sobresaliente,4.36,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.33,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.33,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.33,2026-10-29 18:27:10
+snap-33-init,33,Nadieshda Mariana Flores Barriga,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.6,Aceptable,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.1,Competente,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.33,2026-10-29 18:27:10
+snap-34-init,34,Rodrigo Jhonatan Agüero Condori,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.8,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,4.1,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.1,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.6,Aceptable,4.1,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.0,Competente,4.1,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.8,Sobresaliente,4.1,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,4.1,2026-10-29 18:27:10
+snap-35-init,35,Sheyla Saida Arqque Quispe,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.9,Sobresaliente,4.1,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,3.93,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,3.93,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,3.93,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.4,Competente,3.93,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.2,Competente,3.93,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,3.93,2026-10-29 18:27:10
+snap-36-init,36,Sonia Lazarte Arredondo,NEXUS,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.8,Competente,3.93,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.33,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.33,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,4.33,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.8,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.9,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.33,2026-10-29 18:27:10
+snap-37-init,37,Arjum Jhostim Sarayasi Huarilloclla,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.9,Competente,4.33,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.11,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.11,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,4.11,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.7,Aceptable,4.11,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.3,Competente,4.11,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.11,2026-10-29 18:27:10
+snap-38-init,38,Claudia Velasco Quispe,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.0,Competente,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.1,Competente,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.7,Aceptable,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.11,2026-10-29 18:27:10
+snap-39-init,39,Daniela Valeriano Ramos,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.1,Competente,4.11,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,4.09,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.09,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.09,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.5,Sobresaliente,4.09,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.4,Competente,4.09,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,4.09,2026-10-29 18:27:10
+snap-40-init,40,Franco Cruz Abado,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.2,Competente,4.09,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.3,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.3,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.9,Sobresaliente,4.3,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.8,Competente,4.3,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.3,2026-10-29 18:27:10
+snap-41-init,41,Javier Zavaleta Gutierrez,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.3,Competente,4.3,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.07,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.07,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.6,Aceptable,4.07,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.8,Competente,4.07,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.5,Sobresaliente,4.07,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.07,2026-10-29 18:27:10
+snap-42-init,42,Karelia Axde Delgado Cornejo,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.4,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,3.8,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.2,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,3.9,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.07,2026-10-29 18:27:10
+snap-43-init,43,Kiara Yasumy Zapata Pocco,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.5,Sobresaliente,4.07,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.7,Sobresaliente,4.47,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.47,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.0,Competente,4.47,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.6,Sobresaliente,4.47,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.6,Sobresaliente,4.47,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.4,Competente,4.47,2026-10-29 18:27:10
+snap-44-init,44,Matías José Arteaga Espinoza,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.6,Sobresaliente,4.47,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,3.5,Aceptable,3.83,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,3.83,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.2,Competente,3.83,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.5,Aceptable,3.83,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.0,Competente,3.83,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.5,Aceptable,3.83,2026-10-29 18:27:10
+snap-45-init,45,Nurit Tatiana Castro Cuela,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.7,Sobresaliente,3.83,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,3.8,Competente,4.23,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.9,Competente,4.23,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.4,Competente,4.23,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,3.9,Competente,4.23,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.7,Sobresaliente,4.23,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.1,Competente,4.23,2026-10-29 18:27:10
+snap-46-init,46,Paolo Del Piero Hernani Delgado,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.8,Sobresaliente,4.23,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.1,Competente,4.44,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,4.4,Competente,4.44,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.6,Sobresaliente,4.44,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.3,Competente,4.44,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.1,Competente,4.44,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,4.7,Sobresaliente,4.44,2026-10-29 18:27:10
+snap-47-init,47,Piero Farith Vega Baca,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,4.9,Sobresaliente,4.44,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,escucha_activa,Escucha Activa,4.4,Competente,4.24,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,comunicacion_asertiva,Comunicación Asertiva,3.4,Aceptable,4.24,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,trabajo_equipo,Trabajo en Equipo,4.8,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,liderazgo_gestion,Liderazgo y Gestión,4.7,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,pensamiento_critico,Pensamiento Crítico,4.8,Sobresaliente,4.24,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,resolucion_problemas,Resolución de Problemas,3.8,Competente,4.24,2026-10-29 18:27:10
+snap-48-init,48,Ricardo Enrique Rondón Pacheco,VISIO,01/09/2026,10:00,adaptabilidad_autogestion,Adaptabilidad y Autogestión,3.8,Competente,4.24,2026-10-29 18:27:10

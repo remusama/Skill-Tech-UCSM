@@ -159,7 +159,7 @@ export const QuantumResultsView = ({
     }, [studentId])
 
     // --- RENDIMIENTO PRÁCTICO & LÍNEA DE TIEMPO ---
-    const storageKey = studentId ? `practical_eval_student_${studentId}` : `practical_eval_default`
+    const storageKey = studentId ? `practical_eval_student_${studentId}` : (studentName ? `practical_eval_student_${studentName}` : `practical_eval_default`)
 
     const [timeline, setTimeline] = useState<PracticalSnapshot[]>(() => {
         if (typeof window === "undefined") return []
@@ -187,6 +187,74 @@ export const QuantumResultsView = ({
             }
         ]
     })
+
+    // Sincronización continua de la línea de tiempo con PostgreSQL / Backend
+    useEffect(() => {
+        if (!studentId && !studentName) return
+
+        let isMounted = true
+        const fetchTimeline = async () => {
+            const token = localStorage.getItem("eleonor_token")
+            try {
+                // 1. Cargar caché de localStorage para respuesta instantánea
+                const localSaved = localStorage.getItem(storageKey)
+                let initialTimeline: PracticalSnapshot[] = []
+                if (localSaved) {
+                    try {
+                        const parsed = JSON.parse(localSaved)
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            initialTimeline = parsed
+                            if (isMounted) {
+                                setTimeline(parsed)
+                                setSelectedSnapshotId(parsed[parsed.length - 1]?.id || null)
+                                setLikertScores({ ...parsed[parsed.length - 1]?.scores })
+                            }
+                        }
+                    } catch {}
+                }
+
+                // 2. Consultar base de datos central en PostgreSQL
+                const queryParam = studentName ? `?student_name=${encodeURIComponent(studentName)}` : ""
+                const res = await fetch(`${API_BASE_URL}/api/mentor/students/${studentId || 0}/timeline${queryParam}`, {
+                    headers: {
+                        ...(token ? { Authorization: `Bearer ${token}` } : {})
+                    }
+                })
+
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data && Array.isArray(data.timeline) && data.timeline.length > 0) {
+                        if (data.source === "database" || initialTimeline.length === 0) {
+                            if (isMounted) {
+                                setTimeline(data.timeline)
+                                setSelectedSnapshotId(data.timeline[data.timeline.length - 1]?.id || null)
+                                setLikertScores({ ...data.timeline[data.timeline.length - 1]?.scores })
+                                localStorage.setItem(storageKey, JSON.stringify(data.timeline))
+                            }
+                        } else if (initialTimeline.length > 0 && data.source === "baseline") {
+                            // Sincronizar automáticamente registros locales a PostgreSQL
+                            fetch(`${API_BASE_URL}/api/mentor/students/${studentId || 0}/timeline`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                                },
+                                body: JSON.stringify({
+                                    snapshots: initialTimeline,
+                                    student_name: studentName
+                                })
+                            }).catch(() => {})
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("Aviso cargando timeline desde backend:", err)
+            }
+        }
+
+        fetchTimeline()
+        return () => { isMounted = false }
+    }, [studentId, studentName, storageKey])
 
     const [likertScores, setLikertScores] = useState<Record<string, number>>(() => {
         if (timeline.length > 0) {
@@ -229,12 +297,49 @@ export const QuantumResultsView = ({
         const updated = [...timeline, newSnapshot]
         setTimeline(updated)
         setSelectedSnapshotId(newSnapshot.id)
+
+        // 1. Guardar en localStorage de respaldo
         if (typeof window !== "undefined") {
             localStorage.setItem(storageKey, JSON.stringify(updated))
+            try {
+                const highlights = JSON.parse(localStorage.getItem("skilltech_timeline_highlights") || "{}")
+                const ts = Date.now()
+                if (studentId) highlights[studentId] = ts
+                if (studentName) highlights[studentName] = ts
+                localStorage.setItem("skilltech_timeline_highlights", JSON.stringify(highlights))
+
+                window.dispatchEvent(new CustomEvent("studentTimelineChanged", {
+                    detail: { studentId, studentName, timestamp: ts }
+                }))
+            } catch (err) {
+                console.error("Error al registrar highlight de línea de tiempo:", err)
+            }
         }
+
+        // 2. Persistir permanentemente en PostgreSQL (para que nunca se pierda)
+        const token = typeof window !== "undefined" ? localStorage.getItem("eleonor_token") : null
+        fetch(`${API_BASE_URL}/api/mentor/students/${studentId || 0}/timeline`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({
+                snapshots: updated,
+                student_name: studentName
+            })
+        })
+        .then(res => res.ok ? res.json() : null)
+        .then(() => {
+            setToastMessage("¡Cambios guardados permanentemente en la base de datos y línea de tiempo!")
+        })
+        .catch(err => {
+            console.warn("Aviso guardando timeline en servidor:", err)
+            setToastMessage("¡Guardado localmente! (Se sincronizará con la base de datos)")
+        })
+
         setIsEditingPractical(false)
-        setToastMessage("¡Cambios guardados en la línea de tiempo!")
-        setTimeout(() => setToastMessage(""), 4000)
+        setTimeout(() => setToastMessage(""), 5000)
     }
 
     const handleSelectSnapshot = (snap: PracticalSnapshot) => {

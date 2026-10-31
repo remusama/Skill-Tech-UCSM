@@ -71,6 +71,12 @@ MIGRATIONS = [
     ("mentor_exam_questions", "correct_answer", "VARCHAR", "VARCHAR"),
     ("mentor_exam_questions", "dimension", "VARCHAR", "VARCHAR"),
     ("mentor_exam_assignments", "demographics", "JSONB", "JSON"),
+    # ── Tokenomía MYL & Solana Token-2022 ─────────────────────────────────
+    ("users", "solana_wallet_address", "VARCHAR(64)", "VARCHAR(64)"),
+    ("users", "house", "VARCHAR(32)", "VARCHAR(32)"),
+    ("users", "myl_balance_cash", "INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
+    ("users", "myl_balance_digital", "INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
+    ("users", "myl_house_points_session", "INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
 ]
 
 

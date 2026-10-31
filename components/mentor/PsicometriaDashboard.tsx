@@ -16,7 +16,11 @@ import {
     Filter,
     Sparkles,
     Calendar,
-    Award
+    Award,
+    RefreshCw,
+    Radio,
+    Clock,
+    CheckCircle2
 } from "lucide-react"
 import {
     BarChart,
@@ -56,12 +60,13 @@ interface PsicometriaResponse {
     students: PsicometriaStudent[]
 }
 
-type AreaKey = "liderazgo" | "liderazgo_ccl" | "personalidad_neo"
+type AreaKey = "liderazgo" | "liderazgo_ccl" | "personalidad_neo" | "expectativas"
 
 const AREAS: { key: AreaKey; label: string; color: string }[] = [
     { key: "liderazgo", label: "Liderazgo (Kurt Lewin)", color: "#f59e0b" },
     { key: "liderazgo_ccl", label: "CCL (Competencias)", color: "#3b82f6" },
     { key: "personalidad_neo", label: "Personalidad (NEO PI-R)", color: "#a855f7" },
+    { key: "expectativas", label: "Expectativas (CEPV-20)", color: "#10b981" },
 ]
 
 const NEO_DOMAIN_LABELS: Record<string, string> = {
@@ -172,6 +177,34 @@ export function getNeoDominantDomain(student: PsicometriaStudent): string {
     const hash = Math.abs((student.student_id * 11 + Math.round(student.score || 50) * 3) % keys.length)
     return keys[hash]
 }
+export const CEEV_DIMENSION_NAMES_FALLBACK: Record<string, string> = {
+    aprendizaje_aplicabilidad: "Aprendizaje y Aplicabilidad",
+    metodologia_vivencial: "Metodología Vivencial e Inmersión",
+    facilitacion_conduccion: "Facilitación y Conducción",
+    interaccion_social_networking: "Interacción Social y Networking",
+}
+
+export function getExpectativasLevel(student: PsicometriaStudent): string {
+    const score = student.score || 0
+    if (score >= 80) return "Expectativa Alta (80-100%)"
+    if (score >= 60) return "Expectativa Favorable (60-79%)"
+    return "Expectativa Inicial (<60%)"
+}
+
+export function getTopCepvDimension(student: PsicometriaStudent): string {
+    const avg = student.data?.avg || {}
+    let maxVal = -1
+    let topDim = ""
+    for (const [k, v] of Object.entries(avg)) {
+        const num = parseFloat(String(v)) || 0
+        if (num > maxVal) {
+            maxVal = num
+            topDim = k
+        }
+    }
+    return CEEV_DIMENSION_NAMES_FALLBACK[topDim] || "Equilibrada"
+}
+
 
 export const PsicometriaDashboard = () => {
     const [selectedArea, setSelectedArea] = useState<AreaKey>("liderazgo")
@@ -184,6 +217,13 @@ export const PsicometriaDashboard = () => {
     const [expandedStyle, setExpandedStyle] = useState<string | null>(null)
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
+
+    // ESTADOS PARA MONITOREO Y REVISIÓN CONTINUA EN VIVO
+    const [isAutoSync, setIsAutoSync] = useState(true)
+    const [isChecking, setIsChecking] = useState(false)
+    const [lastChecked, setLastChecked] = useState<Date | null>(null)
+    const [secondsAgo, setSecondsAgo] = useState(0)
+    const [newDataNotice, setNewDataNotice] = useState<string | null>(null)
 
     const currentAreaMeta = AREAS.find(a => a.key === selectedArea)!
 
@@ -211,31 +251,104 @@ export const PsicometriaDashboard = () => {
         fetchGroups()
     }, [])
 
-    useEffect(() => {
-        const fetchDashboard = async () => {
+    // Función principal para cargar y comprobar datos (soporta modo silencioso en vivo)
+    const fetchDashboard = async (isSilent = false) => {
+        if (!isSilent) {
             setLoading(true)
             setError(null)
-            const token = localStorage.getItem("eleonor_token")
-            try {
-                const params = new URLSearchParams({ area: selectedArea })
-                if (selectedGroupId) params.set("group_id", String(selectedGroupId))
-                const res = await fetch(`${API_BASE_URL}/api/mentor/dashboard/psicometria?${params.toString()}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}))
-                    throw new Error(err.detail || "No se pudo cargar el dashboard.")
+        }
+        setIsChecking(true)
+        const token = localStorage.getItem("eleonor_token")
+        try {
+            const params = new URLSearchParams({ area: selectedArea })
+            if (selectedGroupId) params.set("group_id", String(selectedGroupId))
+            params.set("_t", String(Date.now()))
+
+            const res = await fetch(`${API_BASE_URL}/api/mentor/dashboard/psicometria?${params.toString()}`, {
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    "Cache-Control": "no-cache, no-store, must-revalidate"
+                },
+                cache: "no-store"
+            })
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}))
+                throw new Error(err.detail || "No se pudo cargar el dashboard.")
+            }
+            const data: PsicometriaResponse = await res.json()
+
+            // Detección proactiva de nuevas evaluaciones o variaciones de promedio
+            setResult(prev => {
+                if (prev) {
+                    if (data.total !== prev.total) {
+                        setNewDataNotice(`¡Nuevos datos detectados! Ahora hay ${data.total} estudiantes evaluados.`)
+                        setTimeout(() => setNewDataNotice(null), 5000)
+                    } else if (data.group_avg_score !== prev.group_avg_score) {
+                        setNewDataNotice(`¡Promedio actualizado! Nuevo puntaje grupal: ${data.group_avg_score}/100`)
+                        setTimeout(() => setNewDataNotice(null), 5000)
+                    }
                 }
-                const data = await res.json()
-                setResult(data)
-            } catch (e: any) {
+                return data
+            })
+
+            setLastChecked(new Date())
+            setSecondsAgo(0)
+            if (!isSilent) setError(null)
+        } catch (e: any) {
+            if (!isSilent) {
                 setError(e.message || "Error al cargar los datos.")
                 setResult(null)
-            } finally {
-                setLoading(false)
+            } else {
+                console.warn("Aviso en ciclo de revisión continua:", e)
+            }
+        } finally {
+            if (!isSilent) setLoading(false)
+            setIsChecking(false)
+        }
+    }
+
+    // 1. Carga inicial y cambio de filtros manuales
+    useEffect(() => {
+        fetchDashboard(false)
+    }, [selectedArea, selectedGroupId])
+
+    // 2. CICLO CONSTANTE DE REVISIÓN EN TIEMPO REAL (Cada 4 segundos)
+    useEffect(() => {
+        if (!isAutoSync) return
+
+        const interval = setInterval(() => {
+            // No saturar si la pestaña está oculta
+            if (typeof document !== "undefined" && document.hidden) return
+            fetchDashboard(true)
+        }, 4000)
+
+        return () => clearInterval(interval)
+    }, [isAutoSync, selectedArea, selectedGroupId])
+
+    // 3. Contador de tiempo transcurrido desde la última revisión exitosa
+    useEffect(() => {
+        const timer = setInterval(() => {
+            if (lastChecked) {
+                const diff = Math.floor((Date.now() - lastChecked.getTime()) / 1000)
+                setSecondsAgo(diff >= 0 ? diff : 0)
+            }
+        }, 1000)
+        return () => clearInterval(timer)
+    }, [lastChecked])
+
+    // 4. Re-evaluar de inmediato cuando el mentor regresa a la pestaña o ventana activa
+    useEffect(() => {
+        const onVisibilityOrFocus = () => {
+            if (typeof document !== "undefined" && !document.hidden) {
+                fetchDashboard(true)
             }
         }
-        fetchDashboard()
+        window.addEventListener("focus", onVisibilityOrFocus)
+        document.addEventListener("visibilitychange", onVisibilityOrFocus)
+        return () => {
+            window.removeEventListener("focus", onVisibilityOrFocus)
+            document.removeEventListener("visibilitychange", onVisibilityOrFocus)
+        }
     }, [selectedArea, selectedGroupId])
 
     // Lista de grupos deduplicada
@@ -252,7 +365,8 @@ export const PsicometriaDashboard = () => {
             let cat = ""
             if (selectedArea === "liderazgo") cat = getKurtLewinStyle(s)
             else if (selectedArea === "liderazgo_ccl") cat = getCCLGeneralLevel(s)
-            else cat = getNeoDominantDomain(s)
+            else if (selectedArea === "personalidad_neo") cat = getNeoDominantDomain(s)
+            else cat = getExpectativasLevel(s)
 
             return {
                 name: s.student_name.split(" ")[0],
@@ -373,11 +487,95 @@ export const PsicometriaDashboard = () => {
         }))
     }, [result, selectedArea])
 
+
+    // Gráfico de pastel para Expectativas CEPV-20
+    const expectativasPieData = useMemo(() => {
+        const students = result?.students || []
+        if (students.length === 0 || selectedArea !== "expectativas") return []
+
+        const levels: Record<string, { count: number; students: string[]; color: string; desc: string }> = {
+            "Expectativa Alta (80-100%)": {
+                count: 0,
+                students: [],
+                color: "#10b981",
+                desc: "Altísima motivación e interés sobresaliente en la experiencia y aprendizaje práctico.",
+            },
+            "Expectativa Favorable (60-79%)": {
+                count: 0,
+                students: [],
+                color: "#3b82f6",
+                desc: "Expectativas alineadas con buena disposición al trabajo vivencial y colaborativo.",
+            },
+            "Expectativa Inicial (<60%)": {
+                count: 0,
+                students: [],
+                color: "#f59e0b",
+                desc: "Requiere mayor inducción y alineación con los objetivos del programa formativo.",
+            },
+        }
+
+        students.forEach(s => {
+            const key = getExpectativasLevel(s)
+            if (levels[key]) {
+                levels[key].count += 1
+                levels[key].students.push(s.student_name)
+            }
+        })
+
+        const total = students.length
+        return Object.entries(levels).map(([name, item]) => ({
+            name,
+            value: item.count,
+            percentage: total > 0 ? Number(((item.count / total) * 100).toFixed(1)) : 0,
+            color: item.color,
+            students: item.students,
+            desc: item.desc,
+            badgeBg: "bg-white/5 border-white/10 text-white",
+        }))
+    }, [result, selectedArea])
+
+    // Promedio por dimensión CEPV-20 para gráfico de radar/barras
+    const cepvDimensionsAverage = useMemo(() => {
+        const students = result?.students || []
+        if (students.length === 0 || selectedArea !== "expectativas") return []
+
+        const sumMap: Record<string, number> = {
+            aprendizaje_aplicabilidad: 0,
+            metodologia_vivencial: 0,
+            facilitacion_conduccion: 0,
+            interaccion_social_networking: 0,
+        }
+        let count = 0
+
+        students.forEach(s => {
+            const avg = s.data?.avg
+            if (avg && typeof avg === "object") {
+                count += 1
+                for (const k of Object.keys(sumMap)) {
+                    sumMap[k] += parseFloat(String(avg[k] || 0)) || 0
+                }
+            }
+        })
+
+        if (count === 0) return []
+
+        return Object.entries(sumMap).map(([key, sum]) => {
+            const avgVal = parseFloat((sum / count).toFixed(2))
+            return {
+                dimension: key,
+                label: CEEV_DIMENSION_NAMES_FALLBACK[key] || key,
+                promedio: avgVal,
+                porcentaje: Math.round((avgVal / 5.0) * 100),
+            }
+        })
+    }, [result, selectedArea])
+
     const currentPieData = useMemo(() => {
         if (selectedArea === "liderazgo") return leadershipPieData
         if (selectedArea === "liderazgo_ccl") return cclPieData
-        return neoPieData
-    }, [selectedArea, leadershipPieData, cclPieData, neoPieData])
+        if (selectedArea === "personalidad_neo") return neoPieData
+        return expectativasPieData
+    }, [selectedArea, leadershipPieData, cclPieData, neoPieData, expectativasPieData])
 
     // Filtrar los alumnos mostrados en la tabla
     const filteredStudents = useMemo(() => {
@@ -398,6 +596,8 @@ export const PsicometriaDashboard = () => {
                 list = list.filter(s => getCCLGeneralLevel(s) === selectedCategoryFilter)
             } else if (selectedArea === "personalidad_neo") {
                 list = list.filter(s => getNeoDominantDomain(s) === selectedCategoryFilter)
+            } else if (selectedArea === "expectativas") {
+                list = list.filter(s => getExpectativasLevel(s) === selectedCategoryFilter)
             }
         }
 
@@ -422,7 +622,7 @@ export const PsicometriaDashboard = () => {
                         Dashboard Psicométrico & Diagnósticos
                     </h2>
                     <p className="text-xs text-gray-400 mt-1 max-w-2xl">
-                        Análisis científico de resultados: estilos de liderazgo (Kurt Lewin), competencias directivas (CCL) y rasgos de personalidad (NEO PI-R).
+                        Análisis científico de resultados: estilos de liderazgo (Kurt Lewin), competencias directivas (CCL), rasgos de personalidad (NEO PI-R) y expectativas vivenciales (CEPV-20).
                     </p>
                 </div>
 
@@ -451,6 +651,105 @@ export const PsicometriaDashboard = () => {
                     })}
                 </div>
             </div>
+
+            {/* BARRA DE MONITOREO CONTINUO & ESTADO EN TIEMPO REAL */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-900/90 border border-emerald-500/20 rounded-2xl backdrop-blur-md shadow-2xl">
+                <div className="flex items-center gap-3 flex-wrap">
+                    {/* Indicador Radar / Faro en Vivo */}
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-black uppercase tracking-wider transition-all ${
+                        isAutoSync
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                            : "bg-slate-800/80 border-slate-700 text-slate-400"
+                    }`}>
+                        <span className="relative flex h-2.5 w-2.5">
+                            {isAutoSync && (
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            )}
+                            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isAutoSync ? "bg-emerald-500" : "bg-slate-500"}`}></span>
+                        </span>
+                        <span>{isAutoSync ? "Monitoreo Continuo Activo" : "Monitoreo Pausado"}</span>
+                    </div>
+
+                    {/* Estado dinámico de comprobación */}
+                    <div className="flex items-center gap-2 text-xs">
+                        {isChecking ? (
+                            <span className="inline-flex items-center gap-1.5 text-emerald-300 font-bold animate-pulse">
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                                Comprobando diagnósticos en PostgreSQL...
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1.5 text-slate-400 font-mono">
+                                <Clock className="w-3.5 h-3.5 text-slate-500" />
+                                Última comprobación: <strong className="text-slate-200">{lastChecked ? (secondsAgo < 3 ? "hace un instante" : `hace ${secondsAgo}s`) : "iniciando..."}</strong>
+                            </span>
+                        )}
+                        <span className="text-slate-700 hidden md:inline">•</span>
+                        <span className="text-[11px] text-slate-400 hidden md:inline">
+                            Ciclo de revisión: <strong className="text-[hsl(74,100%,47%)]">cada 4 seg</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                    {/* Botón para alternar auto-sync */}
+                    <button
+                        onClick={() => setIsAutoSync(prev => !prev)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                            isAutoSync
+                                ? "bg-slate-950/80 hover:bg-slate-900 border-emerald-500/30 text-emerald-400"
+                                : "bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300"
+                        }`}
+                        title={isAutoSync ? "Pausar revisión automática" : "Activar revisión automática cada 4s"}
+                    >
+                        <Radio className={`w-3.5 h-3.5 ${isAutoSync ? "text-emerald-400 animate-pulse" : "text-amber-400"}`} />
+                        <span>{isAutoSync ? "Pausar Auto-Sync" : "Reanudar Auto-Sync"}</span>
+                    </button>
+
+                    {/* Botón para forzar revisión inmediata */}
+                    <button
+                        onClick={() => fetchDashboard(true)}
+                        disabled={isChecking}
+                        className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-[hsl(74,100%,47%)]/15 transition-all disabled:opacity-50 active:scale-95"
+                        title="Revisar y actualizar datos de la base de datos de inmediato"
+                    >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? "animate-spin text-slate-950" : ""}`} />
+                        <span>{isChecking ? "Revisando..." : "Revisar Ahora"}</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Pulso sutil de progreso cuando se realiza la comprobación */}
+            {isChecking && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
+                    className="h-0.5 w-full bg-gradient-to-r from-emerald-500 via-[hsl(74,100%,47%)] to-emerald-500 rounded-full shadow-[0_0_12px_rgba(186,239,0,0.5)]"
+                />
+            )}
+
+            {/* Notificación de nuevos datos detectados */}
+            <AnimatePresence>
+                {newDataNotice && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                        className="p-3 bg-emerald-500/20 border border-emerald-400/40 rounded-2xl flex items-center justify-between text-emerald-200 text-xs font-bold shadow-2xl backdrop-blur-md"
+                    >
+                        <div className="flex items-center gap-2.5">
+                            <Sparkles className="w-4 h-4 text-[hsl(74,100%,47%)] animate-bounce" />
+                            <span>{newDataNotice}</span>
+                        </div>
+                        <button
+                            onClick={() => setNewDataNotice(null)}
+                            className="p-1 text-slate-400 hover:text-white transition-colors"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Barra de filtros de grupo (Deduplicada limpiamente) */}
             <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-wrap items-center gap-2">
@@ -995,6 +1294,15 @@ export const PsicometriaDashboard = () => {
                                                             {neoDominant}
                                                         </span>
                                                     )}
+                                                    {selectedArea === "expectativas" && (
+                                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border ${
+                                                            s.score >= 80 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                                                            s.score >= 60 ? "bg-blue-500/10 text-blue-400 border-blue-500/30" :
+                                                            "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                                        }`}>
+                                                            {getExpectativasLevel(s).split(" ")[0]} {getExpectativasLevel(s).split(" ")[1]}
+                                                        </span>
+                                                    )}
                                                 </td>
 
                                                 <td className="p-4 text-xs text-gray-400">
@@ -1048,6 +1356,41 @@ export const PsicometriaDashboard = () => {
                                                                         {Array.isArray(s.data.areas_desarrollo) ? s.data.areas_desarrollo.join(", ") : s.data.areas_desarrollo}
                                                                     </span>
                                                                 </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {selectedArea === "expectativas" && (
+                                                        <div className="space-y-1.5 text-[11px]">
+                                                            {s.data?.avg && typeof s.data.avg === "object" ? (
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                                    {Object.entries(s.data.avg).map(([dimKey, val]) => (
+                                                                        <div key={dimKey} className="px-2 py-1 rounded bg-white/[0.03] border border-white/5 flex items-center justify-between">
+                                                                            <span className="text-gray-400 text-[10px] truncate max-w-[170px]" title={CEEV_DIMENSION_NAMES_FALLBACK[dimKey] || dimKey}>
+                                                                                {CEEV_DIMENSION_NAMES_FALLBACK[dimKey] || dimKey}:
+                                                                            </span>
+                                                                            <strong className="text-emerald-400 font-bold ml-1">{String(val)} / 5</strong>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            ) : (
+                                                                <span className="text-gray-500 italic">
+                                                                    {s.data?.observaciones || "Evaluación de expectativas registrada."}
+                                                                </span>
+                                                            )}
+                                                            {s.data?.openAns && Object.keys(s.data.openAns).length > 0 && (
+                                                                <details className="mt-1 cursor-pointer">
+                                                                    <summary className="text-[10px] text-emerald-400 font-bold hover:underline select-none">
+                                                                        💬 Ver respuestas cualitativas ({Object.keys(s.data.openAns).length})
+                                                                    </summary>
+                                                                    <div className="mt-1.5 p-2 rounded-xl bg-black/40 border border-emerald-500/20 space-y-1">
+                                                                        {Object.entries(s.data.openAns).map(([qKey, aVal]) => (
+                                                                            <div key={qKey} className="text-[10px] text-gray-300">
+                                                                                <strong className="text-emerald-300">P{qKey}:</strong> {String(aVal)}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </details>
                                                             )}
                                                         </div>
                                                     )}

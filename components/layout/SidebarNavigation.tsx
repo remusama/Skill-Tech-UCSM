@@ -23,7 +23,9 @@ import {
   Folder,
   Archive,
   Calendar,
-  PieChart
+  PieChart,
+  Coins,
+  Landmark
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -38,6 +40,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle"
 
 const navItems = [
   { icon: BarChart, label: "SkillMap", page: "skillmap" },
+  { icon: Coins, label: "Tokenomía MYL", page: "myl-economy" },
   { icon: Clock, label: "Level up", page: "practice" },
   { icon: Brain, label: "Liderómetro", page: "diagnosis" },
   { icon: MessageSquare, label: "Moya", page: "assistant" },
@@ -47,6 +50,7 @@ const navItems = [
 
 const teacherNavItems = [
   { icon: BarChart2, label: "Dashboard", page: "mentor-dashboard" },
+  { icon: Landmark, label: "Banco MYL", page: "mentor-myl" },
   { icon: Calendar, label: "Asistencias", page: "mentor-attendance" },
   { icon: PieChart, label: "Psicometría", page: "mentor-psicometria" },
   { icon: Users, label: "Mis estudiantes", page: "mentor-students" },
@@ -181,39 +185,7 @@ export function SidebarNavigation({ currentPage, setCurrentPage, onLogout, role 
 
   return (
     <>
-      {/* Pestaña Inteligente Retráctil en el Borde Izquierdo: se sale de la pantalla, sigue el scroll y al estar cerca se inserta animada */}
-      <AnimatePresence>
-        {!isOpen && isMobile && (
-          <motion.div
-            initial={{ x: -70, opacity: 0 }}
-            animate={{
-              x: isEdgeExpanded ? 0 : -62,
-              opacity: isEdgeExpanded ? 1 : 0.7,
-            }}
-            exit={{ x: -90, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 450, damping: 28 }}
-            onMouseEnter={() => handleEdgeProximity(true)}
-            onTouchStart={() => handleEdgeProximity(true)}
-            className="fixed left-0 top-32 z-40 md:hidden pointer-events-auto"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(true)
-                setIsEdgeExpanded(false)
-              }}
-              className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-r-2xl bg-[hsl(161,65%,7%)]/90 backdrop-blur-2xl border-y border-r border-emerald-500/30 text-white shadow-[0_6px_25px_rgba(0,0,0,0.6)] cursor-pointer group active:scale-95 transition-all"
-              title="Abrir menú de navegación"
-            >
-              <div className="w-1.5 h-5 rounded-full bg-[hsl(74,100%,47%)] shadow-[0_0_8px_rgba(186,239,0,0.8)]" />
-              <Menu size={14} className="text-[hsl(74,100%,47%)] transition-transform group-hover:scale-110 flex-shrink-0" />
-              <span className="text-[10px] font-black uppercase tracking-wider text-white/90 pr-0.5">
-                Menú
-              </span>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       {/* Backdrop oscuro para móvil cuando el menú está abierto */}
       <AnimatePresence>
