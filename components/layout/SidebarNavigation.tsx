@@ -24,12 +24,9 @@ import {
   Archive,
   Calendar,
   PieChart,
-<<<<<<< HEAD
   Coins,
-  Landmark
-=======
+  Landmark,
   Images
->>>>>>> 118fc5b51408939f3f35d8bcba59df820819e8ea
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"

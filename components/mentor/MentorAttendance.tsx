@@ -297,21 +297,6 @@ export function MentorAttendance() {
                 const classesData = await fetchMentorClasses()
                 setClasses(classesData)
 
-<<<<<<< HEAD
-                // Fetch groups for class creation dropdown
-                try {
-                    const groupsRes = await fetch(`${API_URL}/mentor/groups`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    })
-                    if (groupsRes.ok) {
-                        setGroups(await groupsRes.json())
-                    }
-                } catch (gErr) {
-                    console.warn("Could not fetch groups:", gErr)
-                }
-
-=======
->>>>>>> 118fc5b51408939f3f35d8bcba59df820819e8ea
                 // Fetch all students for simulator dropdown
                 try {
                     const studentsRes = await fetch(`${API_URL}/mentor/students`, {
