@@ -77,6 +77,9 @@ MIGRATIONS = [
     ("users", "myl_balance_cash", "INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
     ("users", "myl_balance_digital", "INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
     ("users", "myl_house_points_session", "INTEGER DEFAULT 0", "INTEGER DEFAULT 0"),
+    ("myl_macroeconomic_state", "qr_market_open", "BOOLEAN DEFAULT TRUE", "INTEGER DEFAULT 1"),
+    ("myl_macroeconomic_state", "moya_broadcast_message", "VARCHAR(255)", "VARCHAR(255)"),
+    ("myl_macroeconomic_state", "moya_broadcast_type", "VARCHAR(32)", "VARCHAR(32)"),
 ]
 
 

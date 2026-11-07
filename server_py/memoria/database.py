@@ -8,6 +8,7 @@ import datetime
 import os
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Float,
@@ -399,6 +400,9 @@ class MylMacroeconomicState(Base):
     session_emitted_myl = Column(Integer, default=384)
     session_burned_myl = Column(Integer, default=312)
     active_phase = Column(String(64), default="Apertura") # 'Apertura', 'Bloque Individual', 'Ventana de Mercado', 'Actividad Grupal', 'Cierre'
+    qr_market_open = Column(Boolean, default=True) # Interruptor Maestro de Mercado QR
+    moya_broadcast_message = Column(String(255), default="¡Bienvenidos a la sesión! Atentos a las pistas de mercado.")
+    moya_broadcast_type = Column(String(32), default="rumor")
     reference_rate_text = Column(String(64), default="1 Punto de Casa = 2 MYL")
     alert_status = Column(String(32), default="green") # 'green', 'yellow', 'red'
     updated_at = Column(DateTime, default=datetime.datetime.utcnow)

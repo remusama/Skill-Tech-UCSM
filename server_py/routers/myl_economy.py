@@ -62,6 +62,7 @@ def get_student_wallet_dashboard(
     house_stat = next((r for r in rankings if r["house"] == house), rankings[0])
     rank = house_stat["rank"]
     bonus_info = HOUSE_BONUS_MULTIPLIERS.get(rank, HOUSE_BONUS_MULTIPLIERS[2])
+    macro = db.query(MylMacroeconomicState).first()
 
     # Transacciones recientes en libro mayor
     ledger = (
@@ -105,6 +106,12 @@ def get_student_wallet_dashboard(
             "diff_up": house_stat["diff_up"],
             "diff_down": house_stat["diff_down"],
             "bonus_projection": bonus_info,
+        },
+        "qr_market_open": bool(macro.qr_market_open) if macro else True,
+        "active_phase": macro.active_phase if macro else "Apertura",
+        "moya_broadcast": {
+            "message": (macro.moya_broadcast_message if macro and macro.moya_broadcast_message else "¡Bienvenidos al ecosistema MYL! Atentos a los rumores de mercado y misiones."),
+            "type": (macro.moya_broadcast_type if macro and macro.moya_broadcast_type else "rumor")
         },
         "session_metrics": {
             "house_points_earned": user.myl_house_points_session or 0,
@@ -702,6 +709,29 @@ def inspect_qr_payload(
     user_balance = int(user.myl_balance_digital or 0)
     can_afford = user_balance >= price
 
+    macro = db.query(MylMacroeconomicState).first()
+    is_market_open = bool(macro.qr_market_open) if macro else True
+
+    if qr_type == "store_cashier_order":
+        bill_id = data.get("bill_id", "BILL-ORDER")
+        house = data.get("house", "APEX")
+        total_cost = int(data.get("total_cost_myl") or price)
+        items = data.get("items", [])
+        return {
+            "valid": True,
+            "type": "store_cashier_order",
+            "bill_id": bill_id,
+            "house": house,
+            "title": f"Caja Tienda: Orden Materiales {house}",
+            "items": items,
+            "price_myl": total_cost,
+            "seller_name": data.get("seller_name", f"Caja Oficial - Casa {house}"),
+            "user_balance_digital": user_balance,
+            "can_afford": user_balance >= total_cost,
+            "market_open": is_market_open,
+            "is_self": False
+        }
+
     if qr_type == "p2p_transfer":
         seller_id = data.get("seller_id")
         seller = db.query(User).filter_by(id=seller_id).first() if seller_id else None
@@ -817,9 +847,49 @@ def pay_qr_payload(
             "fee_burned": fee
         }
 
+    elif inspect_res.get("type") == "store_cashier_order":
+        macro = db.query(MylMacroeconomicState).first()
+        if macro and not macro.qr_market_open:
+            raise HTTPException(status_code=400, detail="El Mercado QR se encuentra CERRADO por el facilitador en esta fase.")
+
+        user.myl_balance_digital -= price
+
+        db.add(MylLedgerEntry(
+            user_id=user.id,
+            house=user.house,
+            amount=-price,
+            entry_type="store_materials_burn",
+            status="settled_solana",
+            description=f"Pago QR Caja Oficial: {inspect_res.get('title', 'Orden de Materiales')} (Quemado: {price} MYL)",
+        ))
+
+        if macro:
+            macro.session_burned_myl += price
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "message": f"¡Pago de {price} MYL a Caja Registradora confirmado! Materiales despachados y saldo quemado.",
+            "new_balance_digital": user.myl_balance_digital,
+            "burned_myl": price
+        }
+
     else:
         # Pago de servicio / artículo oficial
         item_code = inspect_res.get("item_code")
+        if item_code:
+            # Validación antiacaparamiento (máx 2 unidades del mismo tipo)
+            active_count = db.query(MylActiveImpulse).filter_by(
+                user_id=user.id,
+                item_code=item_code,
+                status="active"
+            ).count()
+            if active_count >= 2:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Límite antiacaparamiento: Ya posees el máximo permitido (2 unidades activas) de este Impulso."
+                )
         item = db.query(MylStoreItem).filter_by(code=item_code).first() if item_code else None
 
         user.myl_balance_digital -= price
@@ -938,6 +1008,9 @@ def get_manager_macro_view(
         "burn_target_pct": "75% - 85%",
         "alert_status": alert_status,
         "active_phase": macro.active_phase,
+        "qr_market_open": bool(macro.qr_market_open),
+        "moya_broadcast_message": macro.moya_broadcast_message or "¡Bienvenidos al programa de Liderazgo UCSM!",
+        "moya_broadcast_type": macro.moya_broadcast_type or "rumor",
         "reference_rate_text": macro.reference_rate_text, # "1 Punto de Casa = 2 MYL"
         "phases_available": [
             "Apertura",
@@ -983,6 +1056,14 @@ def get_manager_breakdown(
     rankings = get_house_rankings(db)
     orders = {o.house: o for o in db.query(MylHouseOrder).filter_by(session_number=1).all()}
 
+    # Calcular liquidez agregada por casa sumando saldos de sus 12 integrantes (Dato Exclusivo del Gestor)
+    house_liquidity_map = {}
+    for r in rankings:
+        h = r["house"]
+        members = db.query(User).filter(User.house == h, User.role == "student").all()
+        liq = sum((m.myl_balance_cash or 0) + (m.myl_balance_digital or 0) for m in members)
+        house_liquidity_map[h] = liq
+
     houses_breakdown = []
     for r in rankings:
         h = r["house"]
@@ -993,6 +1074,7 @@ def get_manager_breakdown(
             "st_prev": r["st_prev"],
             "st_curr": r["st_curr"],
             "total_pts": r["total_pts"],
+            "total_house_liquidity_myl": house_liquidity_map.get(h, 48), # DATO EXCLUSIVO DEL GESTOR
             "order_status": ord.status if ord else "draft",
             "order_collected_myl": ord.total_collected_myl if ord else 0,
             "order_total_cost_myl": ord.total_cost_myl if ord else 48,
@@ -1061,3 +1143,333 @@ def get_manager_market_view(
         "unequal_trade_audit_count": len(unequal_alerts),
     }
 
+
+
+# ── ENDPOINTS DE OPERACIONES DEL GESTOR (PRD V3.0.0) ──────────────────────────
+
+class ToggleMarketRequest(BaseModel):
+    open: Optional[bool] = None
+
+@router.post("/manager/toggle-market")
+def toggle_qr_market(
+    req: Optional[ToggleMarketRequest] = None,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Interruptor Maestro de Mercado QR: Habilita o bloquea las transacciones en los móviles."""
+    macro = db.query(MylMacroeconomicState).first()
+    if not macro:
+        macro = MylMacroeconomicState()
+        db.add(macro)
+    if req and req.open is not None:
+        macro.qr_market_open = req.open
+    else:
+        macro.qr_market_open = not bool(macro.qr_market_open)
+    macro.updated_at = datetime.utcnow()
+    db.commit()
+    return {
+        "status": "success",
+        "qr_market_open": bool(macro.qr_market_open),
+        "message": f"Mercado QR {'ABIERTO' if macro.qr_market_open else 'CERRADO'}"
+    }
+
+
+@router.post("/manager/disperse-bonuses")
+def disperse_initial_bonuses(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Dispersión de Bono Inicial (PRD 4.2):
+    Acredita automáticamente los bonos enteros según el puesto de cada casa en la ventana móvil:
+    - 1.º Puesto (APEX): 6 MYL por integrante
+    - 2.º Puesto (IGNIS): 5 MYL por integrante
+    - 3.º Puesto (NEXUS): 5 MYL por integrante
+    - 4.º Puesto (VISIO): 4 MYL por integrante
+    Total emitido: 240 MYL (12 integrantes x 4 casas).
+    """
+    rankings = get_house_rankings(db)
+    house_payouts = {}
+    for r in rankings:
+        h = r["house"]
+        rank = r["rank"]
+        payout = HOUSE_BONUS_MULTIPLIERS.get(rank, {"payout_myl": 5})["payout_myl"]
+        house_payouts[h] = payout
+
+    students = db.query(User).filter(User.role == "student").all()
+    count = 0
+    total_dispersed = 0
+
+    for s in students:
+        payout = house_payouts.get(s.house, 5)
+        s.myl_balance_digital = (s.myl_balance_digital or 0) + payout
+        total_dispersed += payout
+        count += 1
+        db.add(MylLedgerEntry(
+            user_id=s.id,
+            house=s.house,
+            amount=payout,
+            entry_type="session_bonus",
+            status="confirmed",
+            description=f"Bono Inicial de Sesión ({payout} MYL - Casa {s.house})"
+        ))
+
+    macro = db.query(MylMacroeconomicState).first()
+    if macro:
+        macro.session_emitted_myl += total_dispersed
+        macro.edition_emitted_myl += total_dispersed
+
+    db.commit()
+
+    return {
+        "status": "success",
+        "students_credited": count,
+        "total_dispersed_myl": total_dispersed,
+        "message": f"¡Bono inicial dispersado con éxito! Se acreditaron {total_dispersed} MYL entre {count} estudiantes."
+    }
+
+
+class CreditMeritRequest(BaseModel):
+    student_id: int
+    myl_amount: int = Field(ge=1, le=5, default=1)
+    reason: Optional[str] = "Participación destacada en clase"
+
+@router.post("/manager/credit-merit")
+def credit_student_merit(
+    req: CreditMeritRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Acreditación de Mérito Individual Combinada (PRD 4.2):
+    Otorga simultáneamente +1 Punto de Casa y +1 o +2 MYL en un clic.
+    Si el alumno ya alcanzó su tope de 3 Puntos de Casa en la sesión,
+    el sistema bloquea puntos adicionales y acredita únicamente los MYL.
+    """
+    student = db.query(User).filter_by(id=req.student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+
+    current_points = student.myl_house_points_session or 0
+    points_awarded = 0
+    if current_points < 3:
+        points_awarded = 1
+        student.myl_house_points_session = current_points + 1
+
+    # Acreditar MYL digital
+    student.myl_balance_digital = (student.myl_balance_digital or 0) + req.myl_amount
+
+    # Registrar en libro mayor
+    db.add(MylLedgerEntry(
+        user_id=student.id,
+        house=student.house,
+        amount=req.myl_amount,
+        entry_type="merit_credit",
+        status="confirmed",
+        description=f"Mérito: {req.reason} (+{req.myl_amount} MYL, +{points_awarded} pts)"
+    ))
+
+    macro = db.query(MylMacroeconomicState).first()
+    if macro:
+        macro.session_emitted_myl += req.myl_amount
+        macro.edition_emitted_myl += req.myl_amount
+
+    db.commit()
+
+    return {
+        "status": "success",
+        "student_name": student.full_name or student.username,
+        "myl_awarded": req.myl_amount,
+        "points_awarded": points_awarded,
+        "total_session_points": student.myl_house_points_session,
+        "capped": student.myl_house_points_session >= 3,
+        "new_balance_digital": student.myl_balance_digital,
+        "message": f"Acreditados +{req.myl_amount} MYL y +{points_awarded} Pts a {student.full_name or student.username}"
+    }
+
+
+class MoyaBroadcastRequest(BaseModel):
+    message: str
+    broadcast_type: Optional[str] = "rumor"
+
+@router.post("/manager/moya-broadcast")
+def broadcast_moya_message(
+    req: MoyaBroadcastRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Emisor de Globos de Moya en Vivo (PRD 4.2):
+    Dispara un mensaje que aparece inmediatamente en el widget de Moya
+    en el Dashboard de los 48 alumnos.
+    """
+    macro = db.query(MylMacroeconomicState).first()
+    if not macro:
+        macro = MylMacroeconomicState()
+        db.add(macro)
+    macro.moya_broadcast_message = req.message
+    macro.moya_broadcast_type = req.broadcast_type or "rumor"
+    macro.updated_at = datetime.utcnow()
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": "Globo de Moya emitido en vivo",
+        "moya_message": macro.moya_broadcast_message,
+        "broadcast_type": macro.moya_broadcast_type,
+    }
+
+
+class CashierBillRequest(BaseModel):
+    house: str
+    items: List[dict]
+    total_cost_myl: int
+    notes: Optional[str] = ""
+
+@router.post("/manager/cashier/create-bill")
+def create_cashier_bill(
+    req: CashierBillRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """
+    Terminal de Caja Registradora QR (Tienda Oficial - PRD 4.4):
+    El gestor genera el código QR oficial de cobro para que los alumnos
+    escaneen desde su móvil y quemen los MYL al instante.
+    """
+    import json
+    bill_id = f"BILL-{int(datetime.utcnow().timestamp())}-{req.house.upper()}"
+    qr_payload = {
+        "type": "store_cashier_order",
+        "bill_id": bill_id,
+        "house": req.house.upper(),
+        "total_cost_myl": int(req.total_cost_myl),
+        "items": req.items,
+        "seller_name": f"Caja Registradora Tienda (Casa {req.house.upper()})",
+        "created_at": datetime.utcnow().isoformat()
+    }
+    return {
+        "status": "success",
+        "bill_id": bill_id,
+        "qr_payload": json.dumps(qr_payload, ensure_ascii=False),
+        "details": qr_payload
+    }
+
+
+# ── MISIONES OCULTAS Y MUNDO MOYA (PRD 3.2 Y 4.2) ───────────────────────────
+
+OFFICIAL_MOYA_MISSIONS = [
+    {
+        "id": "m1",
+        "code": "TRUEQUE_JUSTO",
+        "title": "El Pacto de la Hormiga",
+        "hint": "Realiza un intercambio presencial P2P intracasa o intercasa sin superar la mediana histórica.",
+        "reward_myl": 1,
+        "badge": "Trueque Transparente",
+        "category": "Negociación"
+    },
+    {
+        "id": "m2",
+        "code": "CERO_POLIZONES",
+        "title": "Sinergia Total",
+        "hint": "Todos los miembros de tu Casa participan activamente y realizan aportes a los retos colectivos.",
+        "reward_myl": 2,
+        "badge": "Cero Polizones",
+        "category": "Cohesión"
+    },
+    {
+        "id": "m3",
+        "code": "INGENIERIA_AUSTERA",
+        "title": "Ingeniería Austera",
+        "hint": "Gana la actividad de construcción optimizando al máximo los insumos de la Hoja de Pedido.",
+        "reward_myl": 2,
+        "badge": "Estrategia Austera",
+        "category": "Estrategia"
+    },
+    {
+        "id": "m4",
+        "code": "CURIOSIDAD_FELINA",
+        "title": "Curiosidad de Moya",
+        "hint": "Explora el mundo pixel-art de Moya y descubre su botón secreto sin causar inflación.",
+        "reward_myl": 1,
+        "badge": "Amigo de Moya",
+        "category": "Exploración"
+    }
+]
+
+@router.get("/moya/missions")
+def get_moya_missions(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Devuelve el tablón de misiones ocultas con su estado."""
+    # Verificar qué misiones ha reclamado el usuario
+    ledger = db.query(MylLedgerEntry).filter_by(user_id=user_id).all()
+    claimed_codes = set()
+    for entry in ledger:
+        desc = (entry.description or "").lower()
+        if "misión:" in desc or "mision:" in desc:
+            for m in OFFICIAL_MOYA_MISSIONS:
+                if m["title"].lower() in desc or m["code"].lower() in desc:
+                    claimed_codes.add(m["id"])
+
+    return [
+        {
+            **m,
+            "completed": m["id"] in claimed_codes,
+            "claimed": m["id"] in claimed_codes,
+        }
+        for m in OFFICIAL_MOYA_MISSIONS
+    ]
+
+
+class ClaimMissionRequest(BaseModel):
+    mission_id: str
+
+@router.post("/moya/claim-mission")
+def claim_moya_mission(
+    req: ClaimMissionRequest,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Permite al alumno reclamar la recompensa de una misión oculta descubierta."""
+    mission = next((m for m in OFFICIAL_MOYA_MISSIONS if m["id"] == req.mission_id), None)
+    if not mission:
+        raise HTTPException(status_code=404, detail="Misión no encontrada")
+
+    user = db.query(User).filter_by(id=user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Verificar si ya la reclamó
+    existing = db.query(MylLedgerEntry).filter(
+        MylLedgerEntry.user_id == user.id,
+        MylLedgerEntry.description.ilike(f"%Misión: {mission['title']}%")
+    ).first()
+    if existing:
+        return {"status": "already_claimed", "message": f"Ya has reclamado la recompensa de '{mission['title']}'."}
+
+    reward = mission["reward_myl"]
+    user.myl_balance_digital = (user.myl_balance_digital or 0) + reward
+
+    db.add(MylLedgerEntry(
+        user_id=user.id,
+        house=user.house,
+        amount=reward,
+        entry_type="mission_reward",
+        status="confirmed",
+        description=f"Misión: {mission['title']} (+{reward} MYL - Medalla: {mission['badge']})"
+    ))
+
+    macro = db.query(MylMacroeconomicState).first()
+    if macro:
+        macro.session_emitted_myl += reward
+
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": f"¡Misión '{mission['title']}' completada! Has ganado +{reward} MYL y la insignia '{mission['badge']}'.",
+        "new_balance_digital": user.myl_balance_digital,
+        "badge": mission["badge"]
+    }
