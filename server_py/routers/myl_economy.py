@@ -16,7 +16,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
+import random
 
 from server_py.memoria.database import (
     get_db, User, MylLedgerEntry, MylMaterial, MylHouseOrder,
@@ -652,7 +653,9 @@ class QRInspectRequest(BaseModel):
     qr_payload: str
 
 class QRPayRequest(BaseModel):
-    qr_payload: str
+    qr_payload: Optional[str] = None
+    recipient_id: Optional[int] = None
+    amount_myl: Optional[int] = None
 
 @router.post("/qr/inspect")
 def inspect_qr_payload(
@@ -662,26 +665,94 @@ def inspect_qr_payload(
 ):
     """
     Decodifica e inspecciona un payload QR para servicios de tienda o transferencia P2P.
-    Soporta formato JSON o URI:
+    Soporta formato Solana Address, Username, Email, JSON o URI:
+    - Billetera Solana de Alumno: e.g. "Kym1PNTeY1RsAZPMCAdfbqtKCQoVuDBFpekMp5rWV3XE"
+    - Usuario directo: e.g. "@luciana.castillo" o "luciana.castillo"
     - Servicio / Tienda: {"type":"service", "item_code":"...", "title":"...", "price":5}
-    - Transferencia P2P: {"type":"p2p_transfer", "seller_id":58, "seller_name":"Josue", "asset_name":"Insumo A", "price":4}
+    - Transferencia P2P: {"type":"p2p_transfer", "seller_id":58, "seller_name":"Josue", "price":4}
     """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no autenticado")
 
     import json
+    from urllib.parse import unquote
     raw = req.qr_payload.strip()
+    raw = unquote(raw).strip()
 
-    # Intentar parsear JSON
+    macro = db.query(MylMacroeconomicState).first()
+    is_market_open = bool(macro.qr_market_open) if macro else True
+    user_balance = int(user.myl_balance_digital or 0)
+
+    # 1. Verificar si el QR escaneado corresponde a la cuenta Solana o ID de un compañero (P2P Estudiante)
+    clean_target = raw.replace("solana:", "").strip()
+    recipient = None
+
+    # Búsqueda por dirección pública de Solana
+    recipient = db.query(User).filter(User.solana_wallet_address == clean_target).first()
+
+    # Búsqueda por nombre de usuario (con o sin @)
+    if not recipient:
+        username_clean = clean_target.lstrip("@").strip()
+        recipient = db.query(User).filter(func.lower(User.username) == username_clean.lower()).first()
+
+    # Búsqueda por email institucional
+    if not recipient:
+        recipient = db.query(User).filter(func.lower(User.email) == clean_target.lower()).first()
+
+    # Búsqueda por ID numérico directo
+    if not recipient and clean_target.isdigit():
+        recipient = db.query(User).filter(User.id == int(clean_target)).first()
+
+    # Si aún no se halla, intentar parsear como JSON
     data = None
-    if raw.startswith("{") and raw.endswith("}"):
+    if not recipient and raw.startswith("{") and raw.endswith("}"):
         try:
             data = json.loads(raw)
         except Exception:
             pass
 
-    # Si no es JSON puro, intentar parsear formato clave-valor estilo token: myl://pay?item=...&price=...
+    if not recipient and data:
+        # Si el JSON define un vendedor o usuario destinatario
+        u_id = data.get("seller_id") or data.get("user_id") or data.get("recipient_id")
+        if u_id:
+            recipient = db.query(User).filter(User.id == int(u_id)).first()
+        if not recipient and "solana_address" in data:
+            recipient = db.query(User).filter(User.solana_wallet_address == data["solana_address"]).first()
+        if not recipient and "username" in data:
+            u_clean = str(data["username"]).lstrip("@").strip()
+            recipient = db.query(User).filter(func.lower(User.username) == u_clean.lower()).first()
+
+    # Si se identificó a un compañero de clase / cuenta de estudiante:
+    if recipient:
+        is_self = (recipient.id == user.id)
+        recipient_name = recipient.full_name or recipient.username
+        recipient_house = recipient.house or "APEX"
+        recipient_wallet = recipient.solana_wallet_address or f"SOL-{recipient.username[:8].upper()}"
+
+        fixed_price = None
+        if data and ("price" in data or "price_myl" in data):
+            fixed_price = int(data.get("price") or data.get("price_myl") or 0)
+
+        return {
+            "valid": True,
+            "type": "p2p_user",
+            "title": f"Transferencia P2P a {recipient_name}",
+            "recipient_id": recipient.id,
+            "recipient_name": recipient_name,
+            "recipient_username": recipient.username,
+            "recipient_house": recipient_house,
+            "recipient_wallet": recipient_wallet,
+            "recipient_avatar": recipient.avatar_url,
+            "user_balance_digital": user_balance,
+            "can_afford": user_balance >= 1,
+            "market_open": is_market_open,
+            "is_self": is_self,
+            "fixed_price": fixed_price,
+            "suggested_amount": min(user_balance, 2) if user_balance > 0 else 0
+        }
+
+    # Si no es un usuario directo, parsear formatos de tienda / orden grupal
     if not data and "myl://" in raw:
         try:
             from urllib.parse import urlparse, parse_qs
@@ -704,15 +775,11 @@ def inspect_qr_payload(
                 "seller_name": "Tienda Oficial UCSM"
             }
         else:
-            raise HTTPException(status_code=400, detail="Formato de código QR no reconocido o inválido.")
+            raise HTTPException(status_code=400, detail="Cuenta Solana o código QR no reconocido en el sistema.")
 
     qr_type = data.get("type", "service")
     price = int(data.get("price") or data.get("price_myl") or 0)
-    user_balance = int(user.myl_balance_digital or 0)
     can_afford = user_balance >= price
-
-    macro = db.query(MylMacroeconomicState).first()
-    is_market_open = bool(macro.qr_market_open) if macro else True
 
     if qr_type == "store_cashier_order":
         bill_id = data.get("bill_id", "BILL-ORDER")
@@ -734,26 +801,6 @@ def inspect_qr_payload(
             "is_self": False
         }
 
-    if qr_type == "p2p_transfer":
-        seller_id = data.get("seller_id")
-        seller = db.query(User).filter_by(id=seller_id).first() if seller_id else None
-        seller_name = seller.full_name or seller.username if seller else data.get("seller_name", "Compañero")
-        asset_name = data.get("asset_name") or data.get("offer", "Activo / Insumo")
-
-        return {
-            "valid": True,
-            "type": "p2p_transfer",
-            "title": f"Transferencia P2P: {asset_name}",
-            "asset_name": asset_name,
-            "seller_id": seller_id,
-            "seller_name": seller_name,
-            "seller_house": seller.house if seller else data.get("seller_house", "APEX"),
-            "price_myl": price,
-            "user_balance_digital": user_balance,
-            "can_afford": can_afford,
-            "is_self": (seller_id == user.id) if seller_id else False
-        }
-
     else:
         # Es un servicio / artículo oficial
         item_code = data.get("item_code") or data.get("code")
@@ -772,6 +819,7 @@ def inspect_qr_payload(
             "seller_name": "Tienda Oficial / Servicios UCSM",
             "user_balance_digital": user_balance,
             "can_afford": user_balance >= price,
+            "market_open": is_market_open,
             "is_self": False
         }
 
@@ -783,79 +831,130 @@ def pay_qr_payload(
     user_id: int = Depends(get_current_user_id),
 ):
     """
-    Ejecuta el pago del QR descontando el saldo digital del usuario y acreditándolo
-    al vendedor (si es P2P) o registrando la compra de servicio en el libro mayor.
+    Ejecuta el pago o transferencia P2P descontando el saldo digital del usuario
+    y acreditándolo al alumno destinatario con cupón oficial estilo Yape y datos 100% reales.
     """
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    # Inspeccionamos para validar
-    inspect_res = inspect_qr_payload(QRInspectRequest(qr_payload=req.qr_payload), db, user_id)
-    if not inspect_res.get("valid"):
-        raise HTTPException(status_code=400, detail="Código QR inválido.")
-
-    if inspect_res.get("is_self"):
-        raise HTTPException(status_code=400, detail="No puedes transferirte fondos a ti mismo.")
-
-    price = int(inspect_res["price_myl"])
-    if (user.myl_balance_digital or 0) < price:
-        raise HTTPException(status_code=400, detail=f"Saldo insuficiente. Tienes {user.myl_balance_digital} MYL y el costo es {price} MYL.")
-
     macro = db.query(MylMacroeconomicState).first()
 
-    if inspect_res["type"] == "p2p_transfer":
-        seller_id = inspect_res.get("seller_id")
-        seller = db.query(User).filter_by(id=seller_id).first()
-        if not seller:
-            raise HTTPException(status_code=404, detail="El vendedor destinatario no fue encontrado.")
+    # CASO A: Transferencia P2P directa a un compañero
+    recipient = None
+    if req.recipient_id:
+        recipient = db.query(User).filter(User.id == req.recipient_id).first()
+        if not recipient:
+            raise HTTPException(status_code=404, detail="El estudiante destinatario no fue encontrado.")
 
-        # Cuota escalonada
-        fee = calculate_p2p_burn_fee(seller.house or "APEX", user.house, price)
-        seller_receive = price - fee
+    # Si no se pasó recipient_id pero se pasó qr_payload, inspeccionamos primero
+    inspect_res = None
+    if not recipient and req.qr_payload:
+        inspect_res = inspect_qr_payload(QRInspectRequest(qr_payload=req.qr_payload), db, user_id)
+        if not inspect_res.get("valid"):
+            raise HTTPException(status_code=400, detail="Código QR inválido.")
+        if inspect_res.get("type") == "p2p_user":
+            recipient = db.query(User).filter(User.id == inspect_res["recipient_id"]).first()
 
-        # Descontar al comprador
-        user.myl_balance_digital -= price
-        # Acreditar al vendedor
-        seller.myl_balance_digital = (seller.myl_balance_digital or 0) + seller_receive
+    # Si es transferencia P2P:
+    if recipient:
+        if recipient.id == user.id:
+            raise HTTPException(status_code=400, detail="No puedes transferirte fondos a ti mismo.")
 
-        # Registrar en libro mayor
+        if macro and not macro.qr_market_open:
+            raise HTTPException(status_code=400, detail="Las transferencias P2P se encuentran temporalmente pausadas por el docente.")
+
+        amount = int(req.amount_myl or (inspect_res.get("fixed_price") if inspect_res else 0) or 0)
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Debes ingresar un monto entero mayor a 0 MYL.")
+
+        current_balance = int(user.myl_balance_digital or 0)
+        if current_balance < amount:
+            raise HTTPException(status_code=400, detail=f"Saldo insuficiente. Tu saldo actual es de {current_balance} MYL y deseas enviar {amount} MYL.")
+
+        # Cuota escalonada quemada en Solana (0 si misma casa o <= 5 MYL)
+        fee = calculate_p2p_burn_fee(recipient.house or "APEX", user.house, amount)
+        recipient_receive = amount - fee
+
+        # Actualizar saldos atómicamente
+        user.myl_balance_digital = current_balance - amount
+        recipient.myl_balance_digital = int(recipient.myl_balance_digital or 0) + recipient_receive
+
+        # Generar código de seguridad de 3 dígitos y número de operación único de 8 dígitos
+        security_code = f"{random.randint(100, 999)}"
+        op_number = f"{int(datetime.utcnow().timestamp())}"[-8:]
+
+        # Libro mayor para emisor y receptor
+        tx_sig = f"OP-{op_number}-{security_code}"
         db.add(MylLedgerEntry(
             user_id=user.id,
             house=user.house,
-            amount=-price,
+            amount=-amount,
             entry_type="qr_p2p_pay",
             status="confirmed",
-            description=f"Pago QR a {seller.full_name or seller.username}: {inspect_res['asset_name']}",
+            solana_tx_signature=tx_sig,
+            description=f"Transferencia P2P a {recipient.full_name or recipient.username} ({recipient.house or 'APEX'}) - Op #{op_number}",
         ))
         db.add(MylLedgerEntry(
-            user_id=seller.id,
-            house=seller.house,
-            amount=seller_receive,
+            user_id=recipient.id,
+            house=recipient.house,
+            amount=recipient_receive,
             entry_type="qr_p2p_receive",
             status="confirmed",
-            description=f"Cobro QR de {user.full_name or user.username}: {inspect_res['asset_name']} (Quemado: {fee} MYL)",
+            solana_tx_signature=tx_sig,
+            description=f"Transferencia P2P recibida de {user.full_name or user.username} ({user.house or 'APEX'}) - Op #{op_number} (Quemado: {fee} MYL)",
         ))
 
         if fee > 0 and macro:
             macro.session_burned_myl += fee
 
         db.commit()
+        db.refresh(user)
+
+        # Formatear fecha y hora para el voucher
+        now_utc = datetime.utcnow()
+        month_names = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "set", "oct", "nov", "dic"]
+        month_str = month_names[now_utc.month - 1]
+        hour = now_utc.hour % 12 or 12
+        ampm = "a. m." if now_utc.hour < 12 else "p. m."
+        formatted_datetime = f"{now_utc.day:02d} {month_str}. {now_utc.year} | {hour:02d}:{now_utc.minute:02d} {ampm}"
 
         return {
             "status": "success",
-            "message": f"¡Pago exitoso de {price} MYL a {seller.full_name or seller.username}! Se transfirió el activo {inspect_res['asset_name']}.",
+            "type": "p2p_voucher",
+            "message": f"¡Transferiste exitosamente {amount} MYL a {recipient.full_name or recipient.username}!",
+            "amount_myl": amount,
+            "recipient_name": recipient.full_name or recipient.username,
+            "recipient_username": recipient.username,
+            "recipient_house": recipient.house or "APEX",
+            "recipient_wallet": recipient.solana_wallet_address or f"SOL-{recipient.username[:8].upper()}",
+            "security_code": security_code,
+            "security_digits": [security_code[0], security_code[1], security_code[2]],
+            "op_number": op_number,
+            "formatted_datetime": formatted_datetime,
             "new_balance_digital": user.myl_balance_digital,
             "fee_burned": fee
         }
 
-    elif inspect_res.get("type") == "store_cashier_order":
-        macro = db.query(MylMacroeconomicState).first()
+    # CASO B: Pago de Orden de Caja o Servicio Oficial
+    if not inspect_res and req.qr_payload:
+        inspect_res = inspect_qr_payload(QRInspectRequest(qr_payload=req.qr_payload), db, user_id)
+
+    if not inspect_res or not inspect_res.get("valid"):
+        raise HTTPException(status_code=400, detail="Código de pago no válido.")
+
+    price = int(inspect_res.get("price_myl") or 0)
+    current_balance = int(user.myl_balance_digital or 0)
+    if current_balance < price:
+        raise HTTPException(status_code=400, detail=f"Saldo insuficiente. Tienes {current_balance} MYL y el costo es {price} MYL.")
+
+    if inspect_res.get("type") == "store_cashier_order":
         if macro and not macro.qr_market_open:
-            raise HTTPException(status_code=400, detail="El Mercado QR se encuentra CERRADO por el facilitador en esta fase.")
+            raise HTTPException(status_code=400, detail="El Mercado QR se encuentra temporalmente cerrado por el docente.")
 
-        user.myl_balance_digital -= price
+        user.myl_balance_digital = current_balance - price
 
+        op_number = f"{int(datetime.utcnow().timestamp())}"[-8:]
         db.add(MylLedgerEntry(
             user_id=user.id,
             house=user.house,
@@ -872,16 +971,17 @@ def pay_qr_payload(
 
         return {
             "status": "success",
-            "message": f"¡Pago de {price} MYL a Caja Registradora confirmado! Materiales despachados y saldo quemado.",
+            "type": "store_order",
+            "message": f"¡Pago de {price} MYL a Caja Registradora confirmado! Materiales despachados.",
             "new_balance_digital": user.myl_balance_digital,
-            "burned_myl": price
+            "burned_myl": price,
+            "op_number": op_number
         }
 
     else:
         # Pago de servicio / artículo oficial
         item_code = inspect_res.get("item_code")
         if item_code:
-            # Validación antiacaparamiento (máx 2 unidades del mismo tipo)
             active_count = db.query(MylActiveImpulse).filter_by(
                 user_id=user.id,
                 item_code=item_code,
@@ -892,12 +992,11 @@ def pay_qr_payload(
                     status_code=400,
                     detail=f"Límite antiacaparamiento: Ya posees el máximo permitido (2 unidades activas) de este Impulso."
                 )
-        item = db.query(MylStoreItem).filter_by(code=item_code).first() if item_code else None
 
-        user.myl_balance_digital -= price
+        item = db.query(MylStoreItem).filter_by(code=item_code).first() if item_code else None
+        user.myl_balance_digital = current_balance - price
 
         if item:
-            # Registrar impulso si aplica
             new_impulse = MylActiveImpulse(
                 user_id=user.id,
                 house=user.house,
@@ -924,6 +1023,7 @@ def pay_qr_payload(
 
         return {
             "status": "success",
+            "type": "service",
             "message": f"¡Pago de servicio confirmado! Has pagado {price} MYL por {inspect_res['title']}.",
             "new_balance_digital": user.myl_balance_digital,
         }
