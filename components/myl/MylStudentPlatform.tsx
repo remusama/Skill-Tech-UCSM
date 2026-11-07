@@ -32,7 +32,8 @@ import {
     Award,
     AlertCircle,
     MessageCircle,
-    CheckCircle2
+    CheckCircle2,
+    Flame
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
 import { CASAS_INFO } from "@/lib/casasData"
@@ -406,7 +407,7 @@ export function MylStudentPlatform() {
                                 {/* AVATAR DE MOYA ANIMADO */}
                                 <div className="relative flex-shrink-0">
                                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-amber-500/30 border-2 border-[hsl(74,100%,47%)]/60 flex items-center justify-center shadow-lg animate-pulse">
-                                        <span className="text-3xl select-none">🐾</span>
+                                        <Sparkles className="w-8 h-8 text-[hsl(74,100%,47%)]" />
                                     </div>
                                     <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-[hsl(74,100%,47%)] text-slate-950 font-black text-[9px] uppercase">
                                         Moya
@@ -416,8 +417,18 @@ export function MylStudentPlatform() {
                                 {/* GLOBO DE DIÁLOGO RPG EN VIVO */}
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(74,100%,47%)]">
-                                            {data?.moya_broadcast?.type === "alert" ? "🚨 Alerta del Facilitador" : "💬 Mensaje de Moya en Vivo"}
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-[hsl(74,100%,47%)] flex items-center gap-1.5">
+                                            {data?.moya_broadcast?.type === "alert" ? (
+                                                <>
+                                                    <AlertCircle className="w-3.5 h-3.5 text-red-400" />
+                                                    <span>Alerta del Facilitador</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <MessageCircle className="w-3.5 h-3.5 text-[hsl(74,100%,47%)]" />
+                                                    <span>Mensaje de Moya en Vivo</span>
+                                                </>
+                                            )}
                                         </span>
                                         <span className="text-[9px] px-2 py-0.2 rounded-full bg-slate-800 text-slate-400 font-mono">
                                             Fase: {data?.active_phase || "Apertura"}
@@ -535,8 +546,9 @@ export function MylStudentPlatform() {
                             </div>
                         </div>
 
-                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-300">
-                            💡 <strong>Costo de oportunidad:</strong> Gastar tus MYL en consumibles o impulsos reduce tu margen para cooperar en proyectos de equipo y actividades grupales.
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-300 flex items-start gap-2">
+                            <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                            <span><strong>Costo de oportunidad:</strong> Gastar tus MYL en consumibles o impulsos reduce tu margen para cooperar en proyectos de equipo y actividades grupales.</span>
                         </div>
                     </div>
 
@@ -600,8 +612,9 @@ export function MylStudentPlatform() {
                                                 {item.target_scope}
                                             </span>
                                             {item.high_demand && (
-                                                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                                    🔥 Alta Demanda
+                                                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                                    <Flame className="w-3 h-3 text-amber-400" />
+                                                    <span>Alta Demanda</span>
                                                 </span>
                                             )}
                                         </div>
@@ -639,28 +652,28 @@ export function MylStudentPlatform() {
                         </h3>
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-1">
-                                <span className="text-2xl">🏆</span>
+                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-2">
+                                <Trophy className="w-6 h-6 text-amber-400 mx-auto" />
                                 <div className="text-xs font-bold text-white">Casa {houseKey}</div>
-                                <span className="text-[10px] text-emerald-400 font-mono">{data?.house_status?.total_pts ?? 52} pts</span>
+                                <span className="text-[10px] text-emerald-400 font-mono block">{data?.house_status?.total_pts ?? 52} pts</span>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-1">
-                                <span className="text-2xl">🤝</span>
+                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-2">
+                                <ArrowUpRight className="w-6 h-6 text-cyan-400 mx-auto" />
                                 <div className="text-xs font-bold text-white">Trueque Justo</div>
-                                <span className="text-[10px] text-slate-400 font-mono">Completado</span>
+                                <span className="text-[10px] text-slate-400 font-mono block">Completado</span>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-1">
-                                <span className="text-2xl">🛡️</span>
+                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-2">
+                                <Shield className="w-6 h-6 text-emerald-400 mx-auto" />
                                 <div className="text-xs font-bold text-white">Cero Polizones</div>
-                                <span className="text-[10px] text-slate-400 font-mono">En curso</span>
+                                <span className="text-[10px] text-slate-400 font-mono block">En curso</span>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-1">
-                                <span className="text-2xl">🐾</span>
+                            <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-center space-y-2">
+                                <Sparkles className="w-6 h-6 text-[hsl(74,100%,47%)] mx-auto" />
                                 <div className="text-xs font-bold text-white">Amigo de Moya</div>
-                                <span className="text-[10px] text-[hsl(74,100%,47%)] font-mono">Descubierto</span>
+                                <span className="text-[10px] text-[hsl(74,100%,47%)] font-mono block">Descubierto</span>
                             </div>
                         </div>
                     </div>

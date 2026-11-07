@@ -31,13 +31,17 @@ import {
     Coins,
     X,
     Copy,
-    Check
+    Check,
+    ChevronDown,
+    Filter
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
 import { CASAS_INFO } from "@/lib/casasData"
 import { StudentHouseAvatar } from "@/components/avatar/StudentHouseAvatar"
 
 type ManagerTab = "macro" | "breakdown" | "market"
+
+const OFFICIAL_HOUSES = ["APEX", "IGNIS", "NEXUS", "VISIO"]
 
 export function MylManagerConsole() {
     const [activeTab, setActiveTab] = useState<ManagerTab>("macro")
@@ -55,9 +59,11 @@ export function MylManagerConsole() {
     const [showDisperseModal, setShowDisperseModal] = useState(false)
     const [isDispersingBonuses, setIsDispersingBonuses] = useState(false)
 
-    // Acreditación de mérito
+    // Acreditación de mérito - Búsqueda mejorada de estudiantes
     const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null)
-    const [meritAmount, setMeritAmount] = useState<number>(1)
+    const [meritHouseFilter, setMeritHouseFilter] = useState<string | null>(null)
+    const [meritSearchTerm, setMeritSearchTerm] = useState<string>("")
+    const [isMeritSearchOpen, setIsMeritSearchOpen] = useState<boolean>(false)
     const [meritReason, setMeritReason] = useState<string>("Participación destacada en clase")
     const [isCreditingMerit, setIsCreditingMerit] = useState(false)
 
@@ -73,7 +79,6 @@ export function MylManagerConsole() {
     const [createdBillData, setCreatedBillData] = useState<any | null>(null)
     const [showBillModal, setShowBillModal] = useState(false)
     const [isCreatingBill, setIsCreatingBill] = useState(false)
-    const [copiedBill, setCopiedBill] = useState(false)
 
     const showToast = (msg: string) => {
         setToastMessage(msg)
@@ -237,7 +242,7 @@ export function MylManagerConsole() {
             })
             const result = await res.json()
             if (res.ok) {
-                showToast("¡Globo de Moya emitido en vivo a los alumnos!")
+                showToast("Globo de Moya emitido en vivo a los alumnos")
                 setMoyaMessage("")
                 await fetchMacro()
             }
@@ -270,7 +275,7 @@ export function MylManagerConsole() {
             if (res.ok) {
                 setCreatedBillData(result)
                 setShowBillModal(true)
-                showToast("¡Factura QR generada para proyección en aula!")
+                showToast("Factura QR generada para proyección en aula")
             } else {
                 showToast(result.detail || "Error al crear factura")
             }
@@ -305,11 +310,35 @@ export function MylManagerConsole() {
         }
     }
 
+    // FILTRO ESTRICTO: Solo estudiantes pertenecientes a las 4 casas oficiales (excluyendo externos)
+    const officialStudents = (breakdownData?.students || []).filter((s: any) =>
+        s.house && OFFICIAL_HOUSES.includes(s.house)
+    )
+
+    // Estudiante seleccionado para mérito
+    const selectedStudent = officialStudents.find((s: any) => s.id === selectedStudentId)
+
+    // Estudiantes filtrados para el panel de mérito rápido
+    const meritFilteredStudents = officialStudents.filter((s: any) => {
+        const matchesHouse = !meritHouseFilter || s.house === meritHouseFilter
+        const q = meritSearchTerm.toLowerCase().trim()
+        const matchesSearch = !q || (s.full_name || "").toLowerCase().includes(q) || (s.username || "").toLowerCase().includes(q)
+        return matchesHouse && matchesSearch
+    })
+
+    // Estudiantes filtrados para el directorio general
+    const filteredStudents = officialStudents.filter((s: any) => {
+        const matchesHouse = !selectedHouseFilter || s.house === selectedHouseFilter
+        const q = studentSearch.toLowerCase().trim()
+        const matchesSearch = !q || (s.full_name || "").toLowerCase().includes(q) || (s.username || "").toLowerCase().includes(q)
+        return matchesHouse && matchesSearch
+    })
+
     // Exportar CSV
     const exportCSV = () => {
-        if (!breakdownData?.students) return
+        if (!officialStudents.length) return
         const headers = ["ID", "Estudiante", "Usuario", "Casa", "Efectivo QR", "Saldo Digital", "Total MYL", "Puntos Merito Sesion", "Billetera Solana"]
-        const rows = breakdownData.students.map((s: any) => [
+        const rows = officialStudents.map((s: any) => [
             s.id,
             `"${s.full_name || ''}"`,
             s.username || '',
@@ -331,13 +360,6 @@ export function MylManagerConsole() {
         showToast("Reporte contable CSV exportado exitosamente")
     }
 
-    const filteredStudents = (breakdownData?.students || []).filter((s: any) => {
-        const matchesHouse = !selectedHouseFilter || s.house === selectedHouseFilter
-        const q = studentSearch.toLowerCase().trim()
-        const matchesSearch = !q || s.full_name?.toLowerCase().includes(q) || s.username?.toLowerCase().includes(q)
-        return matchesHouse && matchesSearch
-    })
-
     const isMarketOpen = macroData?.qr_market_open ?? true
 
     return (
@@ -351,7 +373,7 @@ export function MylManagerConsole() {
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
                         className="fixed top-5 right-5 z-50 p-4 rounded-2xl bg-slate-900 border-2 border-[hsl(74,100%,47%)] text-slate-100 shadow-[0_0_25px_rgba(186,239,0,0.3)] flex items-center gap-3 font-bold text-xs"
                     >
-                        <Sparkles className="w-5 h-5 text-[hsl(74,100%,47%)]" />
+                        <Sparkles className="w-5 h-5 text-[hsl(74,100%,47%)] animate-spin" />
                         <span>{toastMessage}</span>
                     </motion.div>
                 )}
@@ -521,7 +543,7 @@ export function MylManagerConsole() {
                                 </div>
                                 <h3 className="text-lg font-black text-white mt-1">Dispersión Bono Inicial</h3>
                                 <p className="text-xs text-slate-400 mt-1">
-                                    Acredita 240 MYL entre los 48 alumnos en 1 solo clic según el puesto de su casa (6, 5, 5, 4 MYL).
+                                    Acredita 240 MYL entre los 48 alumnos de Casas oficiales en 1 clic según el puesto de su casa (6, 5, 5, 4 MYL).
                                 </p>
                             </div>
 
@@ -530,12 +552,12 @@ export function MylManagerConsole() {
                                 className="w-full py-3 px-4 rounded-xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
                             >
                                 <Zap className="w-4 h-4" />
-                                <span>⚡ Dispersar Bono (240 MYL)</span>
+                                <span>Dispersar Bono (240 MYL)</span>
                             </button>
                         </div>
 
-                        {/* CARD 2: ACREDITACIÓN RÁPIDA DE MÉRITO (+1 PTO / +1-2 MYL) */}
-                        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between space-y-4 shadow-xl">
+                        {/* CARD 2: ACREDITACIÓN RÁPIDA DE MÉRITO (INTERFAZ MEJORADA DE BÚSQUEDA) */}
+                        <div className="p-6 rounded-3xl bg-slate-900/80 border border-slate-800 flex flex-col justify-between space-y-3 shadow-xl">
                             <div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
@@ -544,39 +566,160 @@ export function MylManagerConsole() {
                                     <UserCheck className="w-5 h-5 text-emerald-400" />
                                 </div>
                                 <h3 className="text-lg font-black text-white mt-1">Acreditar Mérito Individual</h3>
-                                <p className="text-xs text-slate-400 mt-1">
-                                    Asigna +1 Punto de Casa y +1 o +2 MYL con tope máximo de 3 puntos por sesión.
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                    Asigna +1 Punto de Casa y +1 o +2 MYL con tope de 3 puntos por sesión (solo alumnos oficiales).
                                 </p>
                             </div>
 
+                            {/* COMPONENTE MEJORADO DE BÚSQUEDA Y SELECCIÓN DE USUARIO */}
                             <div className="space-y-2">
-                                <select
-                                    value={selectedStudentId || ""}
-                                    onChange={(e) => setSelectedStudentId(Number(e.target.value) || null)}
-                                    className="w-full p-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-bold"
-                                >
-                                    <option value="">Seleccionar Alumno (48 oficiales)...</option>
-                                    {(breakdownData?.students || []).map((s: any) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.full_name} ({s.house}) - {s.session_house_points}/3 pts
-                                        </option>
-                                    ))}
-                                </select>
+                                {selectedStudent ? (
+                                    /* ESTUDIANTE SELECCIONADO: TARJETA ELEGANTE */
+                                    <div className="p-3 rounded-2xl bg-slate-950 border border-emerald-500/40 flex items-center justify-between shadow-inner">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <StudentHouseAvatar studentName={selectedStudent.full_name} size="sm" />
+                                            <div className="min-w-0">
+                                                <div className="text-xs font-bold text-white truncate max-w-[150px]">
+                                                    {selectedStudent.full_name}
+                                                </div>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <span className="text-[9px] font-black uppercase px-2 py-0.2 rounded-full bg-slate-800 text-slate-300">
+                                                        Casa {selectedStudent.house}
+                                                    </span>
+                                                    <span className={`text-[9px] font-mono font-bold px-2 py-0.2 rounded-full ${
+                                                        selectedStudent.session_house_points >= 3
+                                                            ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                                            : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                                    }`}>
+                                                        {selectedStudent.session_house_points}/3 pts
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedStudentId(null)
+                                                setIsMeritSearchOpen(true)
+                                            }}
+                                            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                                            title="Cambiar estudiante"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    /* BUSCADOR CON FILTRO DE CASA Y LISTA ESTILIZADA */
+                                    <div className="space-y-2">
+                                        {/* Filtros rápidos por casa */}
+                                        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMeritHouseFilter(null)}
+                                                className={`flex-1 py-1 text-center rounded-lg text-[10px] font-bold transition-all ${
+                                                    !meritHouseFilter ? "bg-white/20 text-white" : "text-slate-400 hover:text-white"
+                                                }`}
+                                            >
+                                                Todas
+                                            </button>
+                                            {OFFICIAL_HOUSES.map((hk) => (
+                                                <button
+                                                    key={hk}
+                                                    type="button"
+                                                    onClick={() => setMeritHouseFilter(hk)}
+                                                    className={`flex-1 py-1 text-center rounded-lg text-[10px] font-bold transition-all ${
+                                                        meritHouseFilter === hk
+                                                            ? "bg-[hsl(74,100%,47%)] text-slate-950 font-black"
+                                                            : "text-slate-400 hover:text-white"
+                                                    }`}
+                                                >
+                                                    {hk}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Input de búsqueda con icono */}
+                                        <div className="relative">
+                                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                            <input
+                                                type="text"
+                                                placeholder="Buscar por nombre o usuario..."
+                                                value={meritSearchTerm}
+                                                onChange={(e) => {
+                                                    setMeritSearchTerm(e.target.value)
+                                                    setIsMeritSearchOpen(true)
+                                                }}
+                                                onFocus={() => setIsMeritSearchOpen(true)}
+                                                className="w-full pl-8 pr-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                                            />
+                                        </div>
+
+                                        {/* Lista desplegable estilizada */}
+                                        {isMeritSearchOpen && (
+                                            <div className="max-h-44 overflow-y-auto space-y-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 shadow-xl">
+                                                {meritFilteredStudents.length === 0 ? (
+                                                    <div className="p-3 text-center text-[11px] text-slate-500">
+                                                        No se encontraron estudiantes oficiales.
+                                                    </div>
+                                                ) : (
+                                                    meritFilteredStudents.map((s: any) => (
+                                                        <div
+                                                            key={s.id}
+                                                            onClick={() => {
+                                                                setSelectedStudentId(s.id)
+                                                                setIsMeritSearchOpen(false)
+                                                            }}
+                                                            className="p-2 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-800 cursor-pointer flex items-center justify-between text-xs transition-all"
+                                                        >
+                                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                                <StudentHouseAvatar studentName={s.full_name} size="sm" />
+                                                                <div className="min-w-0">
+                                                                    <div className="font-bold text-white text-xs truncate max-w-[130px]">
+                                                                        {s.full_name}
+                                                                    </div>
+                                                                    <span className="text-[10px] text-slate-400 font-mono">
+                                                                        Casa {s.house} · @{s.username}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <span className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                                                                s.session_house_points >= 3
+                                                                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                                                    : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                                            }`}>
+                                                                {s.session_house_points}/3 pts
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Aviso de tope de sesión */}
+                                {selectedStudent && selectedStudent.session_house_points >= 3 && (
+                                    <div className="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl">
+                                        Cupo de 3/3 puntos de sesión alcanzado. Se acreditará únicamente el monto en MYL.
+                                    </div>
+                                )}
+
+                                {/* Botonera de acreditación */}
+                                <div className="grid grid-cols-2 gap-2 pt-1">
                                     <button
                                         onClick={() => handleCreditMerit(undefined, 1)}
                                         disabled={!selectedStudentId || isCreditingMerit}
-                                        className="py-2 px-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[11px] font-bold disabled:opacity-40 transition-all"
+                                        className="py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold disabled:opacity-40 transition-all cursor-pointer"
                                     >
                                         +1 Pto & +1 MYL
                                     </button>
                                     <button
                                         onClick={() => handleCreditMerit(undefined, 2)}
                                         disabled={!selectedStudentId || isCreditingMerit}
-                                        className="py-2 px-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-[11px] font-black disabled:opacity-40 transition-all"
+                                        className="py-2.5 px-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl text-xs font-black disabled:opacity-40 transition-all cursor-pointer"
                                     >
-                                        +1 Pto & +2 MYL ⭐
+                                        +1 Pto & +2 MYL (Destacado)
                                     </button>
                                 </div>
                             </div>
@@ -600,27 +743,27 @@ export function MylManagerConsole() {
                             <div className="space-y-2">
                                 <input
                                     type="text"
-                                    placeholder="Ej. ¡Quedan 5 min para cerrar compras!"
+                                    placeholder="Ej. Quedan 5 minutos para cerrar compras"
                                     value={moyaMessage}
                                     onChange={(e) => setMoyaMessage(e.target.value)}
-                                    className="w-full p-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white"
+                                    className="w-full p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
                                 />
 
                                 <div className="flex items-center gap-2">
                                     <select
                                         value={moyaType}
                                         onChange={(e) => setMoyaType(e.target.value)}
-                                        className="p-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-300 font-bold"
+                                        className="p-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-300 font-bold"
                                     >
                                         <option value="rumor">Rumor</option>
                                         <option value="tip">Consejo</option>
-                                        <option value="alert">Alerta 🚨</option>
+                                        <option value="alert">Alerta</option>
                                     </select>
 
                                     <button
                                         onClick={handleBroadcastMoya}
                                         disabled={!moyaMessage.trim() || isBroadcastingMoya}
-                                        className="flex-1 py-2 px-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 rounded-xl text-xs font-black disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                                        className="flex-1 py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 rounded-xl text-xs font-black disabled:opacity-40 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                                     >
                                         <Send className="w-3.5 h-3.5" />
                                         <span>Emitir</span>
@@ -761,13 +904,13 @@ export function MylManagerConsole() {
                         </div>
                     </div>
 
-                    {/* SUBVISTA 2.2: NIVEL PARTICIPANTES (DIRECTORIO DE 48 ALUMNOS) */}
+                    {/* SUBVISTA 2.2: NIVEL PARTICIPANTES (DIRECTORIO DE 48 ALUMNOS OFICIALES) */}
                     <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                                     <Users className="w-4 h-4 text-emerald-400" />
-                                    Subvista 2.2 — Directorio de Alumnos ({breakdownData?.students_total ?? 48} Registrados)
+                                    Subvista 2.2 — Directorio de Alumnos ({officialStudents.length} Oficiales)
                                 </h3>
                                 <p className="text-xs text-slate-400">
                                     Muestra saldo digital vs efectivo, índice de esfuerzo y tope de 3 puntos de mérito por sesión.
@@ -783,7 +926,7 @@ export function MylManagerConsole() {
                                     >
                                         Todas
                                     </button>
-                                    {(["APEX", "IGNIS", "NEXUS", "VISIO"] as const).map(hk => (
+                                    {OFFICIAL_HOUSES.map(hk => (
                                         <button
                                             key={hk}
                                             onClick={() => setSelectedHouseFilter(hk)}
@@ -954,8 +1097,9 @@ export function MylManagerConsole() {
                                     <div className="flex items-center justify-between">
                                         <span className="font-bold text-sm text-white">{it.title}</span>
                                         {it.high_demand && (
-                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                                                Alta Demanda
+                                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                                <Flame className="w-3 h-3 text-amber-400" />
+                                                <span>Alta Demanda</span>
                                             </span>
                                         )}
                                     </div>
@@ -1014,7 +1158,7 @@ export function MylManagerConsole() {
                                             <td className="p-3 font-mono text-slate-300">{feed.buyer_house ? `Casa ${feed.buyer_house}` : "—"}</td>
                                             <td className="p-3 font-mono font-black text-sm text-[hsl(74,100%,47%)]">{feed.price_myl} MYL</td>
                                             <td className="p-3 font-mono font-bold text-emerald-400">
-                                                {feed.fee_burned_myl} MYL {feed.fee_burned_myl === 0 ? "(Exento Intracasa)" : "🔥"}
+                                                {feed.fee_burned_myl} MYL {feed.fee_burned_myl === 0 ? "(Exento Intracasa)" : "(Quemado)"}
                                             </td>
                                             <td className="p-3">
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${feed.status === "completed" ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-800 text-slate-400"}`}>
@@ -1055,7 +1199,7 @@ export function MylManagerConsole() {
                         </div>
 
                         <p className="text-xs text-slate-300 leading-relaxed">
-                            Esta operación acreditará los bonos correspondientes en Solana para los <strong>48 estudiantes</strong> de acuerdo con el ranking actual:
+                            Esta operación acreditará los bonos correspondientes en Solana para los <strong>48 estudiantes oficiales</strong> de acuerdo con el ranking actual:
                         </p>
 
                         <div className="space-y-2 bg-slate-950 p-4 rounded-2xl border border-slate-800 font-mono text-xs">

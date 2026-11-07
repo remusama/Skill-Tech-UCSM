@@ -28,6 +28,8 @@ from server_py.auth.router import get_current_user_id
 router = APIRouter(prefix="/api/myl", tags=["Economía MYL"])
 
 # ── REGLAS DE NEGOCIO Y CONSTANTES ───────────────────────────────────────────
+OFFICIAL_HOUSES = ("APEX", "IGNIS", "NEXUS", "VISIO")
+
 HOUSE_BONUS_MULTIPLIERS = {
     1: {"multiplier": 1.2, "payout_myl": 6, "label": "1.º Puesto (+20%)"},
     2: {"multiplier": 1.0, "payout_myl": 5, "label": "2.º Puesto (Base)"},
@@ -1080,8 +1082,13 @@ def get_manager_breakdown(
             "order_total_cost_myl": ord.total_cost_myl if ord else 48,
         })
 
-    # Directorio de alumnos
-    students = db.query(User).filter(User.role == "student").order_by(User.house, User.full_name).all()
+    # Directorio de 48 alumnos oficiales (excluyendo usuarios externos o sin casa)
+    students = (
+        db.query(User)
+        .filter(User.role == "student", User.house.in_(OFFICIAL_HOUSES))
+        .order_by(User.house, User.full_name)
+        .all()
+    )
     students_list = [
         {
             "id": s.id,
@@ -1196,7 +1203,11 @@ def disperse_initial_bonuses(
         payout = HOUSE_BONUS_MULTIPLIERS.get(rank, {"payout_myl": 5})["payout_myl"]
         house_payouts[h] = payout
 
-    students = db.query(User).filter(User.role == "student").all()
+    students = (
+        db.query(User)
+        .filter(User.role == "student", User.house.in_(OFFICIAL_HOUSES))
+        .all()
+    )
     count = 0
     total_dispersed = 0
 
@@ -1249,6 +1260,8 @@ def credit_student_merit(
     student = db.query(User).filter_by(id=req.student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+    if student.house not in OFFICIAL_HOUSES:
+        raise HTTPException(status_code=400, detail="Solo se puede acreditar mérito a estudiantes asignados a una Casa oficial (APEX, IGNIS, NEXUS, VISIO).")
 
     current_points = student.myl_house_points_session or 0
     points_awarded = 0

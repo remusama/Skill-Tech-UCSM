@@ -263,7 +263,7 @@ export function MundoMoyaModal({
             <div className="flex items-center gap-2.5">
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
               <h2 className="text-sm sm:text-base font-black tracking-widest uppercase text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">
-                ★ MUNDO MOYA RPG · SHOP & MINIJUEGOS ★
+                MUNDO MOYA RPG · SHOP & MINIJUEGOS
               </h2>
             </div>
 
@@ -282,7 +282,7 @@ export function MundoMoyaModal({
                 onClick={triggerMemeEasterEgg}
                 className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all"
               >
-                💵 MEME "PLZ"
+                MEME "PLZ"
               </button>
 
               <button
@@ -311,10 +311,8 @@ export function MundoMoyaModal({
                 <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-b from-emerald-950/60 to-black border-2 border-emerald-400/60 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)] p-2">
                   {/* Avatar Pixel-Art estilizado de Moya */}
                   <div className="relative w-full h-full flex flex-col items-center justify-center">
-                    <div className="text-5xl select-none animate-bounce" style={{ animationDuration: "2.4s" }}>
-                      🐱
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mt-1">
+                    <Sparkles className="w-12 h-12 text-[hsl(74,100%,47%)] animate-bounce" style={{ animationDuration: "2.4s" }} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mt-2">
                       MOYA · LÍDER
                     </span>
                     <span className="text-[9px] text-gray-400">Puesto Nivel 3</span>
@@ -565,7 +563,7 @@ export function MundoMoyaModal({
 
             {selectedOption === "meme" && (
               <div className="bg-black border-2 border-amber-500/40 rounded-2xl p-6 text-center space-y-4">
-                <div className="text-6xl animate-bounce">😸</div>
+                <Sparkles className="w-16 h-16 text-amber-400 mx-auto animate-bounce" />
                 <h3 className="text-base font-black uppercase text-amber-300 tracking-wider">
                   ¡EASTER-EGG NO INFLACIONARIO!
                 </h3>
