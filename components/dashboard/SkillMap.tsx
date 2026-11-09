@@ -9,13 +9,12 @@ import {
 } from "recharts"
 import {
   BarChart2, PieChartIcon, Activity, LineChartIcon,
-  Sparkles, GraduationCap, UserCircle, Target,
+  Target, Compass,
   TrendingUp, Clock, Info
 } from "lucide-react"
 
-import { JourneyVisualizer } from "@/components/dashboard/JourneyVisualizer"
+import { GestoresOverworldMap } from "@/components/dashboard/GestoresOverworldMap"
 import { useTheme } from "@/contexts/theme-context"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { MagicTitle } from "@/components/ui/magic-title"
@@ -68,7 +67,7 @@ const ChartHeader = ({ title, description, icon: Icon, theme }: any) => (
 // --- COMPONENTE PRINCIPAL ---
 
 export function SkillMap() {
-  const [activeTab, setActiveTab] = useState("matrix")
+  const [activeTab, setActiveTab] = useState("overworld")
   const [mounted, setMounted] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [skills, setSkills] = useState<UserSkill[]>([])
@@ -114,39 +113,6 @@ export function SkillMap() {
     return () => window.removeEventListener('skills-updated', handleUpdate);
   }, [loadSkills, refreshKey])
 
-  const normalize = (str: string) => {
-    if (!str) return "";
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  }
-
-  const isSoftSkill = (area: string) => {
-    const softKeywords = ["razonamiento", "aprendizaje", "criterio", "adaptabilidad", "autonomia", "cognitivo", "pensamiento", "metacognicion", "flexibilidad", "autogestion", "liderazgo", "equipo", "creatividad", "actuacion"];
-    const norm = normalize(area);
-    return softKeywords.some(kw => norm.includes(kw));
-  }
-
-  const academicData = useMemo(() => {
-    const academicSkills = skills.filter(s => !isSoftSkill(s.area));
-    if (academicSkills.length === 0) return [{ subject: "Sin Evaluaciones", A: 0, fullMark: 10 }];
-    
-    return academicSkills.map(s => ({
-      subject: s.area,
-      A: s.level / 10,
-      fullMark: 10
-    }));
-  }, [skills])
-
-  const softSkillsData = useMemo(() => {
-    const softSkills = skills.filter(s => isSoftSkill(s.area));
-    if (softSkills.length === 0) return [{ subject: "Sin Evaluaciones", A: 0, fullMark: 10 }];
-    
-    return softSkills.map(s => ({
-      subject: s.area,
-      A: s.level / 10,
-      fullMark: 10
-    }));
-  }, [skills])
-
   const colors = useMemo(() => ({
     primary: "#d0b04d",
     secondary: "#00FFFF", 
@@ -185,42 +151,22 @@ export function SkillMap() {
             </BlurFade>
             
             <div className="h-[2px] w-48 bg-gradient-to-r from-[#baef00] to-[#032318] mb-4" />
-            
-            <div className={`flex items-center gap-3 px-4 py-1.5 rounded-full self-start backdrop-blur-md shadow-sm border ${
-              theme === 'dark' ? 'bg-white/5 border-white/10 text-white/80' : 'bg-[#e8e8e6] border-slate-300 text-[#01130d]'
-            }`}>
-              <div className="w-2 h-2 rounded-full bg-[#0d971f] animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em]">Análisis en tiempo real habilitado</span>
-            </div>
           </div>
-        </div>
 
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          {gamification && <StreakFire count={gamification.streak_count} />}
-
-          <Button
-            variant="default"
-            onClick={() => window.dispatchEvent(new CustomEvent('restart-onboarding'))}
-            style={theme !== 'dark' ? { backgroundColor: '#d0b04d', color: '#01130d' } : undefined}
-            className={`group relative overflow-hidden rounded-2xl h-14 px-8 transition-all duration-500 active:scale-95 shadow-md border ${
-              theme === 'dark' 
-                ? 'bg-white/5 border-white/10 hover:border-[#d0b04d]/50 text-white' 
-                : 'border-[#d0b04d] hover:brightness-105 shadow-slate-300'
-            }`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Sparkles className={`w-4 h-4 mr-3 transition-transform duration-300 group-hover:scale-110 ${theme === 'dark' ? 'text-[#baef00]' : 'text-[#01130d]'}`} />
-            <span className="text-[11px] font-black uppercase tracking-[0.2em]">Repetir Onboarding</span>
-          </Button>
+          {gamification && (
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <StreakFire count={gamification.streak_count} />
+            </div>
+          )}
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
-        <TabsList className={`mb-12 p-1.5 rounded-[2rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full shadow-md border ${
+        <TabsList className={`mb-8 p-1.5 rounded-[2rem] flex flex-wrap h-auto gap-2 backdrop-blur-3xl inline-flex w-auto max-w-full shadow-md border ${
           theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-[#e8e8e6] border-slate-300 shadow-slate-300/60'
         }`}>
           {[
-            { id: 'matrix', icon: Activity, label: 'Matriz de Habilidades' },
+            { id: 'overworld', icon: Compass, label: 'Ruta de Gestores (10 Sesiones)' },
             { id: 'comparison', icon: BarChart2, label: 'Benchmarking' }
           ].map((tab) => (
             <TabsTrigger
@@ -245,59 +191,9 @@ export function SkillMap() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
-            {activeTab === "matrix" && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">
-                <MagicCard 
-                  style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
-                  className={`backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-hidden group shadow-xl border ${
-                    theme === 'dark' ? 'bg-white/5 border-white/5' : 'border-slate-300 shadow-slate-300/50'
-                  }`}
-                >
-                  <ChartHeader
-                    title="Académico"
-                    description="Distribución de competencias en áreas troncales"
-                    icon={GraduationCap}
-                    theme={theme}
-                  />
-
-                  <JourneyVisualizer 
-                    areaId="academico" 
-                    areaName="Académico" 
-                    theme={{
-                      color: "from-emerald-500 to-green-500",
-                      textColor: "text-emerald-400",
-                      badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-                      tab: "bg-emerald-500",
-                      via: "via-emerald-500"
-                    }} 
-                  />
-                </MagicCard>
-
-                <MagicCard 
-                  style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
-                  className={`backdrop-blur-3xl p-8 rounded-[2.5rem] relative overflow-hidden group shadow-xl border ${
-                    theme === 'dark' ? 'bg-white/5 border-white/5' : 'border-slate-300 shadow-slate-300/50'
-                  }`}
-                >
-                  <ChartHeader
-                    title="Soft Skills"
-                    description="Atributos personales y sociales analizados"
-                    icon={UserCircle}
-                    theme={theme}
-                  />
-
-                  <JourneyVisualizer 
-                    areaId="soft-skills" 
-                    areaName="Soft Skills" 
-                    theme={{
-                      color: "from-purple-500 to-fuchsia-500",
-                      textColor: "text-purple-400",
-                      badge: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-                      tab: "bg-purple-500",
-                      via: "via-purple-500"
-                    }} 
-                  />
-                </MagicCard>
+            {activeTab === "overworld" && (
+              <div className="w-full">
+                <GestoresOverworldMap />
               </div>
             )}
 
@@ -354,63 +250,6 @@ export function SkillMap() {
           </motion.div>
         </AnimatePresence>
       </Tabs>
-
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.5, duration: 0.8 }}
-        style={theme !== 'dark' ? { backgroundColor: '#e8e8e6' } : undefined}
-        className={`mt-20 p-12 backdrop-blur-[100px] rounded-[3rem] shadow-2xl relative overflow-hidden w-full border ${
-          theme === 'dark' ? 'bg-white/5 border-white/10' : 'border-slate-300 shadow-slate-300/50'
-        }`}
-      >
-        <div className={`absolute top-0 right-0 p-8 pointer-events-none ${theme === 'dark' ? 'text-white/5' : 'text-[#01130d]/5'}`}>
-          <Info size={120} strokeWidth={1} />
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-12 relative z-10">
-          <div className="flex-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0d971f]/20 rounded-full border border-[#0d971f]/20 mb-6">
-              <span className="text-[9px] font-black uppercase tracking-widest text-[#0d971f]">Intelligence Insight</span>
-            </div>
-            <h3 className={`text-3xl font-black italic tracking-tighter mb-4 uppercase ${theme === 'dark' ? 'text-white' : 'text-[#01130d]'}`}>Interpretación del SkillMap</h3>
-            <p className={`text-sm leading-relaxed font-medium ${theme === 'dark' ? 'text-white/60' : 'text-slate-700'}`}>
-              Tu SkillMap es un ecosistema dinámico que evoluciona con cada interacción. Está diseñado para proporcionarte una ventaja estratégica identificando no solo lo que sabes, sino cómo tu potencial se está expandiendo en múltiples dimensiones.
-            </p>
-          </div>
-
-          <div className="flex-[2] grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {
-                title: "Matriz Radar",
-                txt: "Permite ver el equilibrio entre tus fortalezas técnicas y tu inteligencia emocional.",
-                color: "text-[#0d971f]"
-              },
-              {
-                title: "Benchmark",
-                txt: "Comprende tu posición respecto a los niveles globales para optimizar tu especialización.",
-                color: "text-[#d0b04d]"
-              }
-            ].map((item, i) => (
-              <div 
-                key={i} 
-                style={theme !== 'dark' ? { backgroundColor: '#f4f7f5' } : undefined}
-                className={`p-6 rounded-3xl transition-colors duration-500 group shadow-sm border ${
-                  theme === 'dark' ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'border-slate-300 hover:bg-white shadow-slate-200'
-                }`}
-              >
-                <h4 className={`font-black uppercase tracking-widest text-[11px] mb-2 ${item.color} group-hover:scale-105 transition-transform origin-left`}>
-                  {item.title}
-                </h4>
-                <p className={`text-[11px] leading-relaxed font-bold tracking-tight ${theme === 'dark' ? 'text-white/40' : 'text-slate-700'}`}>
-                  {item.txt}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
     </div>
   )
 }

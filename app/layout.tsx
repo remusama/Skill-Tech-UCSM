@@ -41,6 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className="dark" suppressHydrationWarning>
       <head suppressHydrationWarning>
+        {/* Pixel Art Fonts: Press Start 2P & Silkscreen */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
+
         {/* --- PWA IMMERSION ENGINE --- */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

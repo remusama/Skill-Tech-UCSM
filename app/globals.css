@@ -82,9 +82,17 @@ body {
 
 @layer utilities {
   @keyframes gradient-motion {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
   }
 
   .gradient-motion {
@@ -92,8 +100,13 @@ body {
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   .fade-in {
@@ -105,6 +118,7 @@ body {
       opacity: 0;
       transform: translateY(20px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -120,7 +134,11 @@ body {
       transform: rotate(var(--angle)) translateX(0);
       opacity: 1;
     }
-    70% { opacity: 1; }
+
+    70% {
+      opacity: 1;
+    }
+
     100% {
       transform: rotate(var(--angle)) translateX(-500px);
       opacity: 0;
@@ -132,11 +150,30 @@ body {
   }
 
   @keyframes aurora {
-    0% { background-position: 0% 50%; transform: rotate(-5deg) scale(0.9); }
-    25% { background-position: 50% 100%; transform: rotate(5deg) scale(1.1); }
-    50% { background-position: 100% 50%; transform: rotate(-3deg) scale(0.95); }
-    75% { background-position: 50% 0%; transform: rotate(3deg) scale(1.05); }
-    100% { background-position: 0% 50%; transform: rotate(-5deg) scale(0.9); }
+    0% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
+
+    25% {
+      background-position: 50% 100%;
+      transform: rotate(5deg) scale(1.1);
+    }
+
+    50% {
+      background-position: 100% 50%;
+      transform: rotate(-3deg) scale(0.95);
+    }
+
+    75% {
+      background-position: 50% 0%;
+      transform: rotate(3deg) scale(1.05);
+    }
+
+    100% {
+      background-position: 0% 50%;
+      transform: rotate(-5deg) scale(0.9);
+    }
   }
 
   .animate-aurora {
@@ -252,7 +289,8 @@ body {
   color: hsl(var(--primary-foreground));
 }
 
-.calendar-header, .calendar-sidebar {
+.calendar-header,
+.calendar-sidebar {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -316,4 +354,97 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: #0a6b17 rgba(3, 35, 24, 0.652);
+}
+
+/* ===================================================================
+   PIXEL ART RETRO OVERWORLD STYLES (16-BIT RETRO UI)
+   =================================================================== */
+.font-pixel {
+  font-family: 'Press Start 2P', monospace;
+}
+
+.font-silk {
+  font-family: 'Silkscreen', monospace;
+}
+
+.pixel-box {
+  background-color: #0e1628;
+  border: 4px solid #334155;
+  box-shadow:
+    inset -4px -4px 0px #060a12,
+    inset 4px 4px 0px #1e293b,
+    0 6px 0 #02040a;
+}
+
+.pixel-banner-blue {
+  background-color: #0284c7;
+  border: 4px solid #38bdf8;
+  box-shadow:
+    inset -4px -4px 0px #0369a1,
+    inset 4px 4px 0px #7dd3fc,
+    0 6px 0 #082f49;
+}
+
+.pixel-banner-ucsm {
+  background-color: #064e3b;
+  border: 4px solid #10b981;
+  box-shadow:
+    inset -4px -4px 0px #022c22,
+    inset 4px 4px 0px #34d399,
+    0 6px 0 #011910;
+}
+
+.pixel-btn {
+  position: relative;
+  border: 4px solid #020617;
+  transition: transform 0.08s steps(2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.pixel-btn:active {
+  transform: translateY(4px);
+}
+
+.pixel-btn-blue {
+  background-color: #0ea5e9;
+  box-shadow: inset -4px -4px 0 #0369a1, inset 4px 4px 0 #7dd3fc, 0 4px 0 #020617;
+}
+
+.pixel-btn-emerald {
+  background-color: #10b981;
+  box-shadow: inset -4px -4px 0 #047857, inset 4px 4px 0 #6ee7b7, 0 4px 0 #020617;
+}
+
+.pixel-btn-amber {
+  background-color: #f59e0b;
+  box-shadow: inset -4px -4px 0 #b45309, inset 4px 4px 0 #fde047, 0 4px 0 #020617;
+}
+
+.pixel-btn-slate {
+  background-color: #1e293b;
+  box-shadow: inset -4px -4px 0 #0f172a, inset 4px 4px 0 #475569, 0 4px 0 #020617;
+}
+
+.pixel-btn-purple {
+  background-color: #9333ea;
+  box-shadow: inset -4px -4px 0 #6b21a8, inset 4px 4px 0 #c084fc, 0 4px 0 #020617;
+}
+
+.pixel-text-shadow {
+  text-shadow:
+    3px 3px 0 #020617,
+    -2px -2px 0 #020617,
+    2px -2px 0 #020617,
+    -2px 2px 0 #020617,
+    0 4px 0 #020617;
+}
+
+.scanlines {
+  background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 0, 0, 0.16) 50%,
+      rgba(0, 0, 0, 0.16));
+  background-size: 100% 4px;
 }
