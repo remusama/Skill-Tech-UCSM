@@ -6,9 +6,8 @@ import { MagicCard } from "@/components/ui/magic-card"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { fetchUserProfile, UserProfile } from "@/lib/api/user"
 import { fetchStudentToken, regenerateStudentToken } from "@/lib/api/attendance"
-import { QrCode, ScanLine, Tag, Wallet, Coins, RefreshCw } from "lucide-react"
+import { QrCode, ScanLine, Wallet, Coins, RefreshCw } from "lucide-react"
 import { QRScannerPaymentModal } from "@/components/myl/QRScannerPaymentModal"
-import { GenerateP2PQRModal } from "@/components/myl/GenerateP2PQRModal"
 import { API_BASE_URL } from "@/lib/config"
 
 export function Profile() {
@@ -20,9 +19,8 @@ export function Profile() {
   // Saldo Digital MYL
   const [digitalBalance, setDigitalBalance] = useState<number | null>(null)
 
-  // Modales de Pasarela QR y Cobro P2P
+  // Modal de Pasarela QR
   const [showScannerModal, setShowScannerModal] = useState(false)
-  const [showGenerateModal, setShowGenerateModal] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -157,22 +155,14 @@ export function Profile() {
                   </span>
                 </div>
 
-                {/* Acciones Rápidas QR */}
-                <div className="grid grid-cols-2 gap-2.5">
+                {/* Acción Rápida QR */}
+                <div className="w-full">
                   <button
                     onClick={() => setShowScannerModal(true)}
-                    className="p-3 rounded-2xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                    className="w-full p-3.5 rounded-2xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
                   >
                     <ScanLine className="w-4 h-4" />
                     <span>Escanear y Pagar</span>
-                  </button>
-
-                  <button
-                    onClick={() => setShowGenerateModal(true)}
-                    className="p-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white border border-white/10 font-bold text-xs uppercase tracking-wider shadow flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                  >
-                    <Tag className="w-4 h-4 text-[#d0b04d]" />
-                    <span>Cobrar con QR</span>
                   </button>
                 </div>
               </div>
@@ -182,20 +172,13 @@ export function Profile() {
         </BlurFade>
       </div>
 
-      {/* MODAL 1: ESCANEAR Y PAGAR QR */}
+      {/* MODAL: ESCANEAR Y PAGAR QR */}
       <QRScannerPaymentModal
         isOpen={showScannerModal}
         onClose={() => setShowScannerModal(false)}
         onSuccessPayment={(newBal) => {
           setDigitalBalance(newBal)
         }}
-      />
-
-      {/* MODAL 2: GENERAR TOKEN QR P2P */}
-      <GenerateP2PQRModal
-        isOpen={showGenerateModal}
-        onClose={() => setShowGenerateModal(false)}
-        userName={profile?.full_name || profile?.username}
       />
     </div>
   )

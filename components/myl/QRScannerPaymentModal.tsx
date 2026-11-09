@@ -18,41 +18,21 @@ import {
     Calendar,
     Clock,
     Upload,
-    ArrowLeft
+    ArrowLeft,
+    Copy,
+    Check,
+    Sparkles,
+    Flame,
+    Lock
 } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
+import { CASAS_INFO } from "@/lib/casasData"
+import { StudentHouseAvatar } from "@/components/avatar/StudentHouseAvatar"
 
 interface QRScannerModalProps {
     isOpen: boolean
     onClose: () => void
     onSuccessPayment?: (newBalance: number) => void
-}
-
-const HOUSE_THEMES: Record<string, { bg: string, text: string, border: string, badge: string }> = {
-    APEX: {
-        bg: "bg-purple-950/40",
-        text: "text-purple-300",
-        border: "border-purple-500/30",
-        badge: "bg-purple-500/20 text-purple-300 border-purple-500/40"
-    },
-    IGNIS: {
-        bg: "bg-amber-950/40",
-        text: "text-amber-300",
-        border: "border-amber-500/30",
-        badge: "bg-amber-500/20 text-amber-300 border-amber-500/40"
-    },
-    NEXUS: {
-        bg: "bg-cyan-950/40",
-        text: "text-cyan-300",
-        border: "border-cyan-500/30",
-        badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
-    },
-    VISIO: {
-        bg: "bg-emerald-950/40",
-        text: "text-emerald-300",
-        border: "border-emerald-500/30",
-        badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-    }
 }
 
 export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRScannerModalProps) {
@@ -65,6 +45,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
     const [isPaying, setIsPaying] = useState(false)
     const [paymentResult, setPaymentResult] = useState<any | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [copiedOp, setCopiedOp] = useState(false)
 
     // Monto seleccionado para transferencia P2P
     const [transferAmount, setTransferAmount] = useState<number>(1)
@@ -95,6 +76,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
         setErrorMessage(null)
         setCameraError(null)
         setTransferAmount(1)
+        setCopiedOp(false)
     }
 
     const initScanner = async () => {
@@ -166,6 +148,10 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
             }
         } catch (err) {
             setErrorMessage("No se pudo leer ningún código QR en la imagen seleccionada.")
+        } finally {
+            if (e.target) {
+                e.target.value = ""
+            }
         }
     }
 
@@ -247,6 +233,13 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
         }
     }
 
+    const copyOpNumber = (num: string) => {
+        if (!num) return
+        navigator.clipboard.writeText(num)
+        setCopiedOp(true)
+        setTimeout(() => setCopiedOp(false), 2000)
+    }
+
     if (!isOpen) return null
 
     // Validaciones de transferencia P2P
@@ -262,159 +255,207 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
         ? (isValidAmount && hasBalance && !isSelf && isMarketOpen && !isPaying)
         : (inspectData?.can_afford && isMarketOpen && !isPaying)
 
-    const houseConfig = inspectData?.recipient_house ? HOUSE_THEMES[inspectData.recipient_house] || HOUSE_THEMES.APEX : HOUSE_THEMES.APEX
+    // Casa del destinatario para temas
+    const rawHouse = inspectData?.recipient_house as "APEX" | "IGNIS" | "NEXUS" | "VISIO" | undefined
+    const recipientCasa = rawHouse && CASAS_INFO[rawHouse] ? CASAS_INFO[rawHouse] : CASAS_INFO.APEX
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4">
             <div id="hidden-file-reader" className="hidden" />
 
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="w-full max-w-md bg-[#021811]/95 border border-emerald-500/30 rounded-[2.5rem] shadow-[0_0_50px_rgba(3,35,24,0.8),0_0_25px_rgba(186,239,0,0.15)] overflow-hidden flex flex-col max-h-[92vh] relative"
             >
-                {/* Cabecera Principal */}
-                <div className="p-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/60">
+                {/* Luces Ambientales de Fondo */}
+                <div className="absolute -top-20 -right-20 w-52 h-52 bg-[#0d971f]/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-52 h-52 bg-[#d0b04d]/15 rounded-full blur-3xl pointer-events-none" />
+
+                {/* ── CABECERA PRINCIPAL ESTILO SKILL-TECH UCSM ── */}
+                <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/40 relative z-10 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[hsl(74,100%,47%)]/10 border border-[hsl(74,100%,47%)]/30 flex items-center justify-center text-[hsl(74,100%,47%)]">
+                        <div className="w-11 h-11 rounded-2xl bg-[#032318] border border-[hsl(74,100%,47%)]/40 flex items-center justify-center text-[hsl(74,100%,47%)] shadow-[0_0_15px_rgba(186,239,0,0.25)]">
                             <QrCode className="w-5 h-5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-black text-white uppercase tracking-wider">
-                                Pasarela de Transferencias QR
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d0b04d] bg-[#d0b04d]/10 px-2 py-0.5 rounded-full border border-[#d0b04d]/25">
+                                    PASARELA DIGITAL UCSM
+                                </span>
+                            </div>
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">
+                                Pagos & Transferencias MYL
                             </h3>
-                            <p className="text-xs text-slate-400">Envío directo de Moyoles entre estudiantes</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                        className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 flex items-center justify-center transition-all cursor-pointer active:scale-95"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* Contenido Principal */}
-                <div className="p-5 overflow-y-auto space-y-4">
+                {/* ── CONTENIDO PRINCIPAL SCROLLABLE ── */}
+                <div className="p-5 overflow-y-auto space-y-4 relative z-10">
                     {/* ════════════════════════════════════════════════════════════════ */}
-                    {/* CASO 1: CUPÓN OFICIAL ESTILO YAPE (TRANSFERENCIA P2P EXITOSA)     */}
+                    {/* CASO 1: VOUCHER OFICIAL SKILL-TECH UCSM (TRANSFERENCIA P2P EXITOSA)*/}
                     {/* ════════════════════════════════════════════════════════════════ */}
                     {paymentResult && paymentResult.type === "p2p_voucher" ? (
-                        <div className="py-2 space-y-4">
-                            {/* Tarjeta Visual Estilo Yape */}
-                            <div className="rounded-[2rem] bg-gradient-to-b from-[#74119c] to-[#4c0968] p-5 shadow-2xl space-y-4 text-white">
-                                <div className="flex items-center justify-between pb-1">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-xs">
-                                            S/
+                        <div className="py-1 space-y-4">
+                            {/* Comprobante Oficial UCSM */}
+                            <div className="rounded-[2.2rem] bg-gradient-to-b from-[#03291c] via-[#021d14] to-[#01140e] border border-[#d0b04d]/30 p-5 shadow-2xl space-y-4 relative overflow-hidden">
+                                {/* Decoraciones de esquina */}
+                                <div className="absolute top-0 right-0 w-28 h-28 bg-[#d0b04d]/10 rounded-full blur-2xl pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 w-28 h-28 bg-[hsl(74,100%,47%)]/10 rounded-full blur-2xl pointer-events-none" />
+
+                                {/* Encabezado Institucional */}
+                                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-[#032318] border border-[#d0b04d]/40 flex items-center justify-center text-[#d0b04d] font-black text-xs shadow-inner">
+                                            <Sparkles className="w-4 h-4" />
                                         </div>
-                                        <span className="font-black text-sm tracking-widest uppercase text-white/90">
-                                            UCSM · MYL
-                                        </span>
+                                        <div>
+                                            <span className="font-black text-xs tracking-wider uppercase text-white block">
+                                                Skill-Tech UCSM
+                                            </span>
+                                            <span className="text-[9px] font-mono font-bold text-[#d0b04d] tracking-widest block uppercase">
+                                                Economía de Casas
+                                            </span>
+                                        </div>
                                     </div>
-                                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full text-white/90">
-                                        Oficial
+                                    <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/40 px-2.5 py-1 rounded-full text-[hsl(74,100%,47%)] flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[hsl(74,100%,47%)] animate-pulse" />
+                                        Confirmado
                                     </span>
                                 </div>
 
-                                {/* Tarjeta Blanca Interna con detalles */}
-                                <div className="bg-white rounded-3xl p-5 text-slate-900 shadow-xl space-y-3.5">
-                                    <div>
-                                        <h4 className="text-xl font-black text-[#74119c] tracking-tight">
-                                            ¡Transferiste!
-                                        </h4>
-                                        <div className="text-3xl font-black text-slate-900 font-mono mt-0.5">
-                                            {paymentResult.amount_myl} MYL
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div className="text-base font-black text-slate-900 leading-snug">
-                                            {paymentResult.recipient_name}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1 font-medium">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            <span>{paymentResult.formatted_datetime || "07 nov. 2026 | 01:30 a. m."}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Recuadro Destacado con Borde Rojo: CÓDIGO DE SEGURIDAD [ 9 ] [ 0 ] [ 5 ] */}
-                                    <div className="p-3 rounded-2xl border-2 border-red-500 bg-white flex items-center justify-between">
-                                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-700">
-                                            Código de Seguridad
+                                {/* Monto Transferido */}
+                                <div className="text-center py-2">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+                                        Transferencia Exitosa
+                                    </span>
+                                    <div className="flex items-baseline justify-center gap-2">
+                                        <span className="text-4xl font-black text-white font-mono tracking-tight">
+                                            {paymentResult.amount_myl}
                                         </span>
-                                        <div className="flex items-center gap-1.5">
-                                            {(paymentResult.security_digits || [
-                                                (paymentResult.security_code || "905")[0] || "9",
-                                                (paymentResult.security_code || "905")[1] || "0",
-                                                (paymentResult.security_code || "905")[2] || "5"
-                                            ]).map((digit: string, idx: number) => (
-                                                <span
-                                                    key={idx}
-                                                    className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-300 font-mono font-black text-base text-slate-900 flex items-center justify-center shadow-inner"
-                                                >
-                                                    {digit}
+                                        <span className="text-lg font-black text-[hsl(74,100%,47%)] font-mono">
+                                            MYL
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Tarjeta Interna de Destinatario */}
+                                <div className="bg-black/50 border border-white/10 rounded-2xl p-4 space-y-3 backdrop-blur-md">
+                                    <div className="flex items-center gap-3">
+                                        <StudentHouseAvatar
+                                            studentName={paymentResult.recipient_name}
+                                            username={paymentResult.recipient_username}
+                                            size="sm"
+                                            className="border border-[#d0b04d]/30"
+                                        />
+                                        <div className="min-w-0 flex-1">
+                                            <h4 className="text-sm font-black text-white truncate">
+                                                {paymentResult.recipient_name}
+                                            </h4>
+                                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                                <span className="text-[10px] font-bold text-[#d0b04d]">
+                                                    @{paymentResult.recipient_username}
                                                 </span>
-                                            ))}
+                                                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-300">
+                                                    Casa {paymentResult.recipient_house}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* Datos de la Transacción */}
-                                    <div className="pt-2 border-t border-slate-100 space-y-2">
-                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
-                                            Datos de la Transacción
+                                    <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-2 border-t border-white/5">
+                                        <Calendar className="w-3.5 h-3.5 text-[#d0b04d]" />
+                                        <span>{paymentResult.formatted_datetime || "Fecha y hora confirmada"}</span>
+                                    </div>
+                                </div>
+
+                                {/* Código de Validación Criptográfica UCSM */}
+                                <div className="p-3.5 rounded-2xl border border-[hsl(74,100%,47%)]/30 bg-[#032318]/70 flex items-center justify-between shadow-inner">
+                                    <div>
+                                        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#d0b04d] block">
+                                            Código de Validación
                                         </span>
+                                        <span className="text-[10px] text-slate-400 font-medium">
+                                            Seguridad Criptográfica
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        {(paymentResult.security_digits || [
+                                            (paymentResult.security_code || "905")[0] || "9",
+                                            (paymentResult.security_code || "905")[1] || "0",
+                                            (paymentResult.security_code || "905")[2] || "5"
+                                        ]).map((digit: string, idx: number) => (
+                                            <span
+                                                key={idx}
+                                                className="w-8 h-8 rounded-xl bg-black/80 border border-[hsl(74,100%,47%)]/50 font-mono font-black text-base text-[hsl(74,100%,47%)] flex items-center justify-center shadow-[0_0_8px_rgba(186,239,0,0.2)]"
+                                            >
+                                                {digit}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-slate-500">Destino:</span>
-                                            <span className="font-bold text-slate-800">
-                                                Casa {paymentResult.recipient_house}
+                                {/* Detalle Técnico y Libro Mayor */}
+                                <div className="p-3.5 rounded-2xl bg-black/40 border border-white/5 space-y-2 text-xs">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400">Nro. de Operación:</span>
+                                        <button
+                                            onClick={() => copyOpNumber(paymentResult.op_number)}
+                                            className="flex items-center gap-1 font-mono font-black text-white hover:text-[hsl(74,100%,47%)] transition-colors cursor-pointer"
+                                            title="Copiar Nro de Operación"
+                                        >
+                                            <span>{paymentResult.op_number}</span>
+                                            {copiedOp ? <Check className="w-3 h-3 text-[hsl(74,100%,47%)]" /> : <Copy className="w-3 h-3 text-slate-500" />}
+                                        </button>
+                                    </div>
+
+                                    {paymentResult.fee_burned_myl !== undefined && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-400 flex items-center gap-1">
+                                                <Flame className="w-3 h-3 text-orange-400" />
+                                                Cuota quemada en Solana:
+                                            </span>
+                                            <span className="font-mono font-bold text-orange-300">
+                                                {paymentResult.fee_burned_myl} MYL
                                             </span>
                                         </div>
+                                    )}
 
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-slate-500">Destinatario:</span>
-                                            <span className="font-mono text-slate-700">
-                                                @{paymentResult.recipient_username}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex justify-between items-center text-xs">
-                                            <span className="text-slate-500">Nro. de operación:</span>
-                                            <span className="font-mono font-black text-slate-900 tracking-wide">
-                                                {paymentResult.op_number}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-100">
-                                            <span className="text-slate-500">Saldo actualizado:</span>
-                                            <span className="font-mono font-black text-emerald-600">
-                                                {paymentResult.new_balance_digital} MYL
-                                            </span>
-                                        </div>
+                                    <div className="flex justify-between items-center pt-1.5 border-t border-white/5">
+                                        <span className="text-slate-400">Tu nuevo saldo digital:</span>
+                                        <span className="font-mono font-black text-[hsl(74,100%,47%)] text-sm">
+                                            {paymentResult.new_balance_digital} MYL
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={onClose}
-                                className="w-full py-3.5 rounded-2xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+                                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[hsl(74,100%,47%)] to-emerald-400 hover:from-[hsl(74,100%,43%)] hover:to-emerald-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(186,239,0,0.35)] transition-all cursor-pointer active:scale-[0.98]"
                             >
-                                Listo
+                                Listo / Finalizar
                             </button>
                         </div>
                     ) : paymentResult ? (
                         /* Caso de Orden de Tienda / Despacho */
                         <div className="text-center py-6 space-y-4">
-                            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400 flex items-center justify-center mx-auto shadow-2xl">
+                            <div className="w-16 h-16 rounded-full bg-[hsl(74,100%,47%)]/15 border border-[hsl(74,100%,47%)]/50 text-[hsl(74,100%,47%)] flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(186,239,0,0.3)]">
                                 <CheckCircle2 className="w-8 h-8" />
                             </div>
-                            <h4 className="text-lg font-black text-white">Pago Confirmado</h4>
+                            <h4 className="text-lg font-black text-white uppercase tracking-wider">Pago Confirmado</h4>
                             <p className="text-xs text-slate-300 max-w-xs mx-auto leading-relaxed">
                                 {paymentResult.message}
                             </p>
-                            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 font-mono text-center">
+                            <div className="p-4 rounded-2xl bg-black/60 border border-emerald-500/30 font-mono text-center">
                                 <span className="text-[10px] text-slate-400 uppercase tracking-widest block">Nuevo Saldo Digital</span>
                                 <span className="text-2xl font-black text-[hsl(74,100%,47%)]">
                                     {paymentResult.new_balance_digital} MYL
@@ -422,7 +463,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                             </div>
                             <button
                                 onClick={onClose}
-                                className="w-full py-3.5 rounded-2xl bg-[hsl(74,100%,47%)] text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-[hsl(74,100%,42%)] transition-all cursor-pointer"
+                                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[hsl(74,100%,47%)] to-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(186,239,0,0.3)] transition-all cursor-pointer"
                             >
                                 Finalizar
                             </button>
@@ -435,50 +476,61 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                             {isP2P ? (
                                 /* TARJETA DE TRANSFERENCIA P2P A COMPAÑERO */
                                 <div className="space-y-4">
-                                    {/* Ficha del Destinatario */}
-                                    <div className={`p-5 rounded-3xl ${houseConfig.bg} border ${houseConfig.border} space-y-3`}>
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center text-white font-black text-base">
-                                                    {inspectData.recipient_name?.charAt(0) || "U"}
-                                                </div>
-                                                <div>
-                                                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${houseConfig.badge}`}>
-                                                        Casa {inspectData.recipient_house}
+                                    {/* Ficha del Destinatario con Avatar de Casa */}
+                                    <div className={`p-5 rounded-3xl ${recipientCasa.badgeBg} border ${recipientCasa.borderColor} space-y-3 relative overflow-hidden backdrop-blur-md shadow-xl`}>
+                                        <div
+                                            className="absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl opacity-30 pointer-events-none"
+                                            style={{ backgroundColor: recipientCasa.glowColor }}
+                                        />
+
+                                        <div className="flex items-center gap-3.5 relative z-10">
+                                            <StudentHouseAvatar
+                                                studentName={inspectData.recipient_name}
+                                                username={inspectData.recipient_username}
+                                                size="lg"
+                                                className="border-2 border-white/20 shadow-xl"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${recipientCasa.badgeBg} ${recipientCasa.badgeText} ${recipientCasa.borderColor}`}>
+                                                        Casa {recipientCasa.name} · {recipientCasa.element}
                                                     </span>
-                                                    <h4 className="text-base font-black text-white mt-1">
-                                                        {inspectData.recipient_name}
-                                                    </h4>
-                                                    <p className="text-xs text-slate-400 font-mono">
-                                                        @{inspectData.recipient_username}
-                                                    </p>
                                                 </div>
+                                                <h4 className="text-base font-black text-white mt-1 leading-snug">
+                                                    {inspectData.recipient_name}
+                                                </h4>
+                                                <p className="text-xs text-[#d0b04d] font-bold">
+                                                    @{inspectData.recipient_username}
+                                                </p>
                                             </div>
                                         </div>
 
-                                        <div className="text-[11px] font-mono text-slate-400 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800/80 truncate">
-                                            Solana: {inspectData.recipient_wallet}
+                                        <div className="text-[10px] font-mono text-slate-300 bg-black/60 p-2.5 rounded-xl border border-white/10 truncate flex items-center justify-between gap-2">
+                                            <span className="truncate">Solana: {inspectData.recipient_wallet}</span>
+                                            <Shield className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
                                         </div>
                                     </div>
 
                                     {/* Saldo Disponible del Emisor */}
-                                    <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                                    <div className="p-3.5 rounded-2xl bg-black/50 border border-white/10 flex items-center justify-between backdrop-blur-sm">
                                         <div className="flex items-center gap-2">
-                                            <Wallet className="w-4 h-4 text-slate-400" />
-                                            <span className="text-xs text-slate-300">Tu saldo digital disponible:</span>
+                                            <div className="w-7 h-7 rounded-lg bg-[#d0b04d]/10 border border-[#d0b04d]/30 flex items-center justify-center text-[#d0b04d]">
+                                                <Coins className="w-3.5 h-3.5" />
+                                            </div>
+                                            <span className="text-xs text-slate-300 font-medium">Tu saldo digital disponible:</span>
                                         </div>
-                                        <span className="text-sm font-black font-mono text-emerald-400">
+                                        <span className="text-sm font-black font-mono text-[hsl(74,100%,47%)]">
                                             {userBalance} MYL
                                         </span>
                                     </div>
 
                                     {/* Selector Interactivo de Monto a Enviar */}
-                                    <div className="p-4 rounded-3xl bg-slate-900/50 border border-slate-800 space-y-3">
+                                    <div className="p-4 rounded-3xl bg-black/40 border border-white/10 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <label className="text-xs font-bold text-slate-300">
-                                                Cantidad de Moyoles a transferir:
+                                            <label className="text-xs font-black uppercase tracking-wider text-slate-200">
+                                                Monto a Transferir
                                             </label>
-                                            <span className="text-[10px] font-mono text-slate-400">Enteros estrictos</span>
+                                            <span className="text-[10px] font-mono text-[#d0b04d]">Enteros estrictos</span>
                                         </div>
 
                                         <div className="relative">
@@ -492,9 +544,9 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                                     const val = parseInt(e.target.value, 10)
                                                     setTransferAmount(isNaN(val) ? 0 : val)
                                                 }}
-                                                className="w-full p-3.5 bg-slate-950 border border-slate-700 rounded-2xl text-xl font-mono font-black text-white focus:outline-none focus:border-[hsl(74,100%,47%)] pr-16"
+                                                className="w-full p-3.5 bg-black/70 border border-emerald-500/30 rounded-2xl text-2xl font-mono font-black text-white focus:outline-none focus:border-[hsl(74,100%,47%)] focus:ring-1 focus:ring-[hsl(74,100%,47%)] pr-16 shadow-inner"
                                             />
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono font-bold text-sm text-[hsl(74,100%,47%)]">
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono font-black text-sm text-[hsl(74,100%,47%)]">
                                                 MYL
                                             </span>
                                         </div>
@@ -508,8 +560,8 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                                     disabled={userBalance < amt}
                                                     onClick={() => setTransferAmount(amt)}
                                                     className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${transferAmount === amt
-                                                            ? "bg-[hsl(74,100%,47%)] text-slate-950 border-[hsl(74,100%,47%)] font-black"
-                                                            : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700"
+                                                        ? "bg-[hsl(74,100%,47%)] text-slate-950 border-[hsl(74,100%,47%)] font-black shadow-[0_0_12px_rgba(186,239,0,0.35)]"
+                                                        : "bg-black/60 text-slate-300 border-white/10 hover:border-emerald-500/40"
                                                         } disabled:opacity-30 disabled:cursor-not-allowed`}
                                                 >
                                                     {amt} MYL
@@ -520,8 +572,8 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                                 disabled={userBalance <= 0}
                                                 onClick={() => setTransferAmount(userBalance)}
                                                 className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${transferAmount === userBalance && userBalance > 0
-                                                        ? "bg-[hsl(74,100%,47%)] text-slate-950 border-[hsl(74,100%,47%)] font-black"
-                                                        : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700"
+                                                    ? "bg-[hsl(74,100%,47%)] text-slate-950 border-[hsl(74,100%,47%)] font-black shadow-[0_0_12px_rgba(186,239,0,0.35)]"
+                                                    : "bg-black/60 text-slate-300 border-white/10 hover:border-emerald-500/40"
                                                     } disabled:opacity-30 disabled:cursor-not-allowed`}
                                             >
                                                 Máx ({userBalance})
@@ -560,16 +612,16 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                 </div>
                             ) : (
                                 /* ARTÍCULO O SERVICIO DE TIENDA OFICIAL */
-                                <div className="p-5 rounded-3xl bg-slate-900 border border-emerald-500/30 space-y-3">
+                                <div className="p-5 rounded-3xl bg-black/50 border border-emerald-500/30 space-y-3">
                                     <div className="flex items-start justify-between">
                                         <div>
-                                            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-800 text-[hsl(74,100%,47%)] border border-slate-700">
+                                            <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-[hsl(74,100%,47%)] border border-emerald-500/30">
                                                 Servicio Oficial
                                             </span>
                                             <h4 className="text-base font-black text-white mt-1">
                                                 {inspectData.title}
                                             </h4>
-                                            <p className="text-xs text-slate-400 mt-0.5">
+                                            <p className="text-xs text-[#d0b04d] mt-0.5">
                                                 {inspectData.seller_name}
                                             </p>
                                         </div>
@@ -581,7 +633,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                         </div>
                                     </div>
                                     {inspectData.description && (
-                                        <p className="text-xs text-slate-300 bg-slate-950 p-3 rounded-2xl border border-slate-800">
+                                        <p className="text-xs text-slate-300 bg-black/60 p-3 rounded-2xl border border-white/5">
                                             {inspectData.description}
                                         </p>
                                     )}
@@ -602,7 +654,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                         setInspectData(null)
                                         setErrorMessage(null)
                                     }}
-                                    className="px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5"
+                                    className="px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                                 >
                                     <ArrowLeft className="w-3.5 h-3.5" />
                                     <span>Volver</span>
@@ -610,12 +662,12 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                 <button
                                     onClick={handleConfirmPayment}
                                     disabled={!canSubmit}
-                                    className="flex-1 py-3 rounded-2xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+                                    className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-[hsl(74,100%,47%)] to-emerald-400 hover:from-[hsl(74,100%,43%)] hover:to-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(186,239,0,0.35)] flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.98]"
                                 >
                                     {isPaying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                     <span>
                                         {isPaying
-                                            ? "Procesando..."
+                                            ? "Procesando en Solana..."
                                             : isP2P
                                                 ? `Confirmar y Transferir ${amountNum} MYL`
                                                 : `Confirmar y Pagar (${inspectData.price_myl} MYL)`}
@@ -625,24 +677,24 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                         </div>
                     ) : (
                         /* ════════════════════════════════════════════════════════════════ */
-                        /* CASO 3: ESCÁNER EN VIVO CON CÁMARA (SIN SECCIÓN DE TOKENS)        */
+                        /* CASO 3: ESCÁNER EN VIVO CON CÁMARA (O SUBIDA DE IMAGEN)           */
                         /* ════════════════════════════════════════════════════════════════ */
                         <div className="space-y-4">
-                            <div className="relative rounded-3xl overflow-hidden bg-black border border-slate-800 aspect-square max-h-[290px] mx-auto flex items-center justify-center shadow-inner">
+                            <div className="relative rounded-3xl overflow-hidden bg-black border border-emerald-500/30 aspect-square max-h-[290px] mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(3,35,24,0.6)]">
                                 <div id={containerId} className="w-full h-full object-cover" />
 
-                                {/* Guía visual de escaneo */}
-                                <div className="absolute inset-8 border-2 border-dashed border-[hsl(74,100%,47%)]/60 rounded-2xl pointer-events-none flex items-center justify-center">
+                                {/* Guía visual de escaneo con diseño futurista */}
+                                <div className="absolute inset-8 border-2 border-dashed border-[hsl(74,100%,47%)]/50 rounded-2xl pointer-events-none flex items-center justify-center">
                                     <div className="w-full h-[2px] bg-[hsl(74,100%,47%)] shadow-[0_0_12px_rgba(186,239,0,0.8)] animate-[scan_2.5s_infinite_linear]" />
                                 </div>
 
                                 {cameraError && (
-                                    <div className="absolute inset-0 bg-slate-950/95 p-5 flex flex-col items-center justify-center text-center text-xs text-slate-300 space-y-3">
-                                        <AlertTriangle className="w-8 h-8 text-amber-400" />
-                                        <p className="leading-relaxed">{cameraError}</p>
+                                    <div className="absolute inset-0 bg-[#021811]/95 p-5 flex flex-col items-center justify-center text-center text-xs text-slate-300 space-y-3">
+                                        <AlertTriangle className="w-8 h-8 text-[#d0b04d]" />
+                                        <p className="leading-relaxed text-slate-300">{cameraError}</p>
                                         <button
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center gap-2 cursor-pointer transition-all"
+                                            className="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-[hsl(74,100%,47%)] font-bold text-xs flex items-center gap-2 cursor-pointer transition-all"
                                         >
                                             <Upload className="w-4 h-4" />
                                             <span>Subir Captura de QR</span>
@@ -651,7 +703,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                 )}
                             </div>
 
-                            <p className="text-[11px] text-center text-slate-400">
+                            <p className="text-[11px] text-center text-slate-400 font-medium">
                                 Apunta la cámara al código QR de la credencial o billetera Solana de tu compañero.
                             </p>
 
@@ -664,12 +716,12 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                 className="hidden"
                             />
 
-                            <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                            <div className="pt-2 border-t border-white/10 flex items-center justify-between">
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+                                    className="w-full py-3 rounded-2xl bg-black/60 hover:bg-emerald-950/60 border border-emerald-500/30 text-white text-xs font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-lg active:scale-95 group"
                                 >
-                                    <Upload className="w-3.5 h-3.5 text-slate-400" />
+                                    <Upload className="w-4 h-4 text-[#d0b04d] group-hover:text-[hsl(74,100%,47%)] transition-colors" />
                                     <span>Escanear desde imagen o captura</span>
                                 </button>
                             </div>
@@ -682,7 +734,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                             )}
 
                             {isInspecting && (
-                                <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 font-medium flex items-center justify-center gap-2">
+                                <div className="p-3 rounded-2xl bg-black/60 border border-emerald-500/30 text-xs text-slate-300 font-medium flex items-center justify-center gap-2">
                                     <RefreshCw className="w-4 h-4 animate-spin text-[hsl(74,100%,47%)]" />
                                     <span>Identificando cuenta y credenciales...</span>
                                 </div>

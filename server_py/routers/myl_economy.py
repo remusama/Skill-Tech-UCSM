@@ -40,14 +40,50 @@ HOUSE_BONUS_MULTIPLIERS = {
 }
 
 def get_house_rankings(db: Session):
-    """Calcula las puntuaciones de ventana móvil (St-1 + St) y ranking de las 4 casas."""
-    # Simulación calibrada de ventana móvil para las 4 casas oficiales
-    return [
-        {"house": "APEX", "rank": 1, "st_prev": 28, "st_curr": 24, "total_pts": 52, "diff_up": 0, "diff_down": 4},
-        {"house": "IGNIS", "rank": 2, "st_prev": 24, "st_curr": 24, "total_pts": 48, "diff_up": -4, "diff_down": 6},
-        {"house": "NEXUS", "rank": 3, "st_prev": 22, "st_curr": 20, "total_pts": 42, "diff_up": -6, "diff_down": 4},
-        {"house": "VISIO", "rank": 4, "st_prev": 18, "st_curr": 20, "total_pts": 38, "diff_up": -4, "diff_down": 0},
-    ]
+    """Calcula las puntuaciones de ventana móvil (St-1 + St) y ranking de las 4 casas en tiempo real."""
+    house_st_curr = {h: 0 for h in OFFICIAL_HOUSES}
+    results = (
+        db.query(User.house, func.sum(User.myl_house_points_session))
+        .filter(User.role == "student", User.house.in_(OFFICIAL_HOUSES))
+        .group_by(User.house)
+        .all()
+    )
+    for h, total_pts in results:
+        if h in house_st_curr:
+            house_st_curr[h] = int(total_pts or 0)
+
+    house_stats = []
+    for h in OFFICIAL_HOUSES:
+        st_c = house_st_curr.get(h, 0)
+        st_p = 0  # Sesión previa (0 al iniciar el programa antes del primer uso)
+        house_stats.append({
+            "house": h,
+            "st_prev": st_p,
+            "st_curr": st_c,
+            "total_pts": st_p + st_c,
+        })
+
+    # Ordenar por total_pts descendente, manteniendo orden canónico para empates
+    order_map = {h: i for i, h in enumerate(OFFICIAL_HOUSES)}
+    house_stats.sort(key=lambda x: (-x["total_pts"], order_map.get(x["house"], 0)))
+
+    ranked = []
+    curr_rank = 1
+    for i, item in enumerate(house_stats):
+        if i > 0 and item["total_pts"] < house_stats[i - 1]["total_pts"]:
+            curr_rank = i + 1
+        diff_up = 0 if i == 0 else item["total_pts"] - house_stats[0]["total_pts"]
+        diff_down = 0 if i == len(house_stats) - 1 else item["total_pts"] - house_stats[-1]["total_pts"]
+        ranked.append({
+            "house": item["house"],
+            "rank": curr_rank,
+            "st_prev": item["st_prev"],
+            "st_curr": item["st_curr"],
+            "total_pts": item["total_pts"],
+            "diff_up": diff_up,
+            "diff_down": diff_down,
+        })
+    return ranked
 
 
 # ── MÓDULO A: DASHBOARD & BILLETERA PERSONAL ────────────────────────────────
@@ -65,7 +101,10 @@ def get_student_wallet_dashboard(
     rankings = get_house_rankings(db)
     house_stat = next((r for r in rankings if r["house"] == house), rankings[0])
     rank = house_stat["rank"]
-    bonus_info = HOUSE_BONUS_MULTIPLIERS.get(rank, HOUSE_BONUS_MULTIPLIERS[2])
+    if all(r["total_pts"] == 0 for r in rankings):
+        bonus_info = {"multiplier": 1.0, "payout_myl": 5, "label": "Puesto Inicial / Empate (Base)"}
+    else:
+        bonus_info = HOUSE_BONUS_MULTIPLIERS.get(rank, HOUSE_BONUS_MULTIPLIERS[2])
     macro = db.query(MylMacroeconomicState).first()
 
     # Transacciones recientes en libro mayor
@@ -683,7 +722,7 @@ def inspect_qr_payload(
     import json
     from urllib.parse import unquote
     raw = req.qr_payload.strip()
-    raw = unquote(raw).strip()
+    raw = unquote(raw).strip().strip('"\'')
 
     macro = db.query(MylMacroeconomicState).first()
     is_market_open = bool(macro.qr_market_open) if macro else True
@@ -693,8 +732,25 @@ def inspect_qr_payload(
     clean_target = raw.replace("solana:", "").strip()
     recipient = None
 
+    # Búsqueda por token seguro de credencial (Carnet QR del estudiante: e.g. "SKILL-30AAE48ADA77")
+    recipient = db.query(User).filter(func.upper(User.secure_token) == clean_target.upper()).first()
+
+    # Búsqueda si el payload es una URL que contiene el parámetro data o token
+    if not recipient and ("http://" in clean_target or "https://" in clean_target):
+        try:
+            from urllib.parse import urlparse, parse_qs
+            parsed_url = urlparse(clean_target)
+            qs = parse_qs(parsed_url.query)
+            token_candidate = qs.get("data", [None])[0] or qs.get("token", [None])[0]
+            if token_candidate:
+                clean_cand = token_candidate.strip().strip('"\'')
+                recipient = db.query(User).filter(func.upper(User.secure_token) == clean_cand.upper()).first()
+        except Exception:
+            pass
+
     # Búsqueda por dirección pública de Solana
-    recipient = db.query(User).filter(User.solana_wallet_address == clean_target).first()
+    if not recipient:
+        recipient = db.query(User).filter(User.solana_wallet_address == clean_target).first()
 
     # Búsqueda por nombre de usuario (con o sin @)
     if not recipient:
@@ -722,6 +778,9 @@ def inspect_qr_payload(
         u_id = data.get("seller_id") or data.get("user_id") or data.get("recipient_id")
         if u_id:
             recipient = db.query(User).filter(User.id == int(u_id)).first()
+        if not recipient and ("secure_token" in data or "token" in data or "student_token" in data):
+            t = str(data.get("secure_token") or data.get("token") or data.get("student_token")).strip().strip('"\'')
+            recipient = db.query(User).filter(func.upper(User.secure_token) == t.upper()).first()
         if not recipient and "solana_address" in data:
             recipient = db.query(User).filter(User.solana_wallet_address == data["solana_address"]).first()
         if not recipient and "username" in data:
@@ -1320,11 +1379,12 @@ def disperse_initial_bonuses(
     """
     check_is_mentor(user_id, db)
     rankings = get_house_rankings(db)
+    all_zero = all(r["total_pts"] == 0 for r in rankings)
     house_payouts = {}
     for r in rankings:
         h = r["house"]
         rank = r["rank"]
-        payout = HOUSE_BONUS_MULTIPLIERS.get(rank, {"payout_myl": 5})["payout_myl"]
+        payout = 5 if all_zero else HOUSE_BONUS_MULTIPLIERS.get(rank, {"payout_myl": 5})["payout_myl"]
         house_payouts[h] = payout
 
     students = (

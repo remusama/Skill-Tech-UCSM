@@ -14,7 +14,6 @@ import {
     Zap,
     Trophy,
     TrendingUp,
-    ChevronRight,
     QrCode,
     Radio,
     DollarSign,
@@ -22,8 +21,6 @@ import {
     HelpCircle,
     Package,
     ArrowUpRight,
-    ScanLine,
-    Tag,
     Eye,
     EyeOff,
     Gamepad2,
@@ -38,11 +35,9 @@ import {
 import { API_BASE_URL } from "@/lib/config"
 import { CASAS_INFO } from "@/lib/casasData"
 import { StudentHouseAvatar } from "@/components/avatar/StudentHouseAvatar"
-import { QRScannerPaymentModal } from "@/components/myl/QRScannerPaymentModal"
-import { GenerateP2PQRModal } from "@/components/myl/GenerateP2PQRModal"
 import { MundoMoyaModal } from "@/components/myl/MundoMoyaModal"
 
-type StudentTab = "dashboard" | "inventory" | "profile_hw"
+type StudentTab = "dashboard" | "inventory"
 
 export function MylStudentPlatform() {
     const [activeTab, setActiveTab] = useState<StudentTab>("dashboard")
@@ -54,9 +49,7 @@ export function MylStudentPlatform() {
     // Privacidad: Ocultar o mostrar saldo
     const [showBalance, setShowBalance] = useState(true)
 
-    // Modales QR y Mundo Moya
-    const [showQRScanModal, setShowQRScanModal] = useState(false)
-    const [showGenerateQRModal, setShowGenerateQRModal] = useState(false)
+    // Modal Mundo Moya
     const [showMundoMoyaModal, setShowMundoMoyaModal] = useState(false)
 
     // Tienda & Acciones
@@ -229,8 +222,8 @@ export function MylStudentPlatform() {
                 </div>
             </div>
 
-            {/* BARRA DE NAVEGACIÓN EN 3 PESTAÑAS CANÓNICAS (PRD V3.0.0) */}
-            <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-950/80 border border-slate-800 rounded-2xl">
+            {/* BARRA DE NAVEGACIÓN EN 2 PESTAÑAS (PRD V3.0.0) */}
+            <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-950/80 border border-slate-800 rounded-2xl">
                 <button
                     onClick={() => setActiveTab("dashboard")}
                     className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
@@ -253,18 +246,6 @@ export function MylStudentPlatform() {
                 >
                     <ShoppingBag className="w-4 h-4" />
                     <span>2. Inventario & Vitrina</span>
-                </button>
-
-                <button
-                    onClick={() => setActiveTab("profile_hw")}
-                    className={`flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
-                        activeTab === "profile_hw"
-                            ? "bg-[hsl(74,100%,47%)] text-slate-950 shadow-[0_0_15px_rgba(186,239,0,0.35)]"
-                            : "text-slate-400 hover:text-white hover:bg-slate-900"
-                    }`}
-                >
-                    <QrCode className="w-4 h-4" />
-                    <span>3. Perfil & Hardware</span>
                 </button>
             </div>
 
@@ -337,67 +318,6 @@ export function MylStudentPlatform() {
                                 </span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* BOTONES DUALES DE ACCIÓN QR RÁPIDA (CENTRO DE OPERACIONES) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* BOTÓN 1: ESCANEAR QR DE CAJA / COMPRA */}
-                        <button
-                            onClick={() => {
-                                if (!isMarketOpen) {
-                                    showToast("El mercado QR se encuentra cerrado por el facilitador.")
-                                    return
-                                }
-                                setShowQRScanModal(true)
-                            }}
-                            className={`p-6 rounded-3xl border transition-all text-left flex items-center justify-between group shadow-xl ${
-                                isMarketOpen
-                                    ? "bg-slate-900/90 hover:bg-slate-900 border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_25px_rgba(16,185,129,0.2)] cursor-pointer"
-                                    : "bg-slate-900/50 border-slate-800 opacity-60 cursor-not-allowed"
-                            }`}
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform shadow-lg">
-                                    <ScanLine className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 block">
-                                        Pagar Insumos o Tienda
-                                    </span>
-                                    <h3 className="text-lg font-black text-white group-hover:text-emerald-300 transition-colors">
-                                        Escanear QR de Caja
-                                    </h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">
-                                        Escanea la factura oficial o token P2P con confirmación
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </button>
-
-                        {/* BOTÓN 2: COBRAR / P2P CON QR */}
-                        <button
-                            onClick={() => setShowGenerateQRModal(true)}
-                            className="p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-900 border border-[hsl(74,100%,47%)]/40 hover:border-[hsl(74,100%,47%)] hover:shadow-[0_0_25px_rgba(186,239,0,0.2)] transition-all text-left flex items-center justify-between group shadow-xl cursor-pointer"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl bg-[hsl(74,100%,47%)]/20 border border-[hsl(74,100%,47%)]/50 flex items-center justify-center text-[hsl(74,100%,47%)] group-hover:scale-105 transition-transform shadow-lg">
-                                    <Tag className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-[hsl(74,100%,47%)] block">
-                                        Transferencia / Venta
-                                    </span>
-                                    <h3 className="text-lg font-black text-white group-hover:text-[hsl(74,100%,47%)] transition-colors">
-                                        Cobrar / P2P con QR
-                                    </h3>
-                                    <p className="text-xs text-slate-400 mt-0.5">
-                                        Genera tu código QR con tu nombre, precio y oferta
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </button>
                     </div>
 
                     {/* ÚLTIMOS 3 MOVIMIENTOS DEL LIBRO MAYOR (RESUMEN COMPACTO) */}
@@ -501,99 +421,6 @@ export function MylStudentPlatform() {
                     </div>
                 </div>
             )}
-
-            {/* ───────────────────────────────────────────────────────────── */}
-            {/* PESTAÑA 3: PERFIL & HARDWARE (CREDENCIAL, NFC, SOLANA)         */}
-            {/* ───────────────────────────────────────────────────────────── */}
-            {activeTab === "profile_hw" && (
-                <div className="space-y-6">
-                    {/* CREDENCIAL DIGITAL & QR RECEPTOR PERSONAL ESTÁTICO */}
-                    <div className="p-6 md:p-8 rounded-3xl bg-slate-900/80 border border-emerald-500/30 shadow-2xl flex flex-col items-center text-center space-y-4">
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d0b04d] bg-[#d0b04d]/10 px-3.5 py-1 rounded-full border border-[#d0b04d]/20">
-                            CREDENCIAL DIGITAL ACTIVA · RECEPTOR
-                        </span>
-
-                        {/* CÓDIGO QR ESTÁTICO RECEPTOR */}
-                        <div className="p-5 bg-white rounded-3xl border border-white/20 shadow-2xl aspect-square w-52 flex items-center justify-center">
-                            <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                                    data?.solana_wallet_address || data?.username || "STUDENT-MYL"
-                                )}`}
-                                alt="QR Personal Receptor"
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
-
-                        <div>
-                            <h3 className="text-xl font-black text-white">{data?.full_name || "Estudiante"}</h3>
-                            <p className="text-xs text-slate-400 font-mono">@{data?.username || "usuario"}</p>
-                        </div>
-
-                        <p className="text-xs text-slate-400 max-w-sm">
-                            Este código QR es tu receptor estático para recibir MYL directamente de tus compañeros de clase o bonificaciones del facilitador.
-                        </p>
-                    </div>
-
-                    {/* IDENTIFICADOR HARDWARE NFC */}
-                    <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                                Identificador de Tarjeta Física NFC
-                            </span>
-                            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                                NFC ACTIVO
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                            <span className="font-mono text-sm text-[#d0b04d] font-black tracking-widest">
-                                SKILL-DD1E14A6FB6E
-                            </span>
-                            <span className="text-xs text-slate-500 font-mono">Banda 13.56 MHz</span>
-                        </div>
-                    </div>
-
-                    {/* MEDIDOR DE PUNTOS DE CASA DEL DÍA (TOPE 3/3 PTS) */}
-                    <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="text-sm font-bold text-white">Tope Individual de Mérito del Día</h4>
-                                <p className="text-xs text-slate-400">
-                                    Máximo 3 Puntos de Casa por sesión para evitar saturación y premiar la constancia.
-                                </p>
-                            </div>
-                            <span className={`text-base font-black font-mono px-3 py-1 rounded-xl ${
-                                housePointsToday >= 3 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-slate-800 text-white"
-                            }`}>
-                                {housePointsToday} / {housePointsCap} pts
-                            </span>
-                        </div>
-
-                        {/* BARRA VISUAL DE PROGRESO */}
-                        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
-                            <div
-                                className="h-full bg-gradient-to-r from-emerald-500 to-[hsl(74,100%,47%)] transition-all duration-500"
-                                style={{ width: `${Math.min(100, (housePointsToday / housePointsCap) * 100)}%` }}
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* MODALES QR GLOBALES */}
-            <QRScannerPaymentModal
-                isOpen={showQRScanModal}
-                onClose={() => setShowQRScanModal(false)}
-                onSuccessPayment={async () => {
-                    await fetchWallet()
-                    showToast("¡Pago procesado exitosamente!")
-                }}
-            />
-
-            <GenerateP2PQRModal
-                isOpen={showGenerateQRModal}
-                onClose={() => setShowGenerateQRModal(false)}
-                userName={data?.full_name || data?.username}
-            />
 
             {/* MODAL MUNDO MOYA RETRO PIXEL-ART */}
             <MundoMoyaModal

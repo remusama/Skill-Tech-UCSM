@@ -174,11 +174,11 @@ def seed_myl_system():
             print("6. Inicializando estado macroeconómico global...")
             macro = MylMacroeconomicState(
                 edition_total_cap_myl=7000,
-                edition_emitted_myl=1840,
+                edition_emitted_myl=384,
                 session_number=1,
                 session_cap_myl=500,
                 session_emitted_myl=384,
-                session_burned_myl=312,
+                session_burned_myl=0,
                 active_phase="Apertura",
                 reference_rate_text="1 Punto de Casa = 2 MYL",
                 alert_status="green"

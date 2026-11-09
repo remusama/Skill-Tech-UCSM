@@ -394,11 +394,11 @@ class MylMacroeconomicState(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     edition_total_cap_myl = Column(Integer, default=7000)
-    edition_emitted_myl = Column(Integer, default=1840)
+    edition_emitted_myl = Column(Integer, default=384)
     session_number = Column(Integer, default=1)
     session_cap_myl = Column(Integer, default=500)
     session_emitted_myl = Column(Integer, default=384)
-    session_burned_myl = Column(Integer, default=312)
+    session_burned_myl = Column(Integer, default=0)
     active_phase = Column(String(64), default="Apertura") # 'Apertura', 'Bloque Individual', 'Ventana de Mercado', 'Actividad Grupal', 'Cierre'
     qr_market_open = Column(Boolean, default=True) # Interruptor Maestro de Mercado QR
     moya_broadcast_message = Column(String(255), default="¡Bienvenidos a la sesión! Atentos a las pistas de mercado.")

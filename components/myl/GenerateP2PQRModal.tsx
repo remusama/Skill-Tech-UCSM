@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { motion } from "framer-motion"
-import { QrCode, X, Copy, Check, Sparkles, Send, Tag } from "lucide-react"
+import { QrCode, X, Copy, Check, Sparkles, Send, Tag, Coins } from "lucide-react"
 import { API_BASE_URL } from "@/lib/config"
 
 interface GenerateP2PQRModalProps {
@@ -62,66 +62,73 @@ export function GenerateP2PQRModal({ isOpen, onClose, userName }: GenerateP2PQRM
     }
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4">
             <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full max-w-md bg-slate-950 border border-slate-800 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="w-full max-w-md bg-[#021811]/95 border border-emerald-500/30 rounded-[2.5rem] shadow-[0_0_50px_rgba(3,35,24,0.8),0_0_25px_rgba(186,239,0,0.15)] overflow-hidden flex flex-col relative"
             >
+                {/* Luces Ambientales de Fondo */}
+                <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#0d971f]/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-[#d0b04d]/15 rounded-full blur-3xl pointer-events-none" />
+
                 {/* Header */}
-                <div className="p-6 border-b border-slate-800/80 flex items-center justify-between bg-slate-900/40">
+                <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/40 relative z-10 backdrop-blur-md">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[hsl(74,100%,47%)]/10 border border-[hsl(74,100%,47%)]/30 flex items-center justify-center text-[hsl(74,100%,47%)]">
-                            <Tag className="w-5 h-5" />
+                        <div className="w-11 h-11 rounded-2xl bg-[#032318] border border-[hsl(74,100%,47%)]/40 flex items-center justify-center text-[hsl(74,100%,47%)] shadow-[0_0_15px_rgba(186,239,0,0.25)]">
+                            <Tag className="w-5 h-5 text-[#d0b04d]" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black text-white uppercase tracking-wider">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#d0b04d] bg-[#d0b04d]/10 px-2 py-0.5 rounded-full border border-[#d0b04d]/25">
+                                COBRO P2P · SKILL-TECH UCSM
+                            </span>
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider mt-0.5">
                                 Generar QR de Cobro P2P
                             </h3>
-                            <p className="text-xs text-slate-400">Token con tu nombre, precio y lo que ofreces</p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition-all"
+                        className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 flex items-center justify-center transition-all cursor-pointer active:scale-95"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                <div className="p-6 space-y-5">
+                <div className="p-5 space-y-4 relative z-10">
                     {generatedToken && qrImageUrl ? (
                         <div className="text-center space-y-4">
-                            {/* Visualización del QR */}
-                            <div className="relative mx-auto p-5 bg-white rounded-3xl border-4 border-[hsl(74,100%,47%)] shadow-2xl aspect-square w-60 flex items-center justify-center">
+                            {/* Visualización del QR Institucional */}
+                            <div className="relative mx-auto p-5 bg-white rounded-3xl border-4 border-[#032318] shadow-[0_0_30px_rgba(186,239,0,0.2)] aspect-square w-60 flex items-center justify-center">
                                 <img
                                     src={qrImageUrl}
                                     alt="QR Transferencia P2P"
                                     className="w-full h-full object-contain"
                                 />
+                                <div className="absolute top-0 left-0 w-full h-[2px] bg-[#0d971f] shadow-[0_0_8px_rgba(13,151,31,0.8)] animate-[scan_3s_infinite_linear] pointer-events-none rounded-t-3xl" />
                             </div>
 
-                            <div>
-                                <h4 className="text-lg font-black text-white">{assetName}</h4>
+                            <div className="bg-black/50 border border-white/10 p-4 rounded-2xl">
+                                <h4 className="text-base font-black text-white">{assetName}</h4>
                                 <div className="text-2xl font-black text-[hsl(74,100%,47%)] font-mono mt-0.5">
                                     {priceMyl} MYL
                                 </div>
                                 <p className="text-xs text-slate-400 mt-1">
-                                    Vendedor: <strong className="text-white">{userName || "Tú"}</strong>
+                                    Vendedor: <strong className="text-[#d0b04d]">{userName || "Tú"}</strong>
                                 </p>
                             </div>
 
-                            <p className="text-[11px] text-slate-400 bg-slate-900/80 p-3 rounded-2xl border border-slate-800 leading-relaxed">
+                            <p className="text-[11px] text-slate-400 bg-black/40 p-3 rounded-2xl border border-white/5 leading-relaxed">
                                 Muestra este código para que tu compañero lo escanee con su pasarela QR desde su perfil o plataforma.
                             </p>
 
                             <div className="flex gap-2">
                                 <button
                                     onClick={copyToClipboard}
-                                    className="flex-1 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                                    className="flex-1 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
                                 >
-                                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                                    {copied ? <Check className="w-4 h-4 text-[hsl(74,100%,47%)]" /> : <Copy className="w-4 h-4 text-slate-400" />}
                                     <span>{copied ? "Copiado al portapapeles" : "Copiar Token QR"}</span>
                                 </button>
                                 <button
@@ -129,7 +136,7 @@ export function GenerateP2PQRModal({ isOpen, onClose, userName }: GenerateP2PQRM
                                         setGeneratedToken(null)
                                         setQrImageUrl(null)
                                     }}
-                                    className="px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-all"
+                                    className="px-4 py-3 rounded-2xl bg-black/60 hover:bg-black/80 border border-emerald-500/30 text-[hsl(74,100%,47%)] text-xs font-bold transition-all active:scale-95 cursor-pointer"
                                 >
                                     Crear Otro
                                 </button>
@@ -138,7 +145,7 @@ export function GenerateP2PQRModal({ isOpen, onClose, userName }: GenerateP2PQRM
                     ) : (
                         <form onSubmit={handleGenerate} className="space-y-4">
                             <div>
-                                <label className="text-xs font-bold text-slate-300 block mb-1">
+                                <label className="text-xs font-black uppercase tracking-wider text-slate-200 block mb-1.5">
                                     ¿Qué artículo, insumo o servicio ofreces?
                                 </label>
                                 <input
@@ -147,23 +154,28 @@ export function GenerateP2PQRModal({ isOpen, onClose, userName }: GenerateP2PQRM
                                     placeholder="Ej: Módulo Actuador, Pliego MDF, Asesoría..."
                                     value={assetName}
                                     onChange={(e) => setAssetName(e.target.value)}
-                                    className="w-full p-3.5 bg-slate-900 border border-slate-700 rounded-2xl text-sm font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-[hsl(74,100%,47%)]"
+                                    className="w-full p-3.5 bg-black/60 border border-emerald-500/30 rounded-2xl text-sm font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-[hsl(74,100%,47%)] focus:ring-1 focus:ring-[hsl(74,100%,47%)] shadow-inner"
                                 />
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-300 block mb-1">
+                                <label className="text-xs font-black uppercase tracking-wider text-slate-200 block mb-1.5">
                                     Precio en Números Enteros (MYL)
                                 </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    required
-                                    value={priceMyl}
-                                    onChange={(e) => setPriceMyl(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full p-3.5 bg-slate-900 border border-slate-700 rounded-2xl text-lg font-black font-mono text-[hsl(74,100%,47%)] focus:outline-none focus:border-[hsl(74,100%,47%)]"
-                                />
-                                <span className="text-[10px] text-slate-500 mt-1 block">
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        required
+                                        value={priceMyl}
+                                        onChange={(e) => setPriceMyl(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="w-full p-3.5 bg-black/60 border border-emerald-500/30 rounded-2xl text-xl font-black font-mono text-[hsl(74,100%,47%)] focus:outline-none focus:border-[hsl(74,100%,47%)] focus:ring-1 focus:ring-[hsl(74,100%,47%)] pr-16 shadow-inner"
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 font-mono font-black text-sm text-[hsl(74,100%,47%)]">
+                                        MYL
+                                    </span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 mt-1 block">
                                     Contabilidad estricta: 0 decimales. Sin centavos.
                                 </span>
                             </div>
@@ -171,7 +183,7 @@ export function GenerateP2PQRModal({ isOpen, onClose, userName }: GenerateP2PQRM
                             <button
                                 type="submit"
                                 disabled={isGenerating || !assetName.trim()}
-                                className="w-full py-3.5 rounded-2xl bg-[hsl(74,100%,47%)] hover:bg-[hsl(74,100%,42%)] disabled:opacity-40 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 mt-2"
+                                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[hsl(74,100%,47%)] to-emerald-400 hover:from-[hsl(74,100%,43%)] hover:to-emerald-500 disabled:opacity-40 text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(186,239,0,0.35)] transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer active:scale-[0.98]"
                             >
                                 <QrCode className="w-4 h-4" />
                                 <span>{isGenerating ? "Generando..." : "Generar Código QR de Cobro"}</span>
@@ -183,4 +195,3 @@ export function GenerateP2PQRModal({ isOpen, onClose, userName }: GenerateP2PQRM
         </div>
     )
 }
-
