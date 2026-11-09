@@ -123,7 +123,7 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                 (decodedText: string) => {
                     handlePayloadScanned(decodedText)
                 },
-                () => {} // Ignorar ruidos continuos de frames
+                () => { } // Ignorar ruidos continuos de frames
             )
         } catch (err: any) {
             console.warn("Camera init error:", err)
@@ -507,11 +507,10 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                                     type="button"
                                                     disabled={userBalance < amt}
                                                     onClick={() => setTransferAmount(amt)}
-                                                    className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${
-                                                        transferAmount === amt
+                                                    className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${transferAmount === amt
                                                             ? "bg-[hsl(74,100%,47%)] text-slate-950 border-[hsl(74,100%,47%)] font-black"
                                                             : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700"
-                                                    } disabled:opacity-30 disabled:cursor-not-allowed`}
+                                                        } disabled:opacity-30 disabled:cursor-not-allowed`}
                                                 >
                                                     {amt} MYL
                                                 </button>
@@ -520,11 +519,10 @@ export function QRScannerPaymentModal({ isOpen, onClose, onSuccessPayment }: QRS
                                                 type="button"
                                                 disabled={userBalance <= 0}
                                                 onClick={() => setTransferAmount(userBalance)}
-                                                className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${
-                                                    transferAmount === userBalance && userBalance > 0
+                                                className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${transferAmount === userBalance && userBalance > 0
                                                         ? "bg-[hsl(74,100%,47%)] text-slate-950 border-[hsl(74,100%,47%)] font-black"
                                                         : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700"
-                                                } disabled:opacity-30 disabled:cursor-not-allowed`}
+                                                    } disabled:opacity-30 disabled:cursor-not-allowed`}
                                             >
                                                 Máx ({userBalance})
                                             </button>

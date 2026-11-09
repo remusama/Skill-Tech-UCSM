@@ -25,6 +25,7 @@ from server_py.memoria.database import (
     MylMacroeconomicState
 )
 from server_py.auth.router import get_current_user_id
+from server_py.common.permisos import check_is_mentor
 
 router = APIRouter(prefix="/api/myl", tags=["Economía MYL"])
 
@@ -164,15 +165,19 @@ def get_house_desk(
         db.commit()
         db.refresh(order)
 
-    # 3. Lista de los integrantes oficiales de esta casa (filtrando por la casa exacta del usuario)
-    house_students = db.query(User).filter(User.house == house).all()
-    # Si la lista supera 12 o incluye usuarios de prueba, priorizamos al usuario actual y los miembros principales
+    # 3. Lista de los integrantes oficiales de esta casa (estudiantes oficiales de la casa)
+    house_students = (
+        db.query(User)
+        .filter(User.house == house, User.role == "student")
+        .order_by(User.full_name)
+        .all()
+    )
+    # Si la lista supera 12, priorizamos al usuario actual y limitamos estrictamente a 12
     contributions_map = {
         c.user_id: c.amount_myl
         for c in db.query(MylOrderContribution).filter_by(order_id=order.id).all()
     }
 
-    # Si hay más de 12, garantizamos que el usuario actual esté siempre incluido entre los miembros visibles
     if len(house_students) > 12:
         me_list = [s for s in house_students if s.id == user.id]
         others = [s for s in house_students if s.id != user.id]
@@ -239,7 +244,7 @@ def contribute_to_house_order(
     user_id: int = Depends(get_current_user_id),
 ):
     """Transfiere MYL enteros del saldo digital del alumno al pozo de materiales de su casa."""
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == user_id).with_for_update().first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -251,7 +256,7 @@ def contribute_to_house_order(
         raise HTTPException(status_code=400, detail="Saldo digital insuficiente en MYL.")
 
     house = user.house or "APEX"
-    order = db.query(MylHouseOrder).filter_by(house=house, session_number=1).first()
+    order = db.query(MylHouseOrder).filter_by(house=house, session_number=1).with_for_update().first()
     if not order or order.status != "draft":
         raise HTTPException(status_code=400, detail="No hay una orden de materiales abierta para aportar.")
 
@@ -583,11 +588,11 @@ def buy_p2p_order(
     user_id: int = Depends(get_current_user_id),
 ):
     """Compra una orden P2P liquidando la cuota quemada en Solana."""
-    buyer = db.query(User).filter(User.id == user_id).first()
+    buyer = db.query(User).filter(User.id == user_id).with_for_update().first()
     if not buyer:
         raise HTTPException(status_code=404, detail="Comprador no encontrado")
 
-    order = db.query(MylP2POrder).filter_by(id=order_id, status="open").first()
+    order = db.query(MylP2POrder).filter_by(id=order_id, status="open").with_for_update().first()
     if not order:
         raise HTTPException(status_code=404, detail="La orden no existe o ya no está disponible.")
 
@@ -725,6 +730,15 @@ def inspect_qr_payload(
 
     # Si se identificó a un compañero de clase / cuenta de estudiante:
     if recipient:
+        if recipient.role != "student" or recipient.house not in OFFICIAL_HOUSES:
+            return {
+                "valid": False,
+                "type": "invalid_recipient",
+                "title": "Destinatario no autorizado",
+                "description": "Solo puedes transferir MYL a estudiantes oficiales pertenecientes a una de las Casas (APEX, IGNIS, NEXUS, VISIO).",
+                "price_myl": 0
+            }
+
         is_self = (recipient.id == user.id)
         recipient_name = recipient.full_name or recipient.username
         recipient_house = recipient.house or "APEX"
@@ -834,7 +848,7 @@ def pay_qr_payload(
     Ejecuta el pago o transferencia P2P descontando el saldo digital del usuario
     y acreditándolo al alumno destinatario con cupón oficial estilo Yape y datos 100% reales.
     """
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == user_id).with_for_update().first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
@@ -843,7 +857,7 @@ def pay_qr_payload(
     # CASO A: Transferencia P2P directa a un compañero
     recipient = None
     if req.recipient_id:
-        recipient = db.query(User).filter(User.id == req.recipient_id).first()
+        recipient = db.query(User).filter(User.id == req.recipient_id).with_for_update().first()
         if not recipient:
             raise HTTPException(status_code=404, detail="El estudiante destinatario no fue encontrado.")
 
@@ -854,12 +868,18 @@ def pay_qr_payload(
         if not inspect_res.get("valid"):
             raise HTTPException(status_code=400, detail="Código QR inválido.")
         if inspect_res.get("type") == "p2p_user":
-            recipient = db.query(User).filter(User.id == inspect_res["recipient_id"]).first()
+            recipient = db.query(User).filter(User.id == inspect_res["recipient_id"]).with_for_update().first()
 
     # Si es transferencia P2P:
     if recipient:
         if recipient.id == user.id:
             raise HTTPException(status_code=400, detail="No puedes transferirte fondos a ti mismo.")
+
+        if recipient.role != "student" or recipient.house not in OFFICIAL_HOUSES:
+            raise HTTPException(
+                status_code=400,
+                detail="Solo puedes transferir MYL a estudiantes oficiales pertenecientes a una de las Casas (APEX, IGNIS, NEXUS, VISIO)."
+            )
 
         if macro and not macro.qr_market_open:
             raise HTTPException(status_code=400, detail="Las transferencias P2P se encuentran temporalmente pausadas por el docente.")
@@ -1079,6 +1099,7 @@ def get_manager_macro_view(
     user_id: int = Depends(get_current_user_id),
 ):
     """Pestaña 1: Agregados macroeconómicos, ritmo de quema, semáforo y control de fases."""
+    check_is_mentor(user_id, db)
     macro = db.query(MylMacroeconomicState).first()
     if not macro:
         macro = MylMacroeconomicState()
@@ -1134,6 +1155,7 @@ def update_session_phase(
     user_id: int = Depends(get_current_user_id),
 ):
     """Interruptor maestro para cambiar de fase operativa de sesión."""
+    check_is_mentor(user_id, db)
     macro = db.query(MylMacroeconomicState).first()
     if not macro:
         raise HTTPException(status_code=404, detail="Estado macroeconómico no encontrado")
@@ -1155,16 +1177,23 @@ def get_manager_breakdown(
     user_id: int = Depends(get_current_user_id),
 ):
     """Pestaña 2: Desglose por Casa (Ventana Móvil) y por Participante (Directorio de 48 Alumnos)."""
+    check_is_mentor(user_id, db)
     rankings = get_house_rankings(db)
     orders = {o.house: o for o in db.query(MylHouseOrder).filter_by(session_number=1).all()}
 
-    # Calcular liquidez agregada por casa sumando saldos de sus 12 integrantes (Dato Exclusivo del Gestor)
-    house_liquidity_map = {}
-    for r in rankings:
-        h = r["house"]
-        members = db.query(User).filter(User.house == h, User.role == "student").all()
-        liq = sum((m.myl_balance_cash or 0) + (m.myl_balance_digital or 0) for m in members)
-        house_liquidity_map[h] = liq
+    # Directorio de 48 alumnos oficiales (excluyendo usuarios externos o sin casa)
+    students = (
+        db.query(User)
+        .filter(User.role == "student", User.house.in_(OFFICIAL_HOUSES))
+        .order_by(User.house, User.full_name)
+        .all()
+    )
+
+    # Optimización: Calcular liquidez agregada por casa en memoria en una sola pasada O(N)
+    house_liquidity_map = {h: 0 for h in OFFICIAL_HOUSES}
+    for s in students:
+        liq = (s.myl_balance_cash or 0) + (s.myl_balance_digital or 0)
+        house_liquidity_map[s.house] = house_liquidity_map.get(s.house, 0) + liq
 
     houses_breakdown = []
     for r in rankings:
@@ -1181,14 +1210,6 @@ def get_manager_breakdown(
             "order_collected_myl": ord.total_collected_myl if ord else 0,
             "order_total_cost_myl": ord.total_cost_myl if ord else 48,
         })
-
-    # Directorio de 48 alumnos oficiales (excluyendo usuarios externos o sin casa)
-    students = (
-        db.query(User)
-        .filter(User.role == "student", User.house.in_(OFFICIAL_HOUSES))
-        .order_by(User.house, User.full_name)
-        .all()
-    )
     students_list = [
         {
             "id": s.id,
@@ -1218,6 +1239,7 @@ def get_manager_market_view(
     user_id: int = Depends(get_current_user_id),
 ):
     """Pestaña 3: Monitor de rotación de tienda, feed P2P en tiempo real y auditoría de intercambios desiguales."""
+    check_is_mentor(user_id, db)
     store_items = db.query(MylStoreItem).all()
     p2p_orders = db.query(MylP2POrder).order_by(MylP2POrder.created_at.desc()).limit(20).all()
     unequal_alerts = [ord for ord in p2p_orders if ord.is_unequal_trade == 1]
@@ -1264,6 +1286,7 @@ def toggle_qr_market(
     user_id: int = Depends(get_current_user_id),
 ):
     """Interruptor Maestro de Mercado QR: Habilita o bloquea las transacciones en los móviles."""
+    check_is_mentor(user_id, db)
     macro = db.query(MylMacroeconomicState).first()
     if not macro:
         macro = MylMacroeconomicState()
@@ -1295,6 +1318,7 @@ def disperse_initial_bonuses(
     - 4.º Puesto (VISIO): 4 MYL por integrante
     Total emitido: 240 MYL (12 integrantes x 4 casas).
     """
+    check_is_mentor(user_id, db)
     rankings = get_house_rankings(db)
     house_payouts = {}
     for r in rankings:
@@ -1357,6 +1381,7 @@ def credit_student_merit(
     Si el alumno ya alcanzó su tope de 3 Puntos de Casa en la sesión,
     el sistema bloquea puntos adicionales y acredita únicamente los MYL.
     """
+    check_is_mentor(user_id, db)
     student = db.query(User).filter_by(id=req.student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
@@ -1416,6 +1441,7 @@ def broadcast_moya_message(
     Dispara un mensaje que aparece inmediatamente en el widget de Moya
     en el Dashboard de los 48 alumnos.
     """
+    check_is_mentor(user_id, db)
     macro = db.query(MylMacroeconomicState).first()
     if not macro:
         macro = MylMacroeconomicState()
@@ -1450,6 +1476,7 @@ def create_cashier_bill(
     El gestor genera el código QR oficial de cobro para que los alumnos
     escaneen desde su móvil y quemen los MYL al instante.
     """
+    check_is_mentor(user_id, db)
     import json
     bill_id = f"BILL-{int(datetime.utcnow().timestamp())}-{req.house.upper()}"
     qr_payload = {
@@ -1550,7 +1577,7 @@ def claim_moya_mission(
     if not mission:
         raise HTTPException(status_code=404, detail="Misión no encontrada")
 
-    user = db.query(User).filter_by(id=user_id).first()
+    user = db.query(User).filter_by(id=user_id).with_for_update().first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 

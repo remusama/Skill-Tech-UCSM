@@ -8,10 +8,13 @@ Si los usuarios ya existen, los omite limpiamente sin duplicar.
 
 import logging
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import glob
 import unicodedata
 import uuid
 import bcrypt
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from server_py.memoria.database import SessionLocal, User, EleonorSession
 
@@ -22,6 +25,118 @@ DEFAULT_PASSWORD = "12345678"
 def remove_accents(s: str) -> str:
     nfkd = unicodedata.normalize("NFKD", s)
     return "".join([c for c in nfkd if not unicodedata.combining(c)]).replace("ñ", "n").replace("Ñ", "n")
+
+# Lista oficial canónica de 48 estudiantes y su asignación exacta a Casas (12 por Casa)
+OFFICIAL_48_STUDENTS_HOUSES = {
+    # ── APEX (12 Estudiantes) ──
+    "alyce.valdivia@liderazgo.ucsm.pe": {"username": "Alyce Nayeli Valdivia Sanz", "house": "APEX", "classroom": "5º C"},
+    "brescia.oviedo@liderazgo.ucsm.pe": {"username": "Brescia Avril Oviedo Rodríguez", "house": "APEX", "classroom": "5º C"},
+    "cesar.campos@liderazgo.ucsm.pe": {"username": "César Alejandro Campos García", "house": "APEX", "classroom": "5º B"},
+    "daniel.zapana@liderazgo.ucsm.pe": {"username": "Daniel Elias Zapana Daza", "house": "APEX", "classroom": "5º C"},
+    "fernanda.rodriguez@liderazgo.ucsm.pe": {"username": "Fernanda Josselyn Rodriguez Del Carpio", "house": "APEX", "classroom": "5º C"},
+    "keith.chura@liderazgo.ucsm.pe": {"username": "Keith Vladimir Chura Diaz", "house": "APEX", "classroom": "5º A"},
+    "lucas.bustamante@liderazgo.ucsm.pe": {"username": "Lucas Adriel Bustamante Mena", "house": "APEX", "classroom": "5º C"},
+    "luciana.castillo@liderazgo.ucsm.pe": {"username": "Luciana Castillo Alvarez", "house": "APEX", "classroom": "5º B"},
+    "maria.limazca@liderazgo.ucsm.pe": {"username": "Maria Jose Limazca Quispe", "house": "APEX", "classroom": "5º B"},
+    "mariel.millio@liderazgo.ucsm.pe": {"username": "Mariel Dayana Millio Mendoza", "house": "APEX", "classroom": "5º C"},
+    "ruth.calli@liderazgo.ucsm.pe": {"username": "Ruth Evelyn Calli Choqque", "house": "APEX", "classroom": "5º B"},
+    "stephano.pinto@liderazgo.ucsm.pe": {"username": "Stephano Samuel Pinto Rivera", "house": "APEX", "classroom": "5º A"},
+
+    # ── IGNIS (12 Estudiantes) ──
+    "dalessandra.cuervo@liderazgo.ucsm.pe": {"username": "Dalessandra Cuervo Quispe", "house": "IGNIS", "classroom": "5º A"},
+    "diana.chichizola@liderazgo.ucsm.pe": {"username": "Diana Sophia Chichizola Bustamante", "house": "IGNIS", "classroom": "5º C"},
+    "edgar.miranda@liderazgo.ucsm.pe": {"username": "Edgar Miranda Ccolqque", "house": "IGNIS", "classroom": "5º C"},
+    "fabricio.espinoza@liderazgo.ucsm.pe": {"username": "Fabricio Andre Espinoza Santander", "house": "IGNIS", "classroom": "5º A"},
+    "gloria.callenova@liderazgo.ucsm.pe": {"username": "Gloria Mia Isabel Callenova Caceres", "house": "IGNIS", "classroom": "5º C"},
+    "james.cosi@liderazgo.ucsm.pe": {"username": "James Stephano Alejandro Cosi Rosello", "house": "IGNIS", "classroom": "5º A"},
+    "juan.herrera@liderazgo.ucsm.pe": {"username": "Juan Francisco Herrera Vargas", "house": "IGNIS", "classroom": "5º B"},
+    "mariajose.talavera@liderazgo.ucsm.pe": {"username": "Mariajose Talavera Cardenas", "house": "IGNIS", "classroom": "5º A"},
+    "piero.silvestre@liderazgo.ucsm.pe": {"username": "Piero Alexander Silvestre Gutierrez", "house": "IGNIS", "classroom": "5º B"},
+    "rubi.contreras@liderazgo.ucsm.pe": {"username": "Rubí Alexandra Contreras Villarroel", "house": "IGNIS", "classroom": "5º B"},
+    "sashenka.bernedo@liderazgo.ucsm.pe": {"username": "Sashenka Sofie Bernedo Ccanccapa", "house": "IGNIS", "classroom": "5º C"},
+    "stefano.lopez@liderazgo.ucsm.pe": {"username": "Stefano Lopez Flores", "house": "IGNIS", "classroom": "5º B"},
+
+    # ── NEXUS (12 Estudiantes) ──
+    "camila.beltran@liderazgo.ucsm.pe": {"username": "Camila Yamileth Beltran Huanca", "house": "NEXUS", "classroom": "5º B"},
+    "cristel.umiyauri@liderazgo.ucsm.pe": {"username": "Cristel Xiomara Umiyauri Huaylla", "house": "NEXUS", "classroom": "5º C"},
+    "denis.yana@liderazgo.ucsm.pe": {"username": "Denis Arturo Yana Palazuelos", "house": "NEXUS", "classroom": "5º A"},
+    "edison.amanqui@liderazgo.ucsm.pe": {"username": "Edison Omar Amanqui Galarza", "house": "NEXUS", "classroom": "5º A"},
+    "ikerzon.quispe@liderazgo.ucsm.pe": {"username": "Ikerzon Herbeth Quispe Choquepuma", "house": "NEXUS", "classroom": "5º B"},
+    "jimena.luque@liderazgo.ucsm.pe": {"username": "Jimena Isabel Luque Berroa", "house": "NEXUS", "classroom": "5º C"},
+    "jose.flor@liderazgo.ucsm.pe": {"username": "José Manuel Flor Cruz", "house": "NEXUS", "classroom": "5º C"},
+    "julio.rodriguez@liderazgo.ucsm.pe": {"username": "Julio Gabriel Rodriguez Valdivia", "house": "NEXUS", "classroom": "5º B"},
+    "nadieshda.flores@liderazgo.ucsm.pe": {"username": "Nadieshda Mariana Flores Barriga", "house": "NEXUS", "classroom": "5º A"},
+    "rodrigo.aguero@liderazgo.ucsm.pe": {"username": "Rodrigo Jhonatan Agüero Condori", "house": "NEXUS", "classroom": "5º B"},
+    "sheyla.arqque@liderazgo.ucsm.pe": {"username": "Sheyla Saida Arqque Quispe", "house": "NEXUS", "classroom": "5º C"},
+    "sonia.lazarte@liderazgo.ucsm.pe": {"username": "Sonia Lazarte Arredondo", "house": "NEXUS", "classroom": "5º A"},
+
+    # ── VISIO (12 Estudiantes) ──
+    "arjum.sarayasi@liderazgo.ucsm.pe": {"username": "Arjum Jhostim Sarayasi Huarilloclla", "house": "VISIO", "classroom": "5º A"},
+    "claudia.velasco@liderazgo.ucsm.pe": {"username": "Claudia Velasco Quispe", "house": "VISIO", "classroom": "5º C"},
+    "daniela.valeriano@liderazgo.ucsm.pe": {"username": "Daniela Valeriano Ramos", "house": "VISIO", "classroom": "5º A"},
+    "franco.cruz@liderazgo.ucsm.pe": {"username": "Franco Cruz Abado", "house": "VISIO", "classroom": "5º B"},
+    "javier.zavaleta@liderazgo.ucsm.pe": {"username": "Javier Zavaleta Gutierrez", "house": "VISIO", "classroom": "5º B"},
+    "karelia.delgado@liderazgo.ucsm.pe": {"username": "Karelia Axde Delgado Cornejo", "house": "VISIO", "classroom": "5º B"},
+    "kiara.zapata@liderazgo.ucsm.pe": {"username": "Kiara Yasumy Zapata Pocco", "house": "VISIO", "classroom": "5º A"},
+    "matias.arteaga@liderazgo.ucsm.pe": {"username": "Matias Jose Arteaga Espinoza", "house": "VISIO", "classroom": "5º B"},
+    "nurit.castro@liderazgo.ucsm.pe": {"username": "Nurit Tatiana Castro Cuela", "house": "VISIO", "classroom": "5º C"},
+    "paolo.hernani@liderazgo.ucsm.pe": {"username": "Paolo Del Piero Hernani Delgado", "house": "VISIO", "classroom": "5º A"},
+    "piero.vega@liderazgo.ucsm.pe": {"username": "Piero Farith Vega Baca", "house": "VISIO", "classroom": "5º A"},
+    "ricardo.rondon@liderazgo.ucsm.pe": {"username": "Ricardo Enrique Rondón Pacheco", "house": "VISIO", "classroom": "5º A"},
+}
+
+def sync_official_houses_and_clean_infiltrated(db: Session):
+    """
+    Garantiza estrictamente 48 alumnos oficiales (12 por Casa: APEX, IGNIS, NEXUS, VISIO).
+    1. Asigna Casa, rol de estudiante y billetera Solana a los 48 alumnos oficiales.
+    2. Remueve 'house' (set to None) y saldos MYL de cualquier cuenta no oficial o docente (evita infiltraciones).
+    3. Purga usuarios de prueba ficticios para optimizar la base de datos y evitar filtraciones.
+    """
+    # 1. Asegurar las 4 Casas oficiales para los 48 alumnos
+    for email, meta in OFFICIAL_48_STUDENTS_HOUSES.items():
+        user = db.query(User).filter(User.email.ilike(email)).first()
+        if user:
+            user.house = meta["house"]
+            user.role = "student"
+            user.classroom = meta["classroom"]
+            if not user.full_name:
+                user.full_name = meta["username"]
+            if user.myl_balance_cash is None:
+                user.myl_balance_cash = 4
+            if user.myl_balance_digital is None:
+                user.myl_balance_digital = 4
+            if not user.solana_wallet_address:
+                user.solana_wallet_address = f"SKILL-SOL-{uuid.uuid4().hex[:16].upper()}"
+
+    # 2. Desactivar 'house' y saldo MYL en docentes o usuarios que no pertenezcan al cohort oficial de 48
+    official_emails = set(OFFICIAL_48_STUDENTS_HOUSES.keys())
+    users_with_house = db.query(User).filter(User.house.isnot(None)).all()
+    cleaned_count = 0
+    for u in users_with_house:
+        u_email = (u.email or "").lower().strip()
+        if u_email not in official_emails or u.role != "student":
+            u.house = None
+            u.myl_balance_cash = 0
+            u.myl_balance_digital = 0
+            u.myl_house_points_session = 0
+            cleaned_count += 1
+
+    # 3. Eliminar usuarios de prueba obsoletos si existen limpiando previamente sus dependencias
+    dummy_emails = ["lucho110901@gmail.com", "nepe@nepe.com", "123@asd", "cusirramoschirisantiago@gmail.com", "asd@fas"]
+    for dem in dummy_emails:
+        dummy = db.query(User).filter(User.email == dem).first()
+        if dummy:
+            try:
+                db.execute(text("DELETE FROM attendance_records WHERE student_id = :uid"), {"uid": dummy.id})
+                db.execute(text("DELETE FROM eleonor_sessions WHERE user_id = :uid"), {"uid": dummy.id})
+                db.delete(dummy)
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.warning(f"[AutoSeedStudents] No se pudo purgar usuario dummy {dem}: {e}")
+
+    db.commit()
+    logger.info(f"[AutoSeedStudents] Sincronización oficial: 48 alumnos distribuidos (12 por Casa). Se limpiaron {cleaned_count} cuentas no autorizadas.")
 
 # Lista por defecto de 48 estudiantes
 DEFAULT_48_STUDENTS = [
@@ -362,12 +477,13 @@ def auto_seed_students():
         if liderazgo_count >= expected_count and old_count == 0:
             logger.info(
                 f"[AutoSeedStudents] ⚡ Early exit — {liderazgo_count} usuarios ya registrados, "
-                "nada que migrar. Verificando agentes..."
+                "nada que migrar. Verificando agentes y casas oficiales..."
             )
             print(
                 f"[AutoSeedStudents] ⚡ Early exit — {liderazgo_count}/{expected_count} "
                 "usuarios OK, sin usuarios obsoletos."
             )
+            sync_official_houses_and_clean_infiltrated(db)
             from server_py.routers.mentor_agents import seed_base_agents
             seed_base_agents(db)
             print("[AutoSeedAgents] ✅ Agentes base de IA verificados.")
@@ -481,6 +597,7 @@ def auto_seed_students():
             except Exception as seq_err:
                 logger.warning(f"[AutoSeedStudents] No se pudo sincronizar la secuencia de postgres: {seq_err}")
 
+        sync_official_houses_and_clean_infiltrated(db)
         logger.info(f"[AutoSeedStudents] ✅ Proceso completado — {created} usuarios registrados nuevos, {skipped} ya existían.")
         print(f"[AutoSeedStudents] ✅ Proceso completado — {created} usuarios registrados nuevos, {skipped} ya existían.")
 
